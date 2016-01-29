@@ -28,7 +28,6 @@ module.exports = function(config){
 	};
 	
 	obj.startEphemeral = function(name, base_name, callback){
-
 		var output = '';
 		sysExec('lxc-start-ephemeral -o '+base_name+ ' -n '+name +' --union-type overlayfs -d', function(data){
 			if(data.match("doesn't exist.")) return callback({status: 500, error: "doesn't exist."});
@@ -42,7 +41,6 @@ module.exports = function(config){
 		console.log('stop', name);
 		sysExec('lxc-stop -n '+ name, callback);
 	};
-
 
 	obj.freeze = function(name, cbComplete, cbData){
 		sysExec('lxc-freeze -n '+name, cbComplete, cbData);
