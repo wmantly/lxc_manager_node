@@ -3,7 +3,7 @@ module.exports = function(config){
     var cmd = require('node-cmd');
 
     var sysExec = function(command, callback){
-        console.log('sysExec: ', command, '||| callback:', callback)
+        // console.log('sysExec: ', command, '||| callback:', callback)
         cmd.get('unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; '+command, callback)
     }
 /*    var obj = {};
@@ -90,6 +90,7 @@ module.exports = function(config){
         
         var output = '';
         sysExec('lxc-info -n '+name, function(data){
+            console.log(data)
             if(output.match("doesn't exist")) return callback({state: 'NULL'});
             var info = {};
             output = output.replace(/\suse/ig, '').replace(/\sbytes/ig, '').split("\n").slice(0,-1);
