@@ -72,7 +72,9 @@ router.get('/info/:name', function(req, res, next){
 });
 
 router.get('/list', function(req, res, next) {
-    lxc.list(res.json);
+    lxc.list(function(data){
+        res.json(data); 
+    });
 });
 
 module.exports = router;
