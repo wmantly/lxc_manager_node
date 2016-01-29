@@ -72,6 +72,7 @@ module.exports = function(config){
     };
 
     obj.stop = function(name, callback){
+        console.log('stop');
         sysExec('lxc-stop -n '+ name, callback);
     };
 
@@ -103,15 +104,11 @@ module.exports = function(config){
 
         var output = '';
         sysExec('lxc-ls --fancy', function(data){
-            console.log('info:', data)
             
             output = data.split("\n");
-            console.log('output:', output)
             var keys = output.splice(0,1)[0].split(/\s+/).slice(0,-1);
-            console.log('keys:', keys);
             keys = keys.map(function(v){return v.toLowerCase()});
             output = output.slice(0).splice(1).slice(0,-1);
-            console.log('output2:', output)
 
             var info = [];
 
