@@ -15,9 +15,8 @@
     "serve-favicon": "~2.3.0",
     "node.extend": "~1.1.5",
     "redis": "~2.4.2",
-    "child": "0.0.3",
+/*    "child": "0.0.3",
     "colors": "~1.1.2",
-    "async": "~1.5.2",
-    "node-cmd": "~1.1.1"
+    "async": "~1.5.2",*/
   }
 }
