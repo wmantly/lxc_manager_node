@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = function(config){
 	var obj = {};
 	var cmd = require('node-cmd');
@@ -11,8 +13,8 @@ module.exports = function(config){
 		sysExec('lxc-create -n '+name+' -t '+template, cbComplete);
 	};
 	
-	obj.clone = function(name, base_name, cbComplete, cbData){
-		sysExec('lxc-clone -o '+base_name+ ' -n '+name +' -B overlayfs -s', cbComplete, cbData);
+	obj.clone = function(name, base_name, callback){
+		sysExec('lxc-clone -o '+base_name+ ' -n '+name +' -B overlayfs -s', callback);
 	};
 
 	obj.destroy = function(name, callback){
