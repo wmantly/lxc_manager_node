@@ -36,13 +36,13 @@ router.get('/live/:template/:name', function(req, res, next){
 });
 
 router.get('/stop/:name', function(req, res, next){
-		lxc.stop(req.params.name, function(data, message){
-				if(data){
-					 res.json({status: 500, name: req.params.name, message: message});
-			 }else{
-					 res.json({status: 200});
-			 }
-		});
+	lxc.stop(req.params.name, function(data, message){
+		if(data){
+			res.json({status: 500, name: req.params.name, message: message});
+		}else{
+			res.json({status: 200});
+		}
+	});
 });
 
 router.get('/clone/:template/:name', function(req, res, next){
