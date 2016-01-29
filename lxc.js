@@ -42,12 +42,12 @@ module.exports = function(config){
 		sysExec('lxc-stop -n '+ name, callback);
 	};
 
-	obj.freeze = function(name, cbComplete, cbData){
-		sysExec('lxc-freeze -n '+name, cbComplete, cbData);
+	obj.freeze = function(name, callback){
+		sysExec('lxc-freeze -n '+name, callback);
 	};
 	
-	obj.unfreeze = function(name, cbComplete, cbData){
-		sysExec('lxc-unfreeze -n '+name, cbComplete, cbData);
+	obj.unfreeze = function(name, callback){
+		sysExec('lxc-unfreeze -n '+name, callback);
 	};
 	
 	obj.info = function(name, callback){
