@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = function(config){
 	var obj = {};
 	var cmd = require('node-cmd');
