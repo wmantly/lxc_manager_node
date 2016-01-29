@@ -30,9 +30,9 @@ router.get('/start/:name', function(req, res, next){
 });
 
 router.get('/live/:template/:name', function(req, res, next){
-		lxc.startEphemeral(req.params.name, req.params.template, function (data) {
-				res.json(data);
-		});
+	lxc.startEphemeral(req.params.name, req.params.template, function (data) {
+		res.json(data);
+	});
 });
 
 router.get('/stop/:name', function(req, res, next){
