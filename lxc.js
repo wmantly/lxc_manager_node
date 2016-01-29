@@ -51,9 +51,10 @@ module.exports = function(config){
     };
 
     obj.destroy = function(name, callback){
-        sysExec('lxc-destroy -n '+ name, callback);
+        sysExec('lxc-destroy -n '+ name, function(data){
+            callback(data.match(/Destroyed container u1-sdfwefwe\n/))
+        });
     };
-
 
     obj.start = function(name, callback){
         var cmd = 'lxc-start --name '+name+' --daemon';
