@@ -51,7 +51,6 @@ module.exports = function(config){
 	};
 	
 	obj.info = function(name, callback){
-		
 		var output = '';
 		sysExec('lxc-info -n '+name, function(data){
 			console.log('info', name, data)
