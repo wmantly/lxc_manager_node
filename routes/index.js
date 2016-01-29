@@ -66,9 +66,9 @@ router.get('/destroy/:name', function(req, res, next){
 });
 
 router.get('/info/:name', function(req, res, next){
-		lxc.info(req.params.name, function(data){
-				res.json(data);
-		});
+	lxc.info(req.params.name, function(data){
+		res.json(data);
+	});
 });
 
 router.get('/list', function(req, res, next) {
