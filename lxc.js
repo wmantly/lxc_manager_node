@@ -49,8 +49,8 @@ module.exports = function(config){
         sysExec('lxc-clone -o '+base_name+ ' -n '+name +' -B overlayfs -s', cbComplete, cbData);
     };
 
-    obj.destroy = function(name, cbComplete, cbData){
-        sysExec('lxc-destroy -n '+ name, cbComplete, cbData);
+    obj.destroy = function(name, callback){
+        sysExec('lxc-destroy -n '+ name, callback);
     };
 
 
@@ -60,7 +60,7 @@ module.exports = function(config){
         sysExec(cmd, cbComplete, cbData);
     };
     
-    obj.startEphemeral = function(name, base_name, cbComplete, cbData){
+    obj.startEphemeral = function(name, base_name, cbData){
 
         var output = '';
         sysExec('lxc-start-ephemeral -o '+base_name+ ' -n '+name +' --union-type overlayfs -d', function(data){output+=data}, function(error){

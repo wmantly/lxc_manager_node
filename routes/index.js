@@ -30,7 +30,7 @@ router.get('/start/:name', function(req, res, next){
 });
 
 router.get('/live/:template/:name', function(req, res, next){
-    lxc.startEphemeral(req.params.name, req.params.template, null, function (data) {
+    lxc.startEphemeral(req.params.name, req.params.template, function (data) {
         res.json(data);
     });
 });
@@ -56,7 +56,7 @@ router.get('/clone/:template/:name', function(req, res, next){
 });
 
 router.get('/destroy/:name', function(req, res, next){
-    lxc.destroy(req.params.name, null, function(data, message){
+    lxc.destroy(req.params.name, function(data, message){
         if(data){
             res.json({status: 500, message: message});
         }else{
