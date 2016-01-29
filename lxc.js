@@ -1,4 +1,5 @@
 module.exports = function(config){
+    var obj = {};
     var cmd = require('node-cmd');
 
     var sysExec = function(command, callback){
@@ -40,8 +41,8 @@ module.exports = function(config){
     };
 */
 
-    obj.create = function(name, template, config, cbComplete, cbData){
-        sysExec('lxc-create -n '+name+' -t '+template, cbComplete, cbData);
+    obj.create = function(name, template, config, cbComplete){
+        sysExec('lxc-create -n '+name+' -t '+template, cbComplete);
     };
     
     obj.clone = function(name, base_name, cbComplete, cbData){
