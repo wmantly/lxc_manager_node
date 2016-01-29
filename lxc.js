@@ -73,7 +73,7 @@ module.exports = function(config){
     };
 
     obj.stop = function(name, callback){
-        console.log('stop');
+        console.log('stop', name);
         sysExec('lxc-stop -n '+ name, callback);
     };
 
@@ -90,7 +90,7 @@ module.exports = function(config){
         
         var output = '';
         sysExec('lxc-info -n '+name, function(data){
-            console.log(data)
+            console.log('info', name, data)
             if(data.match("doesn't exist")) return callback({state: 'NULL'});
             var info = {};
             data = data.replace(/\suse/ig, '').replace(/\sbytes/ig, '').split("\n").slice(0,-1);
