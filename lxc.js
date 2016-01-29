@@ -1,15 +1,15 @@
 'use strict';
 var exec = require('child_process').exec;
 
-function sysExec(command,callback){exec(command,
+function sysExec(command,callback){
 	command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command
-    (function(){
+	exec(command,(function(){
         return function(err,data,stderr){
             if(!callback) return;
             callback(data, err, stderr);
         }
-    })(callback)
-);}
+    })(callback));
+};
 
 var lxc = {
 	create: function(name, template, config, callback){
