@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-MfvZlkHCEqatNoGiOXveE8FIwMzZg4W85qfrfIFBfYc= sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    
+    <style>
+        .input-xs {
+            height: 22px;
+            padding: 2px 5px;
+            font-size: 12px;
+            line-height: 1.5; //If Placeholder of the input is moved up, rem/modify this.
+            border-radius: 3px;
+        }
+    </style>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha256-Sk3nkD6mLTMOF0EOpNtsIry+s1CsaqQC1rVLTAy+0yc= sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/mustache.js/0.8.1/mustache.min.js"></script>
+    <script src="//dev.718it.biz/repeat/js/repeat.js"></script>
+    <script>
+    
+    var vmDataParse = function(data){
+        data.ip = data.ip || (data.ipv4 || '').replace('-', '') || null ;
+        data.url = null;
+        data.clone = null;
+        if(data.state === 'RUNNING'){
+            var url = '//'+data.name+'.vm42.us';
+            data.url = '<a href="'+url+'" target="_blank">'+url+'</a>';
+        }else if( data.state !== "RUNNING" && data.name.match(/_template/) ){
+            data.clone = $('#cloneFormTemplate').html();
+        }
+        
+        return data
+    };
+    
+    var getVmList = function(){
+        $.scope.vm.splice(0);
+        $.getJSON('api/list',function(data){
+            data.forEach(function(value){
+                value = vmDataParse(value);
+                $.scope.vm.push(value);
+            });
+        });
+    };
+    
+    var updateVmList = function(name){
+        $.getJSON('api/info/'+name, function(data){
+            if(data.state === 'NULL') return $.scope.vm.splice(name,1);
+            data = vmDataParse(data);
+            $.scope.vm.update(name, data);
+        });
+    };
+    
+    var addMessage = function(name, message, time){
+        time = time || 10000;
+        var index = $.scope.vm.indexOf(name);
+        $.extend(true, $.scope.vm[index], {message: message})
+        //$.scope.vm.update(name, {message: message})
+        setTimeout(function() {
+            $.scope.vm.update(name, {message: null})
+        }, time);
+    };
+    
+    $(document).ready(function(){
+        // set up animation for adding to taks list
+        $.scope.vm.__put = function(){
+            this.slideDown( 'fast' );
+    	};
+        
+        // set up animation for removing taks from list
+    	$.scope.vm.__take = function(){
+    		this.slideUp( 'fast', function(){
+    			this.remove();
+    		});
+    	};
+    	
+    	$.scope.vm.__index = 'name';
+    	
+        getVmList();
+
+        $('ol').on('click', 'button', function(event){
+            var $closest = $(this).closest('[data-name]');
+            var name = $closest.data('name');
+            var call = $(this).data('call');
+            
+            $closest.find('span.options').html('<img src="images/gears.gif"/>');
+            
+            $.getJSON('api/'+call+'/'+name, function(data){
+                if(data.status !== 200) addMessage(name, data.message);
+                updateVmList(name);
+                
+            });
+        }).on('submit', 'form', function(event){
+            event.preventDefault();
+            var $closest = $(this).closest('[data-name]');
+            var templateName = $closest.data('name');
+            var name = $(this).find('[name="name"]').val();
+            var call = $(this).find('[name="live"]').prop('checked') ? 'live' : 'clone';
+            
+            if(!name) return alert('Please add a name!');
+            else if($.scope.vm.indexOf(name) !== -1 ) return alert('Name allready in use!')
+            else $closest.find('span.options').html('<img src="images/gears.gif"/>');
+            
+            $.getJSON('api/'+call+'/'+templateName+'/'+name, function(data){
+                console.log(data.status, data);
+
+                if(data.status == 200){
+                    getVmList();
+                }else{
+                    addMessage(name, data.message);
+                }
+            });
+           
+        });
+    });
+    </script>
+    <script id="cloneFormTemplate" type="x-mustache-template">
+        <form class="form-inline" style="display: inline-block; max-height: 2em;">
+            [<input name="live" type="checkbox" /> Start Live]
+            <div class="input-group">
+                <div class="row" style="margin-left:1px;">
+                    <input type="text" class="form-control input-xs" name="name" placeholder="Clone name">
+                    <span class="input-group-btn">
+                        <input class="btn btn-default btn-xs" type="submit" value="Clone" data-call="clone" />
+                    </span>
+                </div>
+            </div>
+        </form>
+
+    </script>
+</head>
+<body>
+    <h2>Start will take atlest 5 seconds!</h2>
+    <!--<input type="text" name="domain" value="vm42.us"/>-->
+    <ol>
+        <li jq-repeat="vm" data-name="{{ name }}" style="height:2em">
+            {{ name }} | {{ state }} | {{ ip }}
+            <span class="options">
+                <div class="btn-group btn-group-xs">
+                    <button class="btn btn-warning" data-call="stop">Stop</button>
+                    <button class="btn btn-success" data-call="start">Start</button>
+                    <button class="btn btn-danger" data-call="destroy">Destroy</button>
+                </div>
+                {{{ url }}}
+                {{{ clone }}}
+                {{{ message }}}
+            </span>
+        </li>
+    </ol>
+</body>
+</html>
