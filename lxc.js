@@ -1,10 +1,15 @@
 'use strict';
-var cmd = require('node-cmd');
+var exec = require('child_process').exec;
 
-var sysExec = function(command, callback){
-	// console.log('sysExec: ', command, '||| callback:', callback)
-	cmd.get('unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; '+command, callback);
-};
+function sysExec(command,callback){exec(command,
+	command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command
+    (function(){
+        return function(err,data,stderr){
+            if(!callback) return;
+            callback(data, err, stderr);
+        }
+    })(callback)
+);}
 
 var lxc = {
 	create: function(name, template, config, callback){
