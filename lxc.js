@@ -21,7 +21,7 @@ module.exports = function(config){
             var runCommand = sshBind.slice();
             runCommand.push(command);
         } else {
-            var runCommand = textToArgs(command);
+            var runCommand = textToArgs('unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; '+command);
         }
 
         var errors = '';
@@ -119,7 +119,6 @@ module.exports = function(config){
             cbData(info);
         });
     };
-
 
     return obj;
 };
