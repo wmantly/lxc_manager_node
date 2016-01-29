@@ -56,13 +56,13 @@ router.get('/clone/:template/:name', function(req, res, next){
 });
 
 router.get('/destroy/:name', function(req, res, next){
-		lxc.destroy(req.params.name, function(data){
-				if(data){
-						res.json({status: 500, message: data});
-				}else{
-						res.json({status: 200});
-				}
-		});
+	lxc.destroy(req.params.name, function(data){
+		if(data){
+			res.json({status: 500, message: data});
+		}else{
+			res.json({status: 200});
+		}
+	});
 });
 
 router.get('/info/:name', function(req, res, next){
