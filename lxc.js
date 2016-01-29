@@ -54,10 +54,10 @@ module.exports = function(config){
     };
 
 
-    obj.start = function(name, cbComplete, cbData){
+    obj.start = function(name, callback){
         var cmd = 'lxc-start --name '+name+' --daemon';
         console.log('start cmd\n', cmd, '\n');
-        sysExec(cmd, cbComplete, cbData);
+        sysExec(cmd, callback);
     };
     
     obj.startEphemeral = function(name, base_name, cbData){
@@ -85,7 +85,7 @@ module.exports = function(config){
         sysExec('lxc-unfreeze -n '+name, cbComplete, cbData);
     };
     
-    obj.info = function(name, cbComplete, cbData){
+    obj.info = function(name, cbData){
         
         var output = '';
         sysExec('lxc-info -n'+name, function(data){output+=data}, function(error){
