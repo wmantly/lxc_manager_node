@@ -46,13 +46,13 @@ router.get('/stop/:name', function(req, res, next){
 });
 
 router.get('/clone/:template/:name', function(req, res, next){
-		lxc.clone(req.params.name, req.params.template, function(message){
-				if( message.match(/Created container/) ){
-						res.json({status: 200});
-				}else{
-						res.json({status: 500, message: message});
-				}
-		});
+	lxc.clone(req.params.name, req.params.template, function(message){
+		if( message.match(/Created container/) ){
+			res.json({status: 200});
+		}else{
+			res.json({status: 500, message: message});
+		}
+	});
 });
 
 router.get('/destroy/:name', function(req, res, next){
