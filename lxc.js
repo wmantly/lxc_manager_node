@@ -3,7 +3,7 @@ module.exports = function(config){
     var cmd = require('node-cmd');
 
     var sysExec = function(command, callback){
-        console.log('sysExec --', command)
+        console.log('sysExec: ', command, '||| callback:' callback)
         cmd.get('unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; '+command, callback)
     }
 /*    var obj = {};
@@ -101,17 +101,14 @@ module.exports = function(config){
         });
     };
 
-    obj.list = function(cbData){
-
-        var output = '';
+    obj.list = function(callback){
         sysExec('lxc-ls --fancy', function(data){
-            
-            output = data.split("\n");
+            var output = data.split("\n");
             var keys = output.splice(0,1)[0].split(/\s+/).slice(0,-1);
+            var info = [];
+
             keys = keys.map(function(v){return v.toLowerCase()});
             output = output.slice(0).splice(1).slice(0,-1);
-
-            var info = [];
 
             for (var i in output)
             {   
@@ -122,7 +119,7 @@ module.exports = function(config){
                 info.push(mapOut);
                 
             }
-            cbData(info);
+            callback(info);
         });
     };
 
