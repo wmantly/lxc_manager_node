@@ -1,11 +1,12 @@
+'use strict';
+
 var express = require('express');
 var router = express.Router();
 var extend = require('node.extend');
 var redis = require("redis");
 var client = redis.createClient();
-var lxc = require('../lxc')({sshBind: false/*['/usr/bin/ssh', 'virt@127.0.0.1']*/});
+var lxc = require('../lxc')();
 //lxc.startEphemeral('ubuntu_template', 'ue0', function(){console.log('cb1', arguments)}, function(){console.log('cb2', arguments)})
-
 router.get('/start/:name', function(req, res, next){
 	lxc.start(req.params.name, function(status, message){
 		if(status){
