@@ -64,11 +64,11 @@ module.exports = function(config){
     obj.startEphemeral = function(name, base_name, callback){
 
         var output = '';
-        sysExec('lxc-start-ephemeral -o '+base_name+ ' -n '+name +' --union-type overlayfs -d', function(data){output+=data}, function(error){
-            if(output.match("doesn't exist.")) return callback({status: 500, error: "doesn't exist."});
-            if(output.match("already exists.")) return callback({status: 500, error: "already exists"});
-            if(output.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) return callback({status: 200, state:'RUNNING', ip: output.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)[0]});
-            callback({'?': '?', data: output, name: name, base_name: base_name});
+        sysExec('lxc-start-ephemeral -o '+base_name+ ' -n '+name +' --union-type overlayfs -d', function(data){
+            if(data.match("doesn't exist.")) return callback({status: 500, error: "doesn't exist."});
+            if(data.match("already exists.")) return callback({status: 500, error: "already exists"});
+            if(data.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) return callback({status: 200, state:'RUNNING', ip: data.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)[0]});
+            callback({'?': '?', data: data, name: name, base_name: base_name});
         });
     };
 
