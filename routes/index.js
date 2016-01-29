@@ -56,9 +56,9 @@ router.get('/clone/:template/:name', function(req, res, next){
 });
 
 router.get('/destroy/:name', function(req, res, next){
-    lxc.destroy(req.params.name, function(data, message){
+    lxc.destroy(req.params.name, function(data){
         if(data){
-            res.json({status: 500, message: message});
+            res.json({status: 500, message: data});
         }else{
             res.json({status: 200});
         }
