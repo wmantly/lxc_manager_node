@@ -3,6 +3,7 @@ module.exports = function(config){
     var cmd = require('node-cmd');
 
     var sysExec = function(command, callback){
+        console.log('sysExec --', command)
         cmd.get('unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; '+command, callback)
     }
 /*    var obj = {};
@@ -60,14 +61,14 @@ module.exports = function(config){
         sysExec(cmd, callback);
     };
     
-    obj.startEphemeral = function(name, base_name, cbData){
+    obj.startEphemeral = function(name, base_name, callback){
 
         var output = '';
         sysExec('lxc-start-ephemeral -o '+base_name+ ' -n '+name +' --union-type overlayfs -d', function(data){output+=data}, function(error){
-            if(output.match("doesn't exist.")) return cbData({status: 500, error: "doesn't exist."});
-            if(output.match("already exists.")) return cbData({status: 500, error: "already exists"});
-            if(output.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) return cbData({status: 200, state:'RUNNING', ip: output.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)[0]});
-            cbData({'?': '?', data: output, name: name, base_name: base_name});
+            if(output.match("doesn't exist.")) return callback({status: 500, error: "doesn't exist."});
+            if(output.match("already exists.")) return callback({status: 500, error: "already exists"});
+            if(output.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) return callback({status: 200, state:'RUNNING', ip: output.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)[0]});
+            callback({'?': '?', data: output, name: name, base_name: base_name});
         });
     };
 
@@ -85,18 +86,18 @@ module.exports = function(config){
         sysExec('lxc-unfreeze -n '+name, cbComplete, cbData);
     };
     
-    obj.info = function(name, cbData){
+    obj.info = function(name, callback){
         
         var output = '';
         sysExec('lxc-info -n'+name, function(data){output+=data}, function(error){
-            if(output.match("doesn't exist")) return cbData({state: 'NULL'});
+            if(output.match("doesn't exist")) return callback({state: 'NULL'});
             var info = {};
             output = output.replace(/\suse/ig, '').replace(/\sbytes/ig, '').split("\n").slice(0,-1);
             for(var i in output){
                 var temp = output[i].split(/\:\s+/);
                 info[temp[0].toLowerCase().trim()] = temp[1].trim();
             }
-            cbData(info);
+            callback(info);
         });
     };
 
