@@ -1,6 +1,10 @@
 module.exports = function(config){
+    var cmd = require('node-cmd');
 
-    var obj = {};
+    var sysExec = function(command, callback){
+        cmd.get(command, callback)
+    }
+/*    var obj = {};
     var child = require('child'),
         sshBind = config.sshBind || false;
 
@@ -34,7 +38,7 @@ module.exports = function(config){
             cbClose: function(exitCode){ onClose(exitCode == 0 ? null:exitCode,  errors) }
         }).start();
     };
-
+*/
 
     obj.create = function(name, template, config, cbComplete, cbData){
         sysExec('lxc-create -n '+name+' -t '+template, cbComplete, cbData);
@@ -97,7 +101,7 @@ module.exports = function(config){
     obj.list = function(cbData){
 
         var output = '';
-        sysExec('lxc-ls --fancy', function(data){output+=data}, function(error){
+        sysExec('lxc-ls --fancy', function(data){
             
             output = output.split("\n");
             var keys = output.splice(0,1)[0].split(/\s+/).slice(0,-1);
