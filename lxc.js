@@ -103,6 +103,7 @@ module.exports = function(config){
 
         var output = '';
         sysExec('lxc-ls --fancy', function(data){
+            console.log('info:', data)
             
             output = output.split("\n");
             var keys = output.splice(0,1)[0].split(/\s+/).slice(0,-1);
@@ -120,7 +121,6 @@ module.exports = function(config){
                 info.push(mapOut);
                 
             }
-            console.log('info:', info)
             cbData(info);
         });
     };
