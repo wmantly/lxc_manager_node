@@ -105,7 +105,7 @@ module.exports = function(config){
         sysExec('lxc-ls --fancy', function(data){
             console.log('info:', data)
             
-            output = output.split("\n");
+            output = data.split("\n");
             console.log('output:', output)
             var keys = output.splice(0,1)[0].split(/\s+/).slice(0,-1);
             console.log('keys:', keys);
