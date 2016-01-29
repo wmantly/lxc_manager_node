@@ -71,8 +71,8 @@ module.exports = function(config){
         });
     };
 
-    obj.stop = function(name, cbComplete, cbData){
-        sysExec('lxc-stop -n '+ name, cbComplete, cbData);
+    obj.stop = function(name, callback){
+        sysExec('lxc-stop -n '+ name, callback);
     };
 
 

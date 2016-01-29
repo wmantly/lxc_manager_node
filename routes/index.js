@@ -36,7 +36,7 @@ router.get('/live/:template/:name', function(req, res, next){
 });
 
 router.get('/stop/:name', function(req, res, next){
-    lxc.stop(req.params.name, null, function(data, message){
+    lxc.stop(req.params.name, function(data, message){
         if(data){
            res.json({status: 500, name: req.params.name, message: message});
        }else{
