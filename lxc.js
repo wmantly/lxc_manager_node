@@ -89,7 +89,7 @@ module.exports = function(config){
     obj.info = function(name, callback){
         
         var output = '';
-        sysExec('lxc-info -n'+name, function(data){output+=data}, function(error){
+        sysExec('lxc-info -n '+name, function(data){
             if(output.match("doesn't exist")) return callback({state: 'NULL'});
             var info = {};
             output = output.replace(/\suse/ig, '').replace(/\sbytes/ig, '').split("\n").slice(0,-1);
