@@ -120,7 +120,7 @@ module.exports = function(config){
                 info.push(mapOut);
                 
             }
-
+            console.log('info:', info)
             cbData(info);
         });
     };
