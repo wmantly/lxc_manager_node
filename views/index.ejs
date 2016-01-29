@@ -26,7 +26,7 @@
         if(data.state === 'RUNNING'){
             var url = '//'+data.name+'.vm42.us';
             data.url = '<a href="'+url+'" target="_blank">'+url+'</a>';
-        }else if( data.state !== "RUNNING" && data.name.match(/_template/) ){
+        }else if( data.state !== "RUNNING" && data.name.match(/\w\w/) ){
             data.clone = $('#cloneFormTemplate').html();
         }
         

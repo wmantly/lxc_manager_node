@@ -3,11 +3,11 @@ var router = express.Router();
 var extend = require('node.extend');
 var redis = require("redis");
 var client = redis.createClient();
-var lxc = require('../lxc')({sshBind: ['/usr/bin/ssh', 'virt@127.0.0.1']});
+var lxc = require('../lxc')({sshBind: false/*['/usr/bin/ssh', 'virt@127.0.0.1']*/});
 //lxc.startEphemeral('ubuntu_template', 'ue0', function(){console.log('cb1', arguments)}, function(){console.log('cb2', arguments)})
 
 router.get('/start/:name', function(req, res, next){
-    lxc.start(req.params.name, null, function(status, message){
+    lxc.start(req.params.name, function(status, message){
        if(status){
            res.json({status: 500, name: req.params.name, message: message});
        }else{
@@ -30,13 +30,13 @@ router.get('/start/:name', function(req, res, next){
 });
 
 router.get('/live/:template/:name', function(req, res, next){
-    lxc.startEphemeral(req.params.name, req.params.template, null, function (data) {
+    lxc.startEphemeral(req.params.name, req.params.template, function (data) {
         res.json(data);
     });
 });
 
 router.get('/stop/:name', function(req, res, next){
-    lxc.stop(req.params.name, null, function(data, message){
+    lxc.stop(req.params.name, function(data, message){
         if(data){
            res.json({status: 500, name: req.params.name, message: message});
        }else{
@@ -56,9 +56,9 @@ router.get('/clone/:template/:name', function(req, res, next){
 });
 
 router.get('/destroy/:name', function(req, res, next){
-    lxc.destroy(req.params.name, null, function(data, message){
+    lxc.destroy(req.params.name, function(data){
         if(data){
-            res.json({status: 500, message: message});
+            res.json({status: 500, message: data});
         }else{
             res.json({status: 200});
         }
@@ -66,7 +66,7 @@ router.get('/destroy/:name', function(req, res, next){
 });
 
 router.get('/info/:name', function(req, res, next){
-    lxc.info(req.params.name, null, function(data){
+    lxc.info(req.params.name, function(data){
         res.json(data);
     });
 });
