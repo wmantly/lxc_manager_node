@@ -91,11 +91,11 @@ module.exports = function(config){
         var output = '';
         sysExec('lxc-info -n '+name, function(data){
             console.log(data)
-            if(output.match("doesn't exist")) return callback({state: 'NULL'});
+            if(data.match("doesn't exist")) return callback({state: 'NULL'});
             var info = {};
-            output = output.replace(/\suse/ig, '').replace(/\sbytes/ig, '').split("\n").slice(0,-1);
-            for(var i in output){
-                var temp = output[i].split(/\:\s+/);
+            data = data.replace(/\suse/ig, '').replace(/\sbytes/ig, '').split("\n").slice(0,-1);
+            for(var i in data){
+                var temp = data[i].split(/\:\s+/);
                 info[temp[0].toLowerCase().trim()] = temp[1].trim();
             }
             callback(info);
