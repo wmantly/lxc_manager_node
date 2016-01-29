@@ -7,8 +7,8 @@ var sysExec = function(command, callback){
 };
 
 var lxc = {
-	create: function(name, template, config, cbComplete){
-		sysExec('lxc-create -n '+name+' -t '+template, cbComplete);
+	create: function(name, template, config, callback){
+		sysExec('lxc-create -n '+name+' -t '+template, callback);
 	},
 
 	clone: function(name, base_name, callback){
@@ -60,7 +60,7 @@ var lxc = {
 			if(data.match("doesn't exist")){
 				return callback({state: 'NULL'});
 			}
-			
+
 			var info = {};
 			data = data.replace(/\suse/ig, '').replace(/\sbytes/ig, '').split("\n").slice(0,-1);
 			for(var i in data){
