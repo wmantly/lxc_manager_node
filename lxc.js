@@ -52,7 +52,7 @@ module.exports = function(config){
 
     obj.destroy = function(name, callback){
         sysExec('lxc-destroy -n '+ name, function(data){
-            callback(data.match(/Destroyed container u1-sdfwefwe\n/))
+            callback(!data.match(/Destroyed container u1-sdfwefwe\n/))
         });
     };
 
