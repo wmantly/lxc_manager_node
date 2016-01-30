@@ -1,14 +1,19 @@
 'use strict';
-var cmd = require('node-cmd');
+var exec = require('child_process').exec;
 
-var sysExec = function(command, callback){
-	// console.log('sysExec: ', command, '||| callback:', callback)
-	cmd.get('unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; '+command, callback);
+function sysExec(command,callback){
+	command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command
+	exec(command,(function(){
+        return function(err,data,stderr){
+            if(!callback) return;
+            callback(data, err, stderr);
+        }
+    })(callback));
 };
 
 var lxc = {
-	create: function(name, template, config, cbComplete){
-		sysExec('lxc-create -n '+name+' -t '+template, cbComplete);
+	create: function(name, template, config, callback){
+		sysExec('lxc-create -n '+name+' -t '+template, callback);
 	},
 
 	clone: function(name, base_name, callback){
@@ -60,7 +65,7 @@ var lxc = {
 			if(data.match("doesn't exist")){
 				return callback({state: 'NULL'});
 			}
-			
+
 			var info = {};
 			data = data.replace(/\suse/ig, '').replace(/\sbytes/ig, '').split("\n").slice(0,-1);
 			for(var i in data){
