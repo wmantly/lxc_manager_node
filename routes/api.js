@@ -8,9 +8,10 @@ var client = redis.createClient();
 var lxc = require('../lxc');
 
 router.get('/start/:name', function(req, res, next){
-	lxc.start(req.params.name, function(status, message){
-		if(status){
-			res.json({status: 500, name: req.params.name, message: message});
+	lxc.start(req.params.name, function(data){
+		console.log('start', arguments);
+		if(!data){
+			res.json({status: 500, name: req.params.name, message: data});
 		}else{
 			setTimeout(function() {
 				lxc.info(req.params.name, null, function(data){
@@ -32,12 +33,14 @@ router.get('/start/:name', function(req, res, next){
 
 router.get('/live/:template/:name', function(req, res, next){
 	lxc.startEphemeral(req.params.name, req.params.template, function (data) {
+		console.log('live', arguments);
 		res.json(data);
 	});
 });
 
 router.get('/stop/:name', function(req, res, next){
 	lxc.stop(req.params.name, function(data){
+		console.log('stop', arguments);
 		if(data){
 			res.json({status: 500, name: req.params.name, message: data});
 		}else{
@@ -48,6 +51,7 @@ router.get('/stop/:name', function(req, res, next){
 
 router.get('/clone/:template/:name', function(req, res, next){
 	lxc.clone(req.params.name, req.params.template, function(data){
+		console.log('clone', arguments);
 		if( data.match(/Created container/) ){
 			res.json({status: 200});
 		}else{
@@ -58,6 +62,7 @@ router.get('/clone/:template/:name', function(req, res, next){
 
 router.get('/destroy/:name', function(req, res, next){
 	lxc.destroy(req.params.name, function(data){
+		console.log('destroy', arguments);
 		if(data){
 			res.json({status: 500, message: data});
 		}else{
@@ -68,12 +73,14 @@ router.get('/destroy/:name', function(req, res, next){
 
 router.get('/info/:name', function(req, res, next){
 	lxc.info(req.params.name, function(data){
+		console.log('info', arguments);
 		res.json(data);
 	});
 });
 
 router.get('/list', function(req, res, next) {
 	lxc.list(function(data){
+		console.log('list', arguments);
 		res.json(data);
 	});
 });

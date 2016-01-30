@@ -1,9 +1,10 @@
 'use strict';
 var exec = require('child_process').exec;
 
-function sysExec(command,callback){
-	command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command
-	exec(command,(function(){
+function sysExec(command, callback){
+	command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command;
+
+	return exec(command, (function(){
         return function(err,data,stderr){
             if(!callback) return;
             callback(data, err, stderr);
@@ -13,27 +14,27 @@ function sysExec(command,callback){
 
 var lxc = {
 	create: function(name, template, config, callback){
-		sysExec('lxc-create -n '+name+' -t '+template, callback);
+		return sysExec('lxc-create -n '+name+' -t '+template, callback);
 	},
 
 	clone: function(name, base_name, callback){
-		sysExec('lxc-clone -o '+base_name+ ' -n '+name +' -B overlayfs -s', callback);
+		return sysExec('lxc-clone -o '+base_name+ ' -n '+name +' -B overlayfs -s', callback);
 	},
 
 	destroy: function(name, callback){
-		sysExec('lxc-destroy -n '+ name, function(data){
+		return sysExec('lxc-destroy -n '+ name, function(data){
 			callback(!data.match(/Destroyed container/));
 		});
 	},
 
 	start: function(name, callback){
 		var cmd = 'lxc-start --name '+name+' --daemon';
-		sysExec(cmd, callback);
+		return sysExec(cmd, callback);
 	},
 
 	startEphemeral: function(name, base_name, callback){
-		var output = '';
-		sysExec('lxc-start-ephemeral -o '+base_name+ ' -n '+name +' --union-type overlayfs -d', function(data){
+		var command = 'lxc-start-ephemeral -o '+base_name+ ' -n '+name +' --union-type overlayfs -d';
+		return sysExec(command, function(data){
 			if(data.match("doesn't exist.")){
 				return callback({status: 500, error: "doesn't exist."});
 			}
@@ -49,19 +50,19 @@ var lxc = {
 	},
 
 	stop: function(name, callback){
-		sysExec('lxc-stop -n '+ name, callback);
+		return sysExec('lxc-stop -n '+ name, callback);
 	},
 
 	freeze: function(name, callback){
-		sysExec('lxc-freeze -n '+name, callback);
+		return sysExec('lxc-freeze -n '+name, callback);
 	},
 
 	unfreeze: function(name, callback){
-		sysExec('lxc-unfreeze -n '+name, callback);
+		return sysExec('lxc-unfreeze -n '+name, callback);
 	},
 
 	info: function(name, callback){
-		sysExec('lxc-info -n '+name, function(data){
+		return sysExec('lxc-info -n '+name, function(data){
 			if(data.match("doesn't exist")){
 				return callback({state: 'NULL'});
 			}
@@ -85,12 +86,13 @@ var lxc = {
 			keys = keys.map(function(v){return v.toLowerCase()});
 			output = output.slice(0).splice(1).slice(0,-1);
 
-			for (var i in output)
-			{   
+			for(var i in output){   
 
-				var aIn = output[i].split(/\s+/).slice(0,-1),
-					mapOut = {};
-				aIn.map( function(v,i){ mapOut[keys[i]] = v; } );
+				var aIn = output[i].split(/\s+/).slice(0,-1);
+				var mapOut = {};
+				aIn.map(function(value,idx){
+					mapOut[keys[idx]] = value;
+				});
 				info.push(mapOut);
 				
 			}
@@ -98,4 +100,5 @@ var lxc = {
 		});
 	}
 };
+
 module.exports = lxc;
