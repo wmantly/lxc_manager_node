@@ -10,7 +10,7 @@ var lxc = require('../lxc');
 router.get('/start/:name', function(req, res, next){
 	lxc.start(req.params.name, function(data){
 		console.log('start', arguments);
-		if(status){
+		if(!data){
 			res.json({status: 500, name: req.params.name, message: data});
 		}else{
 			setTimeout(function() {
