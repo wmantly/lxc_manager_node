@@ -7,7 +7,6 @@ function sysExec(command, callback){
 	return exec(command, (function(){
         return function(err,data,stderr){
             if(!callback) return;
-            err = err || stderr || null;
             callback(data, err, stderr);
         }
     })(callback));
@@ -97,7 +96,7 @@ var lxc = {
 				info.push(mapOut);
 				
 			}
-			callback(info);
+			callback.apply(info);
 		});
 	}
 };
