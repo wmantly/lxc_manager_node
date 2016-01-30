@@ -96,7 +96,7 @@ var lxc = {
 				info.push(mapOut);
 				
 			}
-			callback.apply(info);
+			callback(info);
 		});
 	}
 };
