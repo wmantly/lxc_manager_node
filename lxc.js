@@ -1,7 +1,7 @@
 'use strict';
 var exec = require('child_process').exec;
 
-var callback_parse = callbackParse(err, data, stderr, callback){
+var callback_parse = function(err, data, stderr, callback){
 	console.log(arguments)
 	return callback(data, err, stderr)
 };
