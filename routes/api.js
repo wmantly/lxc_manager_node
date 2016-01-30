@@ -73,14 +73,12 @@ router.get('/destroy/:name', function(req, res, next){
 
 router.get('/info/:name', function(req, res, next){
 	lxc.info(req.params.name, function(data){
-		console.log('info', arguments);
 		res.json(data);
 	});
 });
 
 router.get('/list', function(req, res, next) {
 	lxc.list(function(data){
-		console.log('list', arguments);
 		res.json(data);
 	});
 });
