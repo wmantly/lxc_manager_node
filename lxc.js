@@ -1,16 +1,16 @@
 'use strict';
 var exec = require('child_process').exec;
 
-var callback_parse = function(err, data, stderr, callback){
-	console.log(arguments)
-	callback(data, err, stderr)
-};
-
 function sysExec(command, callback){
 	command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command;
-	callback = callback || function(){};
 
-	return exec(command, callback_parse(callback));
+	return exec(command, (function(){
+        return function(err,data,stderr){
+            if(!callback) return;
+            err = err || stderr || null;
+            callback(data, err, stderr);
+        }
+    })(callback));
 };
 
 var lxc = {
@@ -35,8 +35,6 @@ var lxc = {
 
 	startEphemeral: function(name, base_name, callback){
 		var command = 'lxc-start-ephemeral -o '+base_name+ ' -n '+name +' --union-type overlayfs -d';
-		callback = callback || function(){};
-
 		return sysExec(command, function(data){
 			if(data.match("doesn't exist.")){
 				return callback({status: 500, error: "doesn't exist."});
