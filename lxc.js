@@ -102,7 +102,7 @@ var lxc = {
 			var args = [].slice.call(arguments);
 			console.log('args~103', args)
 			args[0] = info;
-			console.log('info~105', info)
+			console.log('args~105', args)
 			callback.apply(args);
 		});
 	}
