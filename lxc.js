@@ -4,7 +4,7 @@ var exec = require('child_process').exec;
 function sysExec(command, callback){
 	command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command;
 
-	return exec(command, (function(){
+	return exec(command, (function(callback){
 		return function(err,data,stderr){
 			if(callback){
 				return callback(data, err, stderr);
@@ -99,7 +99,9 @@ var lxc = {
 				info.push(mapOut);
 				
 			}
-			callback(info);
+			var args = [].slice.call(arguments);
+			args[0] = info;
+			callback.apply(args);
 		});
 	}
 };
