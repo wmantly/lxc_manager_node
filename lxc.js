@@ -5,12 +5,12 @@ function sysExec(command, callback){
 	command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command;
 
 	return exec(command, (function(){
-        return function(err,data,stderr){
-            if(callback){
-            	return callback(data, err, stderr);
-            }
-        }
-    })(callback));
+		return function(err,data,stderr){
+			if(callback){
+				return callback(data, err, stderr);
+			}
+		}
+	})(callback));
 };
 
 var lxc = {
