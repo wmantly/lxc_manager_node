@@ -103,7 +103,7 @@ var lxc = {
 			console.log('args~103', args)
 			args[0] = info;
 			console.log('args~105', args)
-			callback.apply(args);
+			callback.apply(this, args);
 		});
 	}
 };
