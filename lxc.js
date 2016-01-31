@@ -99,7 +99,7 @@ var lxc = {
 				info.push(mapOut);
 				
 			}
-			var args = [].slice.call(arguments);
+			var args = [].slice.call(arguments).splice(0, 1, info);
 			console.log('args:', args)
 			callback.apply(this, args);
 		});
