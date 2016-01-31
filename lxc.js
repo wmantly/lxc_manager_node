@@ -76,9 +76,7 @@ var lxc = {
 				var temp = data[i].split(/\:\s+/);
 				info[temp[0].toLowerCase().trim()] = temp[1].trim();
 			}
-
-			var args = [info].concat([].slice.call(arguments).slice(1,99));
-			return callback.apply(this, args);
+			callback(info);
 		});
 	},
 
@@ -101,8 +99,8 @@ var lxc = {
 				info.push(mapOut);
 				
 			}
-			var args = [info].concat([].slice.call(arguments).slice(1,99));
-			return callback.apply(this, args);
+			
+			callback(info);
 		});
 	}
 };
