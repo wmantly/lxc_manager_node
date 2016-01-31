@@ -100,8 +100,8 @@ var lxc = {
 				
 			}
 			var args = [info].concat([].slice.call(arguments).slice(1,99));
-			console.log('args:', args)
-			callback.apply(this, args);
+			// console.log('args:', args)
+			callback.apply(args);
 		});
 	}
 };
