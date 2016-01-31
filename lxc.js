@@ -6,8 +6,9 @@ function sysExec(command, callback){
 
 	return exec(command, (function(){
         return function(err,data,stderr){
-            if(!callback) return;
-            callback(data, err, stderr);
+            if(callback){
+            	return callback(data, err, stderr);
+            }
         }
     })(callback));
 };
