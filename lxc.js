@@ -99,7 +99,9 @@ var lxc = {
 				info.push(mapOut);
 				
 			}
-			callback.apply(this, [info].slice.call(arguments).splice(1,1));
+			var args = [info].slice.call(arguments).splice(1,1);
+			console.log('args:', args)
+			callback.apply(this, args);
 		});
 	}
 };
