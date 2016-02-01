@@ -15,7 +15,7 @@ Make the password something strong, and remember it.
 
 Now you can install the packages we need:
 ```bash
-sudo apt-get install git nodejs npm lxc
+sudo apt-get install git nodejs npm lxc redis-server
 ```
 
 remap `nodejs` to `node`:
@@ -60,8 +60,9 @@ lxc-attach -n test-ubuntu
 ```
 If everything worked you can stop and delete the container
 ```bash
-lxc-stop -n u1
-lxc-destroy -n u1
+lxc-stop -n test-ubuntu
+lxc-destroy -n test-ubuntu
+```
 
 
 ```bash
