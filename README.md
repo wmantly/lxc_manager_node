@@ -4,7 +4,7 @@ This has been tested on **clean** install of ubuntu 14.04 64bit.
 ## install
 Update you system to the newest packages and reboot. You may need to do this several times:
 ```bash
-sudo apt-get update && sudo apt-get upgrade && sudo reboot
+sudo apt-get update && sudo apt-get upgrade -y && sudo reboot
 ```
 
 Once there are no more updates, add the `virt` user:
@@ -15,6 +15,9 @@ Make the password something strong, and remember it.
 
 Now you can install the packages we need:
 ```bash
+sudo add-apt-repository ppa:ubuntu-lxc/stable
+sudo add-apt-repository ppa:ubuntu-lxc/cgmanager-stable
+sudo apt-get update && sudo apt-get upgrade
 sudo apt-get install git nodejs npm lxc redis-server
 ```
 
