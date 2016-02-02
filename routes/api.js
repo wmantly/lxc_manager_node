@@ -5,6 +5,7 @@ var router = express.Router();
 var extend = require('node.extend');
 var redis = require("redis");
 var client = redis.createClient();
+var request = require('request');
 var lxc = require('../lxc');
 
 router.get('/start/:name', function(req, res, next){
@@ -81,6 +82,28 @@ router.get('/list', function(req, res, next) {
 	lxc.list(function(data){
 		res.json(data);
 	});
+});
+
+router.get('/run/:ip?', function(req, res, next){
+	var runner = function(res, req, ip){
+		request.post({url:'http://'+ip, body:req.post}, function(error, response, body){
+			body = JSON.parse(body);
+			body['ip'] = ip.replace('10.0.', '')
+			return res.json(body)
+		})
+	};
+
+
+	if(req.params.ip){
+		var ip = '10.0.'+ req.params.ip;
+		return runner(res, req, ip);
+	}else{
+		var name = 'u1-'+(Math.random()*100).toString().replace('.','')
+		lxc.startEphemeral(name, 'u1', function(data){
+			return runner(res, req, data.ip);
+		});
+	}
+
 });
 
 module.exports = router;
