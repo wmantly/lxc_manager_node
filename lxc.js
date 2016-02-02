@@ -99,8 +99,8 @@ var lxc = {
 				info.push(mapOut);
 				
 			}
-			
-			callback(info);
+			var args = [info].concat(arguments.splice(1));
+			callback(args);
 		});
 	}
 };
