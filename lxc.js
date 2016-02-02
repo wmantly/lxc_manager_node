@@ -24,7 +24,7 @@ var lxc = {
 
 	destroy: function(name, callback){
 		return sysExec('lxc-destroy -n '+ name, function(data){
-			var args = [(data.match(/Destroyed container/))].concat(Array.prototype.slice.call(arguments, 1));
+			var args = [!!data.match(/Destroyed container/)].concat(Array.prototype.slice.call(arguments, 1));
 			callback.apply(this, args);
 		});
 	},
