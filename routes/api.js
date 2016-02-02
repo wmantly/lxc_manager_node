@@ -5,6 +5,7 @@ var router = express.Router();
 var extend = require('node.extend');
 var redis = require("redis");
 var client = redis.createClient();
+var request = require('request');
 var lxc = require('../lxc');
 
 router.get('/start/:name', function(req, res, next){
@@ -32,55 +33,81 @@ router.get('/start/:name', function(req, res, next){
 });
 
 router.get('/live/:template/:name', function(req, res, next){
-	lxc.startEphemeral(req.params.name, req.params.template, function (data) {
+	return lxc.startEphemeral(req.params.name, req.params.template, function (data) {
 		console.log('live', arguments);
-		res.json(data);
+		return res.json(data);
 	});
 });
 
 router.get('/stop/:name', function(req, res, next){
-	lxc.stop(req.params.name, function(data){
+	return lxc.stop(req.params.name, function(data){
 		console.log('stop', arguments);
 		if(data){
-			res.json({status: 500, name: req.params.name, message: data});
+			return res.json({status: 500, name: req.params.name, message: data});
 		}else{
-			res.json({status: 200});
+			return res.json({status: 200});
 		}
 	});
 });
 
 router.get('/clone/:template/:name', function(req, res, next){
-	lxc.clone(req.params.name, req.params.template, function(data){
+	return lxc.clone(req.params.name, req.params.template, function(data){
 		console.log('clone', arguments);
 		if( data.match(/Created container/) ){
-			res.json({status: 200});
+			return res.json({status: 200});
 		}else{
-			res.json({status: 500, message: data});
+			return res.json({status: 500, message: data});
 		}
 	});
 });
 
 router.get('/destroy/:name', function(req, res, next){
-	lxc.destroy(req.params.name, function(data){
+	return lxc.destroy(req.params.name, function(data){
 		console.log('destroy', arguments);
 		if(data){
-			res.json({status: 500, message: data});
+			return res.json({status: 500, message: data});
 		}else{
-			res.json({status: 200});
+			return res.json({status: 200});
 		}
 	});
 });
 
 router.get('/info/:name', function(req, res, next){
-	lxc.info(req.params.name, function(data){
-		res.json(data);
+	return lxc.info(req.params.name, function(data){
+		return res.json(data);
 	});
 });
 
 router.get('/list', function(req, res, next) {
-	lxc.list(function(data){
-		res.json(data);
+	return lxc.list(function(data){
+		return res.json(data);
 	});
+});
+
+router.post('/run/:ip?', function(req, res, next){
+
+	var runner = function(res, req, ip){
+		console.log('runner on', ip,'with body:\n', JSON.stringify(req.body));
+		return request.post({url:'http://'+ip, form: req.body}, function(error, response, body){
+			console.log('request args:', arguments)
+			body = JSON.parse(body);
+			body['ip'] = ip.replace('10.0.', '')
+			return res.json(body)
+		});
+	};
+
+
+	if(req.params.ip){
+		var ip = '10.0.'+ req.params.ip;
+		return runner(res, req, ip);
+	}else{
+		var name = 'u1-'+(Math.random()*100).toString().replace('.','');
+		console.log('new VM', name);
+		return lxc.startEphemeral(name, 'u1', function(data){
+			return runner(res, req, data.ip);
+		});
+	}
+
 });
 
 module.exports = router;
