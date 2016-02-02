@@ -86,9 +86,9 @@ router.get('/list', function(req, res, next) {
 
 router.post('/run/:ip?', function(req, res, next){
 	var runner = function(res, req, ip){
-		console.log('runner on', ip,'with body:\n', req.body);
+		console.log('runner on', ip,'with body:\n', typeof req.body);
 		return request.post({url:'http://'+ip, json: req.body}, function(error, response, body){
-			console.log('request args:', arguments)
+			// console.log('request args:', arguments)
 			body = JSON.parse(body);
 			body['ip'] = ip.replace('10.0.', '')
 			return res.json(body)
