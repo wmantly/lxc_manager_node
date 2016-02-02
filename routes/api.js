@@ -84,7 +84,7 @@ router.get('/list', function(req, res, next) {
 	});
 });
 
-router.post('/run/:ip?', function(req, res, next){
+router.post('/run', function(req, res, next){
 	var runner = function(res, req, ip){
 		request.post({url:'http://'+ip, body:req.post}, function(error, response, body){
 			body = JSON.parse(body);
