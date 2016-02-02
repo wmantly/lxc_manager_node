@@ -43,8 +43,8 @@ su virt
 The lines below will add the proper config file:
 ```bash
 mkdir -p ~/.config/lxc
-echo "lxc.id_map = u 0 `grep -oP '^virt:\K\d+' /etc/subuid` `grep -oP '^virt:\d+:\K\d+' /etc/subuid`" > ~/.config/lxc/default.conf
-echo "lxc.id_map = g 0 `grep -oP '^virt:\K\d+' /etc/subgid` `grep -oP '^virt:\d+:\K\d+' /etc/subgid`" >> ~/.config/lxc/default.conf
+echo "lxc.id_map = u 0 `grep -oP "^$USER:\K\d+" /etc/subuid` `grep -oP "^$USER:\d+:\K\d+" /etc/subuid`" > ~/.config/lxc/default.conf
+echo "lxc.id_map = g 0 `grep -oP "^$USER:\K\d+" /etc/subgid` `grep -oP "^$USER:\d+:\K\d+" /etc/subgid`" >> ~/.config/lxc/default.conf
 echo "lxc.network.type = veth" >> ~/.config/lxc/default.conf
 echo "lxc.network.link = lxcbr0" >> ~/.config/lxc/default.conf
 ```
