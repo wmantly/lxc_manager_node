@@ -4,12 +4,13 @@ var exec = require('child_process').exec;
 function sysExec(command, callback){
 	command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command;
 
-	return exec(command, (function(){
-        return function(err,data,stderr){
-            if(!callback) return;
-            callback(data, err, stderr);
-        }
-    })(callback));
+	return exec(command, (function(callback){
+		return function(err,data,stderr){
+			if(callback){
+				return callback(data, err, stderr);
+			}
+		}
+	})(callback));
 };
 
 var lxc = {
@@ -23,7 +24,10 @@ var lxc = {
 
 	destroy: function(name, callback){
 		return sysExec('lxc-destroy -n '+ name, function(data){
-			callback(!data.match(/Destroyed container/));
+			var info = data.match(/Destroyed container/);
+			console.log('destroy info:', info);
+			var args = [true].concat(Array.prototype.slice.call(arguments, 1));
+			callback.apply(this, args);
 		});
 	},
 
@@ -75,7 +79,8 @@ var lxc = {
 				var temp = data[i].split(/\:\s+/);
 				info[temp[0].toLowerCase().trim()] = temp[1].trim();
 			}
-			callback(info);
+			var args = [info].concat(Array.prototype.slice.call(arguments, 1));
+			callback.apply(this, args);
 		});
 	},
 
@@ -98,7 +103,8 @@ var lxc = {
 				info.push(mapOut);
 				
 			}
-			callback(info);
+			var args = [info].concat(Array.prototype.slice.call(arguments, 1));
+			callback.apply(this, args);
 		});
 	}
 };
