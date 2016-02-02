@@ -100,6 +100,7 @@ var lxc = {
 				
 			}
 			var args = [info].concat(Array.prototype.slice.call(arguments, 1));
+			console.log(args)
 			callback(args);
 		});
 	}
