@@ -99,7 +99,8 @@ router.post('/run/:ip?', function(req, res, next){
 		var ip = '10.0.'+ req.params.ip;
 		return runner(res, req, ip);
 	}else{
-		var name = 'u1-'+(Math.random()*100).toString().replace('.','')
+		var name = 'u1-'+(Math.random()*100).toString().replace('.','');
+		console.log('new VM', name);
 		lxc.startEphemeral(name, 'u1', function(data){
 			return runner(res, req, data.ip);
 		});
