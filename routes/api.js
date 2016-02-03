@@ -8,7 +8,7 @@ var client = redis.createClient();
 var request = require('request');
 var lxc = require('../lxc');
 
-var runner = function(res, req, ip){
+var runner = function(req, res, ip){
 	return request.post({url:'http://'+ip, form: req.body}, function(error, response, body){
 		body = JSON.parse(body);
 		body['ip'] = ip.replace('10.0.', '')
@@ -95,23 +95,27 @@ router.get('/list', function(req, res, next) {
 router.post('/run/:ip?', function doRun(req, res, next){
 	// check if server is
 
-	lxc.list(function(data){
+	return lxc.list(function(data){
+		if(!req.params.ip) data = [];
 		var ip = '10.0.'+ req.params.ip;
-		data.forEach(function(idx, element){
-			if(element.ipv4 === ip){
-				runner(req, res, ip)
+		var found = false;
+
+		for(var idx=data.length; idx--;){
+			if( data[idx]['ipv4'] === ip ){
+				found = true;
+				break;
 			}
-		});
+		}
+
+		if(found){
+			return runner(req, res, ip)
+		}else{
+			return lxc.startEphemeral(name, 'u1', function(data){
+				return runner(req, res, data.ip);
+			});
+		}
 	});
 
-	if(req.params.ip){
-		return runner(res, req, ip);
-	}else{
-		var name = 'u1-'+(Math.random()*100).toString().replace('.','');
-		return lxc.startEphemeral(name, 'u1', function(data){
-			return runner(res, req, data.ip);
-		});
-	}
 });
 
 module.exports = router;
