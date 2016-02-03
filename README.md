@@ -48,6 +48,12 @@ echo "lxc.id_map = g 0 `grep -oP "^$USER:\K\d+" /etc/subgid` `grep -oP "^$USER:\
 echo "lxc.network.type = veth" >> ~/.config/lxc/default.conf
 echo "lxc.network.link = lxcbr0" >> ~/.config/lxc/default.conf
 ```
+Clone the repo and set it up:
+```bash
+git clone https://github.com/wmantly/lxc_manager_node.git
+cd lxc_manager_node
+npm install
+
 Its safer at this point to reboot the system, `exit` back to the privlaged user and `reboot`
 
 **SSH or log dercily into the `virt` user!!!** this will not if you use su!
