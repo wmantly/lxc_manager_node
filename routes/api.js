@@ -92,9 +92,19 @@ router.get('/list', function(req, res, next) {
 	});
 });
 
-router.post('/run/:ip?', function(req, res, next){
-	if(req.params.ip){
+router.post('/run/:ip?', function doRun(req, res, next){
+	// check if server is
+
+	lxc.list(function(data){
 		var ip = '10.0.'+ req.params.ip;
+		data.forEach(function(idx, element){
+			if(element.ipv4 === ip){
+				runner(req, res, ip)
+			}
+		});
+	});
+
+	if(req.params.ip){
 		return runner(res, req, ip);
 	}else{
 		var name = 'u1-'+(Math.random()*100).toString().replace('.','');
