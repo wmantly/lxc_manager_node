@@ -110,6 +110,7 @@ router.post('/run/:ip?', function doRun(req, res, next){
 		if(found){
 			return runner(req, res, ip)
 		}else{
+			var name = 'u1-'+(Math.random()*100).toString().replace('.','');
 			return lxc.startEphemeral(name, 'u1', function(data){
 				return runner(req, res, data.ip);
 			});
