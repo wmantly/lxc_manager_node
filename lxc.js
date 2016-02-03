@@ -91,6 +91,7 @@ var lxc = {
 			var info = [];
 
 			keys = keys.map(function(v){return v.toLowerCase()});
+			console.log(output)
 			output = output.slice(0).splice(1).slice(0,-1);
 
 			for(var i in output){   
