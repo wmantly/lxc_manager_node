@@ -11,8 +11,8 @@ var lxc = require('../lxc');
 var runner = function(req, res, ip){
 	return request.post({url:'http://'+ip, form: req.body}, function(error, response, body){
 		body = JSON.parse(body);
-		body['ip'] = ip.replace('10.0.', '')
-		return res.json(body)
+		body['ip'] = ip.replace('10.0.', '');
+		return res.json(body);
 	});
 };
 var addToRedis = function(){
