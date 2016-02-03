@@ -18,7 +18,7 @@ Now you can install the packages we need:
 sudo add-apt-repository ppa:ubuntu-lxc/stable
 sudo add-apt-repository ppa:ubuntu-lxc/cgmanager-stable
 sudo apt-get update && sudo apt-get upgrade
-sudo apt-get install git nodejs npm lxc redis-server
+sudo apt-get install git nodejs npm lxc redis-server btrfs-tools
 ```
 
 remap `nodejs` to `node`:
