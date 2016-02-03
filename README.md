@@ -68,10 +68,6 @@ lxc-destroy -n test-ubuntu
 ```
 
 
-```bash
-sudo add-apt-repository ppa:ubuntu-lxc/stable
-sudo add-apt-repository ppa:ubuntu-lxc/cgmanager-stable 
-```
 # auto start
 ## crontab
 ```bash
