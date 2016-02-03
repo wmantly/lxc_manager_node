@@ -94,7 +94,7 @@ var lxc = {
 			output = output.slice(0).slice(0,-1);
 
 			for(var i in output){   
-				console.log(i, output[i])
+				if(output[i].match(/^-/)) continue;
 				var aIn = output[i].split(/\s+/).slice(0,-1);
 				var mapOut = {};
 				aIn.map(function(value,idx){
