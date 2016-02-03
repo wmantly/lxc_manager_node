@@ -91,10 +91,10 @@ var lxc = {
 			var info = [];
 
 			keys = keys.map(function(v){return v.toLowerCase()});
-			output = output.slice(0).splice(1).slice(0,-1);
+			output = output.slice(0).slice(0,-1);
 
 			for(var i in output){   
-
+				if(output[i].match(/^-/)) continue;
 				var aIn = output[i].split(/\s+/).slice(0,-1);
 				var mapOut = {};
 				aIn.map(function(value,idx){
