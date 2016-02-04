@@ -15,6 +15,7 @@ var runner = function(req, res, ip){
 		return res.json(body);
 	});
 };
+
 var addToRedis = function(){
 	lxc.info(req.params.name, null, function(data){
 			var domain = req.query.domain || 'vm42.us';
@@ -35,7 +36,7 @@ router.get('/start/:name', function(req, res, next){
 		if(!data){
 			return res.json({status: 500, name: req.params.name, message: data});
 		}else{
-			res.json({})
+			res.json({});
 		}
 	});
 });
