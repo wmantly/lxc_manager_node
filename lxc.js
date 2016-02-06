@@ -22,13 +22,13 @@ var Container = function(config){
 Container.prototype.autoShutDown = function(time) {
 	time = time || 600000;
 
-	this.__shutDownTimeout = setTimeout(function(){}, this.autoShutDown):
+	// this.__shutDownTimeout = setTimeout(function(){}, this.autoShutDown):
 };
 
 var lxcORM = function(){
 	var orm = {}
 	lxc.list(function(data){
-		for(var idx = data.length; idx--){
+		for(var idx = data.length; idx--;){
 			orm[data[idx].name] = new Container(data);
 		}
 	});
@@ -133,3 +133,6 @@ var lxc = {
 };
 
 module.exports = lxc;
+
+var orm = lxcORM()
+setTimeout(function(){})
