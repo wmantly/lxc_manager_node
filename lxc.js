@@ -29,7 +29,7 @@ var lxcORM = function(){
 	var orm = {}
 	lxc.list(function(data){
 		for(var idx = data.length; idx--;){
-			orm[data[idx].name] = new Container(data);
+			orm[data[idx].name] = new Container(data[idx]);
 		}
 	});
 
