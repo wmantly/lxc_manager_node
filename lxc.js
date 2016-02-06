@@ -135,4 +135,4 @@ var lxc = {
 module.exports = lxc;
 
 var orm = lxcORM()
-setTimeout(function(){})
+setTimeout(function(){console.log(orm)}, 5000)
