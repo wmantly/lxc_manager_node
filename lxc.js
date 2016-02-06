@@ -13,6 +13,29 @@ function sysExec(command, callback){
 	})(callback));
 };
 
+var Container = function(config){
+	this.name = config.name;
+	this.state = config.state;
+	this.ip = config.ip || (config.ipv4 || '').replace('-', '') || null ;
+}
+
+Container.prototype.autoShutDown = function(time) {
+	time = time || 600000;
+
+	// this.__shutDownTimeout = setTimeout(function(){}, this.autoShutDown):
+};
+
+var lxcORM = function(){
+	var orm = {}
+	lxc.list(function(data){
+		for(var idx = data.length; idx--;){
+			orm[data[idx].name] = new Container(data[idx]);
+		}
+	});
+
+	return orm
+};
+
 var lxc = {
 	create: function(name, template, config, callback){
 		return sysExec('lxc-create -n '+name+' -t '+template, callback);
@@ -27,13 +50,12 @@ var lxc = {
 			var info = data.match(/Destroyed container/);
 			console.log('destroy info:', info);
 			var args = [true].concat(Array.prototype.slice.call(arguments, 1));
-			callback.apply(this, args);
+			return callback.apply(this, args);
 		});
 	},
 
 	start: function(name, callback){
-		var cmd = 'lxc-start --name '+name+' --daemon';
-		return sysExec(cmd, callback);
+		return sysExec('lxc-start --name '+name+' --daemon', callback);
 	},
 
 	startEphemeral: function(name, base_name, callback){
@@ -43,8 +65,8 @@ var lxc = {
 			if(data.match("doesn't exist.")){
 				return callback({status: 500, error: "doesn't exist."});
 			}
-			if(data.match("already exists.")){
-				return callback({status: 500, error: "already exists"});
+			if(data.match('already exists.')){
+				return callback({status: 500, error: 'already exists'});
 			}
 			if(data.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)){
 				return callback({status: 200, state:'RUNNING', ip: data.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)[0]});
@@ -93,8 +115,9 @@ var lxc = {
 			keys = keys.map(function(v){return v.toLowerCase()});
 			output = output.slice(0).slice(0,-1);
 
-			for(var i in output){   
-				if(output[i].match(/^-/)) continue;
+			for(var i in output){
+				if(output[i].match(/^-/)) continue; // compatibility with 1.x and 2.x output
+
 				var aIn = output[i].split(/\s+/).slice(0,-1);
 				var mapOut = {};
 				aIn.map(function(value,idx){
@@ -110,3 +133,6 @@ var lxc = {
 };
 
 module.exports = lxc;
+
+var orm = lxcORM()
+setTimeout(function(){console.log(orm)}, 5000)
