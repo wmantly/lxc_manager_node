@@ -196,7 +196,7 @@ var lxcORM = function(){
 
 };
 
-lxc.prototype.callReady = function(){
+lxcORM.prototype.callReady = function(){
 	for(var idx=0; idx<this.whenReady.length; idx--){
 		this.whenReady[idx].apply(this);
 	}
