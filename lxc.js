@@ -207,7 +207,7 @@ lxcORM.prototype.ready = function(callback){
 		return callback.apply(this);
 	}
 	else{
-		this.whenReady.append(callback);
+		this.whenReady.push(callback);
 	}
 }
 
