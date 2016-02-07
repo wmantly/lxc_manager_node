@@ -188,6 +188,7 @@ var lxcORM = function(){
 	this.containers = {}
 	this.list(function(data){
 		for(var idx = data.length; idx--;){
+			console.log(data[idx].name)
 			this.containers[data[idx].name] = new Container(data[idx]);
 		}
 	});
