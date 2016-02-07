@@ -253,7 +253,7 @@ lxcORM.prototype.list= function(callback){
 // module.exports = lxc;
 
 var orm = new lxcORM()
-lxc.ready(function(){
+orm.ready(function(){
 	console.log(arguments, this);
 })
 // setTimeout(function(){console.log(orm)}, 5000)
