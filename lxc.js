@@ -185,7 +185,7 @@ Container.prototype.UpdateFromInfo = function(data){
 
 
 var lxcORM = function(){
-	containers = {}
+	var containers = {}
 	this.isReady = false;
 	this.whenReady = [];
 
