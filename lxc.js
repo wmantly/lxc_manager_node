@@ -188,7 +188,7 @@ var lxcORM = function(){
 	var containers = {}
 	this.isReady = false;
 	this.whenReady = [];
-	callReady = this.callReady;
+	var callReady = this.callReady;
 
 	this.list(function(data){
 		for(var idx = data.length; idx--;){
