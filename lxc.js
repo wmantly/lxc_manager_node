@@ -193,10 +193,13 @@ var lxcORM = function(){
 		for(var idx = data.length; idx--;){
 			console.log(data[idx].name)
 			containers[data[idx].name] = new Container(data[idx]);
+			if(idx===0){
+				this.containers = containers
+				this.callReady();
+			}
 		}
 	});
-	this.containers = containers
-	this.callReady();
+
 };
 
 lxcORM.prototype.callReady = function(){
