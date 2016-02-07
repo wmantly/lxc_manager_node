@@ -45,7 +45,7 @@ var Container = function(config){
 }
 
 Container.prototype.clone = function(callback){
-	var overlayfs = this.overlayfs : ' -B overlayfs -s ' ? '';
+	var overlayfs = this.overlayfs ? ' -B overlayfs -s ' : '';
 	
 	return sysExec('lxc-clone -o '+this.orig+ ' -n '+this.name + overlayfs, callback);
 };
