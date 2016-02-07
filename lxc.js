@@ -186,7 +186,7 @@ Container.prototype.UpdateFromInfo = function(data){
 
 var lxcORM = function(){
 	this.containers = {}
-	lxc.list(function(data){
+	this.list(function(data){
 		for(var idx = data.length; idx--;){
 			container[data[idx].name] = new Container(data[idx]);
 		}
