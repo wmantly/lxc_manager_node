@@ -54,7 +54,7 @@ Container.prototype.start = function(callback){
 	args = parseArgs({
 		required: ['name'],
 		takes: ['name'],
-		defaults: extend({}, this);
+		defaults: extend({}, this)
 		
 	});
 
