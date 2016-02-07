@@ -185,17 +185,17 @@ Container.prototype.UpdateFromInfo = function(data){
 
 
 var lxcORM = function(){
-	this.containers = {}
+	containers = {}
 	this.isReady = false;
 	this.whenReady = [];
 
 	this.list(function(data){
 		for(var idx = data.length; idx--;){
 			console.log(data[idx].name)
-			this.containers[data[idx].name] = new Container(data[idx]);
+			containers[data[idx].name] = new Container(data[idx]);
 		}
 	});
-
+	this.containers = containers
 	this.callReady();
 };
 
