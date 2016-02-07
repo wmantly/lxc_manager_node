@@ -186,21 +186,24 @@ Container.prototype.UpdateFromInfo = function(data){
 
 var lxcORM = function(){
 	this.containers = {}
+	this.isReady = false;
+	this.whenReady = [];
+
 	this.list(function(data){
 		for(var idx = data.length; idx--;){
 			console.log(data[idx].name)
 			this.containers[data[idx].name] = new Container(data[idx]);
 		}
 	});
-	this.isReady = false;
-	this.whenReady = [];
 
+	this.callReady();
 };
 
 lxcORM.prototype.callReady = function(){
 	for(var idx=0; idx<this.whenReady.length; idx--){
 		this.whenReady[idx].apply(this);
 	}
+	this.isReady = true;
 }
 
 lxcORM.prototype.ready = function(callback){
