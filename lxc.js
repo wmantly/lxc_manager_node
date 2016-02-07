@@ -188,13 +188,14 @@ var lxcORM = function(){
 	var containers = {}
 	this.isReady = false;
 	this.whenReady = [];
+	callReady = this.callReady;
 
 	this.list(function(data){
 		for(var idx = data.length; idx--;){
 			console.log(data[idx].name)
 			containers[data[idx].name] = new Container(data[idx]);
 			if(idx===0){
-				this.callReady();
+				callReady();
 			}
 		}
 	});
