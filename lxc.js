@@ -3,21 +3,21 @@ var exec = require('child_process').exec;
 var extend = require('node.extend');
 
 
-var parseArgs = function(required, takes, config){
-	var all = Object.keys(config);
+var parseArgs = function(config){
+	var all = Object.keys(config.defaults);
 	// console.log(all)
-	for(var i=required.length; i--;){
-		if(all.indexOf(required[i]) !== -1){
-			required.splice(i, 1);
+	for(var i=congif.required.length; i--;){
+		if(all.indexOf(congif.required[i]) !== -1){
+			congif.required.splice(i, 1);
 		}
 	}
 
-	if(required.length !== 0) return false;
+	if(congif.required.length !== 0) return false;
 
 	var out = '';
-	for(var i=0; i< takes.length; i++){
-		if(all.indexOf(takes[i]) !== -1){
-			out += '--'+takes[i]+' '+config[takes[i]]+' ';
+	for(var i=0; i< congif.takes.length; i++){
+		if(all.indexOf(congif.takes[i]) !== -1){
+			out += '--'+congif.takes[i]+' '+config.defaults[takes[i]]+' ';
 		}
 	}
 
