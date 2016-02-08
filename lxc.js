@@ -186,10 +186,10 @@ Container.prototype.UpdateFromInfo = function(data){
 
 
 var lxcORM = function(){
-	var that = this;
 	var containers = {};
 	this.isReady = false;
 	this.whenReady = [];
+	var that = this;
 
 	this.list(function(data){
 		for(var idx = data.length; idx--;){
