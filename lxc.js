@@ -188,17 +188,17 @@ var lxcORM = function(){
 	var containers = {}
 	this.isReady = false;
 	this.whenReady = [];
-	var callthis = this;
+	var that = this
 
 	this.list(function(data){
 		for(var idx = data.length; idx--;){
 			containers[data[idx].name] = new Container(data[idx]);
 			if(idx===0){
-				callthis.callReady();
+				that.callReady;
 			}
 		}
 	});
-	this.containers = containers
+	this.containers = containers;
 
 };
 
@@ -207,7 +207,7 @@ lxcORM.prototype.callReady = function(){
 		this.whenReady[idx].apply(this);
 	}
 	this.isReady = true;
-}
+};
 
 lxcORM.prototype.ready = function(callback){
 	if(this.isReady){
@@ -216,7 +216,7 @@ lxcORM.prototype.ready = function(callback){
 	else{
 		this.whenReady.push(callback);
 	}
-}
+};
 
 lxcORM.prototype.create = function(args, callback){
 
@@ -230,7 +230,7 @@ lxcORM.prototype.create = function(args, callback){
 	return sysExec('lxc-create '+args, callback);
 };
 
-lxcORM.prototype.list= function(callback){
+lxcORM.prototype.list = function(callback){
 	sysExec('lxc-ls --fancy', function(data){
 		var output = data.split("\n");
 		var keys = output.splice(0,1)[0].split(/\s+/).slice(0,-1);
