@@ -113,7 +113,7 @@ Container.prototype.stop = function(callback){
 		defaults: extend({}, this)
 		
 	});
-		var that = this;
+	var that = this;
 	callback = function(callback){
 		that.info();
 		return callback;
@@ -184,7 +184,7 @@ Container.prototype.info = function(callback){
 };
 
 Container.prototype.updateFromInfo = function(data){
-	var keys = Object.keys(data);
+	var keys = ['state', 'ip', 'total', 'rx', 'tx', 'link', 'kmem', 'memory', 'blkio', 'cpu', 'pid'];
 	for(var i=keys.length; i--;){
 		this[keys[i]] = data[keys[i]];
 	}
