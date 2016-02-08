@@ -195,6 +195,7 @@ var lxcORM = function(){
 		for(var idx = data.length; idx--;){
 			that.containers[data[idx].name] = new Container(data[idx]);
 			if(idx===0){
+				console.log('call ready!')
 				that.callReady;
 			}
 		}
