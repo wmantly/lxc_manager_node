@@ -6,18 +6,18 @@ var extend = require('node.extend');
 var parseArgs = function(config){
 	var all = Object.keys(config.defaults);
 	// console.log(all)
-	for(var i=congif.required.length; i--;){
-		if(all.indexOf(congif.required[i]) !== -1){
-			congif.required.splice(i, 1);
+	for(var i=config.required.length; i--;){
+		if(all.indexOf(config.required[i]) !== -1){
+			config.required.splice(i, 1);
 		}
 	}
 
-	if(congif.required.length !== 0) return false;
+	if(config.required.length !== 0) return false;
 
 	var out = '';
-	for(var i=0; i< congif.takes.length; i++){
-		if(all.indexOf(congif.takes[i]) !== -1){
-			out += '--'+congif.takes[i]+' '+config.defaults[takes[i]]+' ';
+	for(var i=0; i< config.takes.length; i++){
+		if(all.indexOf(config.takes[i]) !== -1){
+			out += '--'+config.takes[i]+' '+config.defaults[takes[i]]+' ';
 		}
 	}
 
