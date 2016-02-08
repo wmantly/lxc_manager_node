@@ -4,6 +4,7 @@ var extend = require('node.extend');
 
 
 var parseArgs = function(config){
+	console.log(config)
 	var all = Object.keys(config.defaults);
 	// console.log(all)
 	for(var i=config.required.length; i--;){
