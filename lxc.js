@@ -185,9 +185,9 @@ Container.prototype.info = function(callback){
 };
 
 Container.prototype.updateFromInfo = function(data){
-	for(var key in Object.keys(data)){
-		console.log('update key:', key);
-		this[key] = data[key];
+	var key = Object.keys(data);
+	for(var i=keys.length; i--;){
+		this[key[i]] = data[key[i]];
 	}
 
 	return this;
