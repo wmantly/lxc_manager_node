@@ -52,7 +52,7 @@ Container.prototype.clone = function(callback){
 };
 
 Container.prototype.start = function(callback){
-	var args = parseArgs({
+	args = parseArgs({
 		required: ['name'],
 		takes: ['name'],
 		defaults: extend({}, this)
@@ -63,7 +63,7 @@ Container.prototype.start = function(callback){
 };
 
 Container.prototype.startEphemeral = function(callback){
-	var args = parseArgs({
+	args = parseArgs({
 		required: ['orig'],
 		takes: ['orig', 'name', 'key', 'union-type', 'keep-data'],
 		defaults: extend({}, this)
@@ -88,7 +88,7 @@ Container.prototype.startEphemeral = function(callback){
 };
 
 Container.prototype.destroy = function(callback){
-	var args = parseArgs({
+	args = parseArgs({
 		required: ['name'],
 		takes: ['name', 'force'],
 		defaults: extend({}, this)
@@ -103,7 +103,7 @@ Container.prototype.destroy = function(callback){
 },
 
 Container.prototype.stop = function(callback){
-	var args = parseArgs({
+	args = parseArgs({
 		required: ['name'],
 		takes: ['name', 'reboot', 'nowait', 'timeout', 'kill'],
 		defaults: extend({}, this)
@@ -113,7 +113,7 @@ Container.prototype.stop = function(callback){
 };
 
 Container.prototype.freeze = function(callback){
-	var args = parseArgs({
+	args = parseArgs({
 		required: ['name'],
 		takes: ['name', 'force'],
 		defaults: extend({}, this)
@@ -127,7 +127,7 @@ Container.prototype.unfreeze = function(callback){
 };
 
 Container.prototype.info = function(callback){
-	var args = parseArgs({
+	args = parseArgs({
 		required: ['name'],
 		takes: ['name', 'reboot', 'nowait', 'timeout', 'kill'],
 		defaults: extend({}, this)
@@ -137,7 +137,7 @@ Container.prototype.info = function(callback){
 };
 
 Container.prototype.freeze = function(callback){
-	var args = parseArgs({
+	args = parseArgs({
 		required: ['name'],
 		takes: ['name', 'force'],
 		defaults: extend({}, this)
@@ -186,10 +186,10 @@ Container.prototype.UpdateFromInfo = function(data){
 
 
 var lxcORM = function(){
-	var containers = {};
+	var containers = {}
 	this.isReady = false;
 	this.whenReady = [];
-	var that = this;
+	var that = this
 
 	this.list(function(data){
 		for(var idx = data.length; idx--;){
@@ -203,10 +203,10 @@ var lxcORM = function(){
 };
 
 lxcORM.prototype.callReady = function(){
-	this.isReady = true;
 	for(var idx=0; idx<this.whenReady.length; idx--){
 		this.whenReady[idx].apply(this);
 	}
+	this.isReady = true;
 };
 
 lxcORM.prototype.ready = function(callback){
@@ -220,7 +220,7 @@ lxcORM.prototype.ready = function(callback){
 
 lxcORM.prototype.create = function(args, callback){
 
-	var args = parseArgs({
+	args = parseArgs({
 		required: ['name', 'template'],
 		takes: ['name', 'template', ' ', 'd', 'r', 'a'],
 		defaults: extend({template:'download', ' ': ' ', d: 'ubuntu', r: 'trusty', a: 'amd64'}, args)
@@ -256,4 +256,11 @@ lxcORM.prototype.list = function(callback){
 };
 
 
-module.exports = new lxcORM();
+
+module.exports = lxcORM;
+
+var orm = new lxcORM()
+orm.ready(function(){
+	console.log('calling ready', arguments, this);
+})
+// setTimeout(function(){console.log(orm)}, 5000)
