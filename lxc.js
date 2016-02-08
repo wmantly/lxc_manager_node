@@ -52,13 +52,14 @@ Container.prototype.clone = function(callback){
 };
 
 Container.prototype.start = function(callback){
-	var that = this;
 	var args = parseArgs({
 		required: ['name'],
 		takes: ['name'],
 		defaults: extend({}, this)
 		
 	});
+
+	var that = this;
 	callback = function(callback){
 		that.info();
 		return callback;
@@ -113,6 +114,11 @@ Container.prototype.stop = function(callback){
 		defaults: extend({}, this)
 		
 	});
+		var that = this;
+	callback = function(callback){
+		that.info();
+		return callback;
+	};
 	return sysExec('lxc-stop '+args, callback);
 };
 
@@ -158,7 +164,7 @@ Container.prototype.info = function(callback){
 	var that = this;
 
 	return sysExec('lxc-info --name '+this.name, function(data){
-		console.log('info', arguments);
+		// console.log('info', arguments);
 		if(data.match("doesn't exist")){
 			return callback({state: 'NULL'});
 		}
@@ -199,7 +205,7 @@ var lxcORM = function(){
 		for(var idx = data.length; idx--;){
 			that.containers[data[idx].name] = new Container(data[idx]);
 			if(idx===0){
-				console.log('call ready!')
+				// console.log('call ready!')
 				that.callReady();
 			}
 		}
