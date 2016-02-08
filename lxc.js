@@ -177,15 +177,16 @@ Container.prototype.info = function(callback){
 			info[temp[0].toLowerCase().trim()] = temp[1].trim();
 		}
 
-		that.UpdateFromInfo(info);
+		that.updateFromInfo(info);
 
 		var args = [info].concat(Array.prototype.slice.call(arguments, 1));
-		return callback.apply(this, args);
+		return callback.apply(that, args);
 	});
 };
 
-Container.prototype.UpdateFromInfo = function(data){
+Container.prototype.updateFromInfo = function(data){
 	for(var key in Object.keys(data)){
+		console.log('update key:', key);
 		this[key] = data[key];
 	}
 
