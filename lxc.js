@@ -18,7 +18,7 @@ var parseArgs = function(config){
 	var out = '';
 	for(var i=0; i< config.takes.length; i++){
 		if(all.indexOf(config.takes[i]) !== -1){
-			out += '--'+config.takes[i]+' '+config.defaults[takes[i]]+' ';
+			out += '--'+config.takes[i]+' '+config.defaults[config.takes[i]]+' ';
 		}
 	}
 
