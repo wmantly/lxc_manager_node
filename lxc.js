@@ -4,7 +4,6 @@ var extend = require('node.extend');
 
 
 var parseArgs = function(config){
-	console.log(config)
 	var all = Object.keys(config.defaults);
 	// console.log(all)
 	for(var i=config.required.length; i--;){
@@ -185,7 +184,7 @@ Container.prototype.info = function(callback){
 };
 
 Container.prototype.updateFromInfo = function(data){
-	var key = Object.keys(data);
+	var keys = Object.keys(data);
 	for(var i=keys.length; i--;){
 		this[key[i]] = data[key[i]];
 	}
