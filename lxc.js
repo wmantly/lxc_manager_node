@@ -162,6 +162,7 @@ Container.prototype.unfreeze = function(callback){
 
 Container.prototype.info = function(callback){
 	var that = this;
+	callback = callback || function(){}
 
 	return sysExec('lxc-info --name '+this.name, function(data){
 		// console.log('info', arguments);
