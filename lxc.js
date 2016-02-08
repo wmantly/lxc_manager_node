@@ -40,8 +40,8 @@ function sysExec(command, callback){
 var Container = function(config){
 	this.name = config.name;
 	this.state = config.state || 'STOPPED';
-	this.ip = config.ip || (config.ipv4 || '').replace('-', '') || null ;
-	this.overlayfs = null
+	this.ip = config.ip || (config.ipv4 || '').replace('-', '') || null;
+	this.overlayfs = undefined; 
 }
 
 Container.prototype.clone = function(callback){
