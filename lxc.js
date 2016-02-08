@@ -52,13 +52,17 @@ Container.prototype.clone = function(callback){
 };
 
 Container.prototype.start = function(callback){
+	var that = this;
 	var args = parseArgs({
 		required: ['name'],
 		takes: ['name'],
 		defaults: extend({}, this)
 		
 	});
-
+	callback = function(callback){
+		that.info();
+		return callback;
+	};
 	return sysExec('lxc-start --daemon '+args, callback);
 };
 
@@ -151,6 +155,8 @@ Container.prototype.unfreeze = function(callback){
 };
 
 Container.prototype.info = function(callback){
+	var that = this;
+
 	return sysExec('lxc-info --name '+this.name, function(data){
 		console.log('info', arguments);
 		if(data.match("doesn't exist")){
@@ -163,6 +169,9 @@ Container.prototype.info = function(callback){
 			var temp = data[i].split(/\:\s+/);
 			info[temp[0].toLowerCase().trim()] = temp[1].trim();
 		}
+
+		that.UpdateFromInfo(info);
+
 		var args = [info].concat(Array.prototype.slice.call(arguments, 1));
 		return callback.apply(this, args);
 	});
