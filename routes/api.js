@@ -8,7 +8,26 @@ var client = redis.createClient();
 var request = require('request');
 var lxc = require('../lxc');
 
+
+var timeoutEvents = {};
+var ip2name = {};
+
+var lxcTimeout = function(ip, time){
+	var name = ip2name[ip];
+	console.log(name)
+	time = time || 100000;
+	var keys = Object.keys(timeoutEvents)
+	if(keys.indexOf(name) !== -1){
+		clearTimeout(timeoutEvents[name])
+	}
+	timeoutEvents[name] = setTimeout(function(){
+		lxc.stop(name);
+	}, time);
+}
+
+
 var runner = function(req, res, ip){
+	lxcTimeout(ip, 30000);
 	return request.post({url:'http://'+ip, form: req.body}, function(error, response, body){
 		body = JSON.parse(body);
 		body['ip'] = ip.replace('10.0.', '');
@@ -113,6 +132,7 @@ router.post('/run/:ip?', function doRun(req, res, next){
 		}else{
 			var name = 'u1-'+(Math.random()*100).toString().replace('.','');
 			return lxc.startEphemeral(name, 'u1', function(data){
+				ip2name[data.ip] = name;
 				return runner(req, res, data.ip);
 			});
 		}
