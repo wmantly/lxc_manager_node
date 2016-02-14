@@ -21,6 +21,7 @@ var lxcTimeout = function(ip, time){
 		clearTimeout(timeoutEvents[name])
 	}
 	timeoutEvents[name] = setTimeout(function(){
+		console.log('killing:', name)
 		lxc.stop(name);
 	}, time);
 }
