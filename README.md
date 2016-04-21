@@ -53,6 +53,7 @@ Clone the repo and set it up:
 git clone https://github.com/wmantly/lxc_manager_node.git
 cd lxc_manager_node
 npm install
+```
 
 Its safer at this point to reboot the system, `exit` back to the privlaged user and `reboot`
 
