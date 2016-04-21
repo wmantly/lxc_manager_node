@@ -57,7 +57,7 @@ npm install
 
 Its safer at this point to reboot the system, `exit` back to the privlaged user and `reboot`
 
-**SSH or log dercily into the `virt` user!!!** this will not if you use su!
+**SSH or log dercily into the `virt` user!!!** this will not work if you use su to get into the user!
 
 Now you can can create a test container:
 ```bash
