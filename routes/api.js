@@ -29,7 +29,7 @@ var lxcTimeout = function(ip, time){
 
 var runner = function(req, res, ip){
 	lxcTimeout(ip);
-	return request.post({url:'http://'+ip, form: req.body}, function(error, response, body){
+	return request.post({url:'http://'+ip, body: JSON.stringify({code: req.params.code}) }, function(error, response, body){
 		body = JSON.parse(body);
 		body['ip'] = ip.replace('10.0.', '');
 		return res.json(body);
@@ -115,8 +115,6 @@ router.get('/list', function(req, res, next) {
 
 router.post('/run/:ip?', function doRun(req, res, next){
 	// check if server is
-
-	console.log(req);
 
 	return lxc.list(function(data){
 		if(!req.params.ip) data = [];
