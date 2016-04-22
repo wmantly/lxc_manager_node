@@ -116,7 +116,7 @@ router.get('/list', function(req, res, next) {
 router.post('/run/:ip?', function doRun(req, res, next){
 	// check if server is
 
-	console.log(req.body);
+	console.log(req);
 
 	return lxc.list(function(data){
 		if(!req.params.ip) data = [];
