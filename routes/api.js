@@ -28,9 +28,10 @@ var lxcTimeout = function(ip, time){
 
 
 var runner = function(req, res, ip){
+	console.log('ip:', ip);
 	lxcTimeout(ip);
-	console.log('code to run:\n', req.body);
-	return request.post({url:'http://'+ip, body: req.body }, function(error, response, body){
+	console.log('code to run:\n', req.body.code);
+	return request.post({url:'http://'+ip, body: {code: req.body.code} }, function(error, response, body){
 		console.log(body);
 		// body = JSON.parse(body);
 		body['ip'] = ip.replace('10.0.', '');
