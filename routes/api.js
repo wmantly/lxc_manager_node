@@ -32,7 +32,7 @@ var runner = function(req, res, ip){
 	lxcTimeout(ip);
 	console.log('code to run:\n', req.body.code);
 	return request.post({url:'http://'+ip, body: JSON.stringify({code: req.body.code}) }, function(error, response, body){
-		console.log(response);
+		console.log('arguments:\n', arguments);
 		// body = JSON.parse(body);
 		body['ip'] = ip.replace('10.0.', '');
 		return res.json(body);
