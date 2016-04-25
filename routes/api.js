@@ -176,15 +176,17 @@ router.post('/run/:ip?', function doRun(req, res, next){
 // freeMem: 420,472 totalmem 513,818,624 usedMem: 100
 var startAll = function(){
 	getFreeMem(function(freeMem){
-		var usedMemPrecent = Math.round(( (totalMem-freeMem) /totalMem)*100);
-		console.log('freeMem:', freeMem, 'totalmem', totalMem, 'usedMemPrecent:', usedMemPrecent);
-		if(usedMemPrecent < 81 ){
+		var usedMemPercent = Math.round(( (totalMem-freeMem) /totalMem)*100);
+		console.log('freeMem:', freeMem, 'totalmem', totalMem, 'usedMemPercent:', usedMemPercent);
+		if(usedMemPercent < 81 ){
 			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
 			return lxc.startEphemeral(name, 'crunner', function(data){
 				ip2name[data.ip] = name;
 				availContainers.push(data.ip);
 				return startAll();
 			});
+		}else{
+			console.log('using', usedMemPercent, 'percent memory, stopping container creation!');
 		}
 	});
 }
