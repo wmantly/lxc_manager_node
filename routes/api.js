@@ -7,10 +7,35 @@ var redis = require("redis");
 var client = redis.createClient();
 var request = require('request');
 var lxc = require('../lxc');
+var os = require('os');
+var spawn = require('child_process').spawn;
 
 
+var totalMem = os.totalmem();
 var timeoutEvents = {};
 var ip2name = {};
+var availContainers = [];
+var usedContainers = []; 
+
+var getFreeMem = function(callback){
+
+	var prc = spawn('free',  ['-b']);
+
+	prc.stdout.setEncoding('utf8');
+	prc.stdout.on('data', function (data) {
+	  var str = data.toString()
+	  var lines = str.split(/\n/g);
+	  for(var i = 0; i < lines.length; i++) {
+	     lines[i] = lines[i].split(/\s+/);
+	  }
+	  var freeMem = Number(lines[2][3]);
+	  return callback(freeMem);
+	});
+
+	prc.on('close', function (code) {
+	});
+};
+
 
 var lxcTimeout = function(ip, time){
 	var name = ip2name[ip];
@@ -137,14 +162,31 @@ router.post('/run/:ip?', function doRun(req, res, next){
 		if(found){
 			return runner(req, res, ip)
 		}else{
-			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
-			return lxc.startEphemeral(name, 'crunner', function(data){
-				ip2name[data.ip] = name;
-				return runner(req, res, data.ip);
-			});
+			return runner(req, res, availContainers.pop());
 		}
 	});
 
 });
+
+// freeMem: 97700 totalmem 513818624 usedMem: 0
+// freeMem: 420,472 totalmem 513,818,624 usedMem: 100
+var startAll = function(){
+	getFreeMem(function(freeMem){
+		var usedMemPercent = Math.round(( (totalMem-freeMem) /totalMem)*100);
+		console.log('freeMem:', freeMem, 'totalmem', totalMem, 'usedMemPercent:', usedMemPercent);
+		if(usedMemPercent < 81 ){
+			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
+			return lxc.startEphemeral(name, 'crunner', function(data){
+				ip2name[data.ip] = name;
+				availContainers.push(data.ip);
+				return startAll();
+			});
+		}else{
+			console.log('using', usedMemPercent, 'percent memory, stopping container creation!', availContainers.length, 'created');
+		}
+	});
+}
+
+startAll();
 
 module.exports = router;
