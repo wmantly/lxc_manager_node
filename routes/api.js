@@ -176,7 +176,7 @@ router.post('/run/:ip?', function doRun(req, res, next){
 // freeMem: 420,472 totalmem 513,818,624 usedMem: 100
 var startAll = function(){
 	getFreeMem(function(freeMem){
-		var usedMemPrecent = Math.round((freeMem/totalMem)*100);
+		var usedMemPrecent = Math.round(( (totalMem-freeMem) /totalMem)*100);
 		console.log('freeMem:', freeMem, 'totalmem', totalMem, 'usedMemPrecent:', usedMemPrecent);
 		if(usedMemPrecent < 81 ){
 			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
