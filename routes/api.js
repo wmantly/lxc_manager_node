@@ -8,8 +8,35 @@ var client = redis.createClient();
 var request = require('request');
 var lxc = require('../lxc');
 
+
+var timeoutEvents = {};
+var ip2name = {};
+
+var lxcTimeout = function(ip, time){
+	var name = ip2name[ip];
+	console.log(name)
+	time = time || 900000; // 15 minutes
+	var keys = Object.keys(timeoutEvents)
+	if(keys.indexOf(name) !== -1){
+		clearTimeout(timeoutEvents[name])
+	}
+	timeoutEvents[name] = setTimeout(function(){
+		lxc.stop(name);
+	}, time);
+}
+
+
 var runner = function(req, res, ip){
-	return request.post({url:'http://'+ip, form: req.body}, function(error, response, body){
+	lxcTimeout(ip);
+
+	var httpOptions = {
+		url:'http://' + ip + ':15000',
+		body: JSON.stringify({
+			code: req.body.code
+		})
+	};
+
+	return request.post(httpOptions, function(error, response, body){
 		body = JSON.parse(body);
 		body['ip'] = ip.replace('10.0.', '');
 		return res.json(body);
@@ -32,7 +59,6 @@ var addToRedis = function(){
 
 router.get('/start/:name', function(req, res, next){
 	return lxc.start(req.params.name, function(data){
-		console.log('start', arguments);
 		if(!data){
 			return res.json({status: 500, name: req.params.name, message: data});
 		}else{
@@ -111,8 +137,9 @@ router.post('/run/:ip?', function doRun(req, res, next){
 		if(found){
 			return runner(req, res, ip)
 		}else{
-			var name = 'u1-'+(Math.random()*100).toString().replace('.','');
-			return lxc.startEphemeral(name, 'u1', function(data){
+			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
+			return lxc.startEphemeral(name, 'crunner', function(data){
+				ip2name[data.ip] = name;
 				return runner(req, res, data.ip);
 			});
 		}
