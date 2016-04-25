@@ -21,16 +21,13 @@ var lxcTimeout = function(ip, time){
 		clearTimeout(timeoutEvents[name])
 	}
 	timeoutEvents[name] = setTimeout(function(){
-		console.log('killing:', name)
 		lxc.stop(name);
 	}, time);
 }
 
 
 var runner = function(req, res, ip){
-	console.log('ip:', ip);
 	lxcTimeout(ip);
-	console.log('code to run:', '\n'+req.body.code);
 
 	var httpOptions = {
 		url:'http://' + ip + ':15000',
@@ -40,7 +37,6 @@ var runner = function(req, res, ip){
 	};
 
 	return request.post(httpOptions, function(error, response, body){
-		console.log('body:\n', body);
 		body = JSON.parse(body);
 		body['ip'] = ip.replace('10.0.', '');
 		return res.json(body);
@@ -63,7 +59,6 @@ var addToRedis = function(){
 
 router.get('/start/:name', function(req, res, next){
 	return lxc.start(req.params.name, function(data){
-		console.log('start', arguments);
 		if(!data){
 			return res.json({status: 500, name: req.params.name, message: data});
 		}else{
