@@ -7,10 +7,35 @@ var redis = require("redis");
 var client = redis.createClient();
 var request = require('request');
 var lxc = require('../lxc');
+var os = require('os');
+var spawn = require('child_process').spawn;
 
 
+var totalMem = os.totalmem();
 var timeoutEvents = {};
 var ip2name = {};
+var availContainers = [];
+var usedContainers = []; 
+
+var getFreeMem = function(callback){
+
+	var prc = spawn('free',  []);
+
+	prc.stdout.setEncoding('utf8');
+	prc.stdout.on('data', function (data) {
+	  var str = data.toString()
+	  var lines = str.split(/\n/g);
+	  for(var i = 0; i < lines.length; i++) {
+	     lines[i] = lines[i].split(/\s+/);
+	  }
+	  var freeMem = Number(lines[2][3]);
+	  return callback(freeMem);
+	});
+
+	prc.on('close', function (code) {
+	});
+};
+
 
 var lxcTimeout = function(ip, time){
 	var name = ip2name[ip];
@@ -146,5 +171,14 @@ router.post('/run/:ip?', function doRun(req, res, next){
 	});
 
 });
+
+var startAll = function(){
+	getFreeMem(function(freeMem){
+		var usedMem = Math.round((freeMem/totalmem)*100);
+		console.log(usedMem);
+	});
+}
+
+startAll();
 
 module.exports = router;
