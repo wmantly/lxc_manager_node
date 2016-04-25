@@ -162,11 +162,7 @@ router.post('/run/:ip?', function doRun(req, res, next){
 		if(found){
 			return runner(req, res, ip)
 		}else{
-			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
-			return lxc.startEphemeral(name, 'crunner', function(data){
-				ip2name[data.ip] = name;
-				return runner(req, res, data.ip);
-			});
+			return runner(req, res, availContainers.pop());
 		}
 	});
 
