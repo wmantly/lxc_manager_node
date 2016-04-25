@@ -172,9 +172,10 @@ router.post('/run/:ip?', function doRun(req, res, next){
 
 });
 
+// freeMem: 97700 totalmem 513818624 usedMem: 0
 var startAll = function(){
 	getFreeMem(function(freeMem){
-		var usedMem = Math.round((freeMem/totalMem)*100);
+		var usedMem = Math.round(((totalMem-freeMem)/totalMem)*100);
 		console.log('freeMem:', freeMem, 'totalmem', totalMem, 'usedMem:', usedMem);
 	});
 }
