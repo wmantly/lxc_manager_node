@@ -175,7 +175,7 @@ router.post('/run/:ip?', function doRun(req, res, next){
 var startAll = function(){
 	getFreeMem(function(freeMem){
 		var usedMem = Math.round((freeMem/totalMem)*100);
-		console.log(usedMem);
+		console.log('freeMem:', freeMem, 'totalmem', totalMem, 'usedMem:', usedMem);
 	});
 }
 
