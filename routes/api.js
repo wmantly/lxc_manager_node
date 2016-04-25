@@ -14,7 +14,7 @@ var ip2name = {};
 
 var lxcTimeout = function(ip, time){
 	var name = ip2name[ip];
-	console.log(name)
+	console.log(name);
 	time = time || 900000; // 15 minutes
 	var keys = Object.keys(timeoutEvents)
 	if(keys.indexOf(name) !== -1){
@@ -30,8 +30,13 @@ var lxcTimeout = function(ip, time){
 var runner = function(req, res, ip){
 	console.log('ip:', ip);
 	lxcTimeout(ip);
-	console.log('code to run:\n', req.body.code);
-	return request.post({url:'http://'+ip, body: JSON.stringify({code: req.body.code}) }, function(error, response, body){
+	console.log('code to run:', '\n'+req.body.code);
+	return request.post({
+		url: 'http://'+ip+':15000',
+		body: JSON.stringify({
+			code: req.body.code
+		})
+	}, function(error, response, body){
 		console.log('arguments:\n', arguments);
 		// body = JSON.parse(body);
 		body['ip'] = ip.replace('10.0.', '');
