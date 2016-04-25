@@ -186,7 +186,7 @@ var startAll = function(){
 				return startAll();
 			});
 		}else{
-			console.log('using', usedMemPercent, 'percent memory, stopping container creation!' availContainers.length, 'created');
+			console.log('using', usedMemPercent, 'percent memory, stopping container creation!', availContainers.length, 'created');
 		}
 	});
 }
