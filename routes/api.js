@@ -19,7 +19,7 @@ var usedContainers = [];
 
 var getFreeMem = function(callback){
 
-	var prc = spawn('free -b',  []);
+	var prc = spawn('free',  ['-b']);
 
 	prc.stdout.setEncoding('utf8');
 	prc.stdout.on('data', function (data) {
