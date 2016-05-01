@@ -33,15 +33,6 @@ function sysExec(command, callback){
 
 var getFreeMem = function(callback){
 
-	var parseFree =  function (data) {
-	  var str = data.toString()
-	  var lines = str.split(/\n/g);
-	  for(var i = 0; i < lines.length; i++) {
-	     lines[i] = lines[i].split(/\s+/);
-	  }
-	  var freeMem = Number(lines[2][3]);
-	  return callback(freeMem);
-	}
 	return sysExec("python3 -c \"a=`head /proc/meminfo | grep MemAvail | grep -Po '\d+'`;t=`head /proc/meminfo | grep MemTotal | grep -Po '\d+'`;print(round(((t-a) / t)*100, 2))\"", function(data) {
 		return parseFree(data, callback);
 	});
