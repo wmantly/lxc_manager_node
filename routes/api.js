@@ -158,7 +158,7 @@ var startAll = function(){
 
 		if(usedMemPercent < 85 ){
 			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
-			return lxc.startEphemeral(name, 'crunner', function(data){
+			return lxc.startEphemeral(name, 'crunner0', function(data){
 				ip2name[data.ip] = name;
 				availContainers.push(data.ip);
 				return startAll();
