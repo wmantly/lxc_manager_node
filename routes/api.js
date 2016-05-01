@@ -7,22 +7,33 @@ var redis = require("redis");
 var client = redis.createClient();
 var request = require('request');
 var lxc = require('../lxc');
-var os = require('os');
-var spawn = require('child_process').spawn;
 
 
 var totalMem = os.totalmem();
 var timeoutEvents = {};
 var ip2name = {};
 var availContainers = [];
-var usedContainers = []; 
+var usedContainers = [];
+
+
+var exec = require('child_process').exec;
+
+function sysExec(command, callback){
+	command = 'ssh virt@104.236.77.157 ' + command;
+	// command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command;
+
+	return exec(command, (function(callback){
+		return function(err,data,stderr){
+			if(callback){
+				return callback(data, err, stderr);
+			}
+		}
+	})(callback));
+};
 
 var getFreeMem = function(callback){
 
-	var prc = spawn('free',  ['-b']);
-
-	prc.stdout.setEncoding('utf8');
-	prc.stdout.on('data', function (data) {
+	var parseFree =  function (data) {
 	  var str = data.toString()
 	  var lines = str.split(/\n/g);
 	  for(var i = 0; i < lines.length; i++) {
@@ -30,9 +41,9 @@ var getFreeMem = function(callback){
 	  }
 	  var freeMem = Number(lines[2][3]);
 	  return callback(freeMem);
-	});
-
-	prc.on('close', function (code) {
+	}
+	return sysExec('free -b ', function(data) {
+		return parseFree(data, callback);
 	});
 };
 
@@ -71,15 +82,15 @@ var runner = function(req, res, ip){
 
 var addToRedis = function(){
 	lxc.info(req.params.name, null, function(data){
-			var domain = req.query.domain || 'vm42.us';
-			domain = req.params.name+'.'+domain;
-			client.SADD("hosts", domain, function(){});
-			
-			var ip = data.ip + ':5000';
-			client.HSET(domain, "ip", ip, redis.print);
-			client.HSET(domain, "updated", (new Date).getTime(), redis.print);
-			client.hset(domain, "include", "proxy.include");
-			return res.json({status: 200, info: data});
+		var domain = req.query.domain || 'vm42.us';
+		domain = req.params.name+'.'+domain;
+		client.SADD("hosts", domain, function(){});
+		
+		var ip = data.ip + ':5000';
+		client.HSET(domain, "ip", ip, redis.print);
+		client.HSET(domain, "updated", (new Date).getTime(), redis.print);
+		client.hset(domain, "include", "proxy.include");
+		return res.json({status: 200, info: data});
 	 });
 };
 
