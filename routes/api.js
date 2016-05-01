@@ -14,7 +14,8 @@ var usedContainers = [];
 var exec = require('child_process').exec;
 
 function sysExec(command, callback){
-	command = 'ssh virt@104.236.77.157 ' + command;
+	command = new Buffer(command).toString('base64')
+	command = 'ssh virt@104.236.77.157 "echo ' + command + '|base64 --decode|bash"';
 	// command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command;
 
 	return exec(command, (function(callback){
