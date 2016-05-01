@@ -42,7 +42,7 @@ var getFreeMem = function(callback){
 	  var freeMem = Number(lines[2][3]);
 	  return callback(freeMem);
 	}
-	return sysExec('free -b ', function(data) {
+	return sysExec("python3 -c \"a=`head /proc/meminfo | grep MemAvail | grep -Po '\d+'`;t=`head /proc/meminfo | grep MemTotal | grep -Po '\d+'`;print(round(((t-a) / t)*100, 2))\"", function(data) {
 		return parseFree(data, callback);
 	});
 };
@@ -183,10 +183,9 @@ router.post('/run/:ip?', function doRun(req, res, next){
 // freeMem: 97700 totalmem 513818624 usedMem: 0
 // freeMem: 420,472 totalmem 513,818,624 usedMem: 100
 var startAll = function(){
-	getFreeMem(function(freeMem){
-		var usedMemPercent = Math.round(( (totalMem-freeMem) /totalMem)*100);
-		console.log('freeMem:', freeMem, 'totalmem', totalMem, 'usedMemPercent:', usedMemPercent);
-		if(usedMemPercent < 81 ){
+	getFreeMem(function(usedMemPercent){
+
+		if(usedMemPercent < 85 ){
 			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
 			return lxc.startEphemeral(name, 'crunner', function(data){
 				ip2name[data.ip] = name;
