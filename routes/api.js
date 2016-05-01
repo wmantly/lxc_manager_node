@@ -28,9 +28,7 @@ function sysExec(command, callback){
 
 var getFreeMem = function(callback){
 
-	return sysExec("python3 -c \"a=`head /proc/meminfo | grep MemAvail | grep -Po '\d+'`;t=`head /proc/meminfo | grep MemTotal | grep -Po '\d+'`;print(round(((t-a) / t)*100, 2))\"", function(data) {
-		return parseFree(data, callback);
-	});
+	return sysExec("python3 -c \"a=`head /proc/meminfo | grep MemAvail | grep -Po '\d+'`;t=`head /proc/meminfo | grep MemTotal | grep -Po '\d+'`;print(round(((t-a) / t)*100, 2))\"", callback);
 };
 
 
