@@ -47,6 +47,7 @@ var lxcTimeout = function(ip, time){
 	}
 	timeoutEvents[name] = setTimeout(function(){
 		lxc.stop(name);
+		startAll();
 	}, time);
 }
 

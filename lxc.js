@@ -2,7 +2,8 @@
 var exec = require('child_process').exec;
 
 function sysExec(command, callback){
-	command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command;
+	command = 'ssh virt@104.236.77.157 ' + command;
+	// command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command;
 
 	return exec(command, (function(callback){
 		return function(err,data,stderr){
