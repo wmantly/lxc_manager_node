@@ -3,8 +3,6 @@
 var express = require('express');
 var router = express.Router();
 var extend = require('node.extend');
-var redis = require("redis");
-var client = redis.createClient();
 var request = require('request');
 var lxc = require('../lxc');
 
@@ -66,20 +64,6 @@ var runner = function(req, res, ip){
 		body['ip'] = ip.replace('10.0.', '');
 		return res.json(body);
 	});
-};
-
-var addToRedis = function(){
-	lxc.info(req.params.name, null, function(data){
-		var domain = req.query.domain || 'vm42.us';
-		domain = req.params.name+'.'+domain;
-		client.SADD("hosts", domain, function(){});
-		
-		var ip = data.ip + ':5000';
-		client.HSET(domain, "ip", ip, redis.print);
-		client.HSET(domain, "updated", (new Date).getTime(), redis.print);
-		client.hset(domain, "include", "proxy.include");
-		return res.json({status: 200, info: data});
-	 });
 };
 
 router.get('/start/:name', function(req, res, next){
