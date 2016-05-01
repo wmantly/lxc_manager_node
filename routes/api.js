@@ -8,13 +8,10 @@ var client = redis.createClient();
 var request = require('request');
 var lxc = require('../lxc');
 
-
-var totalMem = os.totalmem();
 var timeoutEvents = {};
 var ip2name = {};
 var availContainers = [];
 var usedContainers = [];
-
 
 var exec = require('child_process').exec;
 
