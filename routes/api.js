@@ -156,7 +156,7 @@ router.post('/run/:ip?', function doRun(req, res, next){
 var startAll = function(){
 	getFreeMem(function(usedMemPercent){
 
-		if(usedMemPercent < 85 ){
+		if(usedMemPercent < 81 ){
 			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
 			return lxc.startEphemeral(name, 'crunner0', function(data){
 				ip2name[data.ip] = name;
