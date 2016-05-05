@@ -1,7 +1,7 @@
 'use strict';
 var exec = require('child_process').exec;
 
-function sysExec(command, callback, ip){
+function sysExec(command, ip, callback){
 	ip = ip || '104.236.77.157';
 	command = new Buffer(command).toString('base64')
 	command = 'ssh virt@'+ ip + ' "echo ' + command + '|base64 --decode|bash"';
