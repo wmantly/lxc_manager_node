@@ -63,6 +63,7 @@ var runner = function(req, res, container){
 
 var startWorkers = function(clworker, stopPercent){
 	stopPercent = stopPercent || 81;
+	console.log(clworker)
 	getFreeMem(function(usedMemPercent, clworker){
 		if(usedMemPercent < 81 ){
 			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
