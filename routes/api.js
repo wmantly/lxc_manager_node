@@ -76,7 +76,7 @@ var startWorkers = function(clworker, stopPercent){
 					worker: clworker,
 					label: clworker.name+':'+name
 				});
-				return startWorkers(clworker);
+				return setTimeout(startWorkers(clworker),0);
 			});
 		}else{
 			console.log('using', usedMemPercent, 'percent memory, stopping container creation!', availContainers.length, 'created');
