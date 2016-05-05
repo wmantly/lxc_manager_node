@@ -70,8 +70,8 @@ var startWorkers = function(clworker, stopPercent){
 				availContainers.push({
 					ip: data.ip,
 					name: name,
-					worker: worker,
-					label: worker.name+':'+name
+					worker: clworker,
+					label: clworker.name+':'+name
 				});
 				return startWorkers(clworker);
 			});
