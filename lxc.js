@@ -16,31 +16,9 @@ function sysExec(command, callback, ip){
 	})(callback));
 };
 
-var Container = function(config){
-	this.name = config.name;
-	this.state = config.state;
-	this.ip = config.ip || (config.ipv4 || '').replace('-', '') || null ;
-}
-
-Container.prototype.autoShutDown = function(time) {
-	time = time || 600000;
-
-	// this.__shutDownTimeout = setTimeout(function(){}, this.autoShutDown):
-};
-
-var lxcORM = function(){
-	var orm = {}
-	lxc.list(function(data){
-		for(var idx = data.length; idx--;){
-			orm[data[idx].name] = new Container(data[idx]);
-		}
-	});
-
-	return orm
-};
-
 var lxc = {
 	exec: sysExec,
+
 	create: function(name, template, config, callback){
 		return sysExec('lxc-create -n '+name+' -t '+template, callback);
 	},
@@ -80,8 +58,8 @@ var lxc = {
 		});
 	},
 
-	stop: function(name, callback){
-		return sysExec('lxc-stop -n '+ name, callback);
+	stop: function(name, callback, ip){
+		return sysExec('lxc-stop -n '+ name, ip, callback);
 	},
 
 	freeze: function(name, callback){
@@ -137,6 +115,3 @@ var lxc = {
 };
 
 module.exports = lxc;
-
-var orm = lxcORM()
-setTimeout(function(){console.log(orm)}, 5000)
