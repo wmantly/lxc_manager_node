@@ -65,6 +65,7 @@ var startWorkers = function(clworker, stopPercent){
 	stopPercent = stopPercent || 81;
 	console.log(clworker)
 	getFreeMem(clworker.ip, function(usedMemPercent, clworker){
+		console.log(arguments)
 		if(usedMemPercent < 81 ){
 			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
 			return lxc.startEphemeral(name, 'crunner0', clworker.ip, function(data){
