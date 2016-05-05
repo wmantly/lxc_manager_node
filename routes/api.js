@@ -81,7 +81,7 @@ var startWorkers = function(clworker, stopPercent){
 	});
 };
 
-startWorkers(worker.clworker0);
+startWorkers(workers.clworker0);
 
 router.get('/start/:name', function(req, res, next){
 	return lxc.start(req.params.name, function(data){
