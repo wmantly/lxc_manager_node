@@ -146,7 +146,7 @@ router.get('/info/:name', function(req, res, next){
 });
 
 router.get('/list', function(req, res, next) {
-	return lxc.list(ip, function(data){
+	return lxc.list(workers.clworker0.ip, function(data){
 		return res.json(data);
 	});
 });
