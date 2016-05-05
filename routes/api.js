@@ -71,7 +71,7 @@ var startWorkers = function(clworker, stopPercent){
 					ip: data.ip,
 					name: name,
 					worker: worker,
-					label: worker.name+':'+name;
+					label: worker.name+':'+name
 				});
 				return startWorkers(clworker);
 			});
