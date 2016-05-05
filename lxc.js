@@ -40,7 +40,7 @@ var lxc = {
 		return sysExec('lxc-start --name '+name+' --daemon', callback);
 	},
 
-	startEphemeral: function(name, base_name, callback){
+	startEphemeral: function(name, base_name, ip, callback){
 		var command = 'lxc-start-ephemeral -o '+base_name+ ' -n '+name +' --union-type overlayfs -d';
 		return sysExec(command, function(data){
 			console.log('startEphemeral', arguments);
