@@ -7,52 +7,48 @@ var request = require('request');
 var lxc = require('../lxc');
 
 var timeoutEvents = {};
-var ip2name = {};
+var label2container = {};
 var availContainers = [];
 var usedContainers = [];
-
-var exec = require('child_process').exec;
-
-function sysExec(command, callback){
-	command = new Buffer(command).toString('base64')
-	command = 'ssh virt@104.236.77.157 "echo ' + command + '|base64 --decode|bash"';
-	// command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command;
-
-	return exec(command, (function(callback){
-		return function(err,data,stderr){
-			if(callback){
-				return callback(data, err, stderr);
-			}
-		}
-	})(callback));
+var workers = { 
+	clworker0: {
+		ip: '104.236.77.157',
+		name: 'clworker0'
+	}
 };
 
-var getFreeMem = function(callback){
+var getFreeMem = function(ip, callback){
 
-	return sysExec("python3 -c \"a=`head /proc/meminfo | grep MemAvail | grep -Po '\d+'`;t=`head /proc/meminfo | grep MemTotal | grep -Po '\d+'`;print(round(((t-a) / t)*100, 2))\"", callback);
+	return lxc.sysExec(
+		"python3 -c \"a=`head /proc/meminfo|grep MemAvail|grep -Po '\d+'`;t=`head /proc/meminfo|grep MemTotal|grep -Po '\d+'`;print(round(((t-a)/t)*100, 2))\"",
+		ip,
+		callback
+	);
 };
 
-
-var lxcTimeout = function(ip, time){
-	var name = ip2name[ip];
-	console.log(name)
+var lxcTimeout = function(container, time){
 	time = time || 900000; // 15 minutes
 	var keys = Object.keys(timeoutEvents)
-	if(keys.indexOf(name) !== -1){
-		clearTimeout(timeoutEvents[name])
+
+	if(keys.indexOf(container.label) !== -1){
+		clearTimeout(timeoutEvents[container.label])
 	}
-	timeoutEvents[name] = setTimeout(function(){
-		lxc.stop(name);
-		startAll();
+
+	return timeoutEvents[container.label] = setTimeout(function(){
+		lxc.stop(name, container);
+		return startAll(container.worker);
 	}, time);
 }
 
 
-var runner = function(req, res, ip){
-	lxcTimeout(ip);
+var runner = function(req, res, container){
+	lxcTimeout(container);
 
 	var httpOptions = {
-		url:'http://' + ip + ':15000',
+		url: 'http://' + container.worker.ip,
+		headers: {
+			host: container.name
+		},
 		body: JSON.stringify({
 			code: req.body.code
 		})
@@ -60,15 +56,41 @@ var runner = function(req, res, ip){
 
 	return request.post(httpOptions, function(error, response, body){
 		body = JSON.parse(body);
-		body['ip'] = ip.replace('10.0.', '');
+		body['ip'] = container.label;
 		return res.json(body);
 	});
 };
 
+var startWorkers = function(clworker, stopPercent){
+	stopPercent = stopPercent || 81;
+	getFreeMem(function(usedMemPercent, clworker){
+		if(usedMemPercent < 81 ){
+			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
+			return lxc.startEphemeral(name, 'crunner0', clworker, function(data){
+				availContainers.push({
+					ip: data.ip,
+					name: name,
+					worker: worker,
+					label: worker.name+':'+name;
+				});
+				return startWorkers(clworker);
+			});
+		}else{
+			console.log('using', usedMemPercent, 'percent memory, stopping container creation!', availContainers.length, 'created');
+		}
+	});
+};
+
+startWorkers(worker.clworker0);
+
 router.get('/start/:name', function(req, res, next){
 	return lxc.start(req.params.name, function(data){
 		if(!data){
-			return res.json({status: 500, name: req.params.name, message: data});
+			return res.json({
+				status: 500,
+				name: req.params.name,
+				message: data
+			});
 		}else{
 			res.json({});
 		}
@@ -132,43 +154,18 @@ router.post('/run/:ip?', function doRun(req, res, next){
 
 	return lxc.list(function(data){
 		if(!req.params.ip) data = [];
-		var ip = '10.0.'+ req.params.ip;
-		var found = false;
+		var container = label2container[req.params.ip] || null;
 
-		for(var idx=data.length; idx--;){
-			if( data[idx]['ipv4'] === ip ){
-				found = true;
-				break;
-			}
-		}
 
-		if(found){
-			return runner(req, res, ip)
+		if(container){
+			return runner(req, res, container);
 		}else{
-			return runner(req, res, availContainers.pop());
+			container = availContainers.splice(0,1);
+			label2container[container.worker.name+':'+container.name] = container;
+			return runner(req, res, container);
 		}
 	});
 
 });
-
-// freeMem: 97700 totalmem 513818624 usedMem: 0
-// freeMem: 420,472 totalmem 513,818,624 usedMem: 100
-var startAll = function(){
-	getFreeMem(function(usedMemPercent){
-
-		if(usedMemPercent < 81 ){
-			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
-			return lxc.startEphemeral(name, 'crunner0', function(data){
-				ip2name[data.ip] = name;
-				availContainers.push(data.ip);
-				return startAll();
-			});
-		}else{
-			console.log('using', usedMemPercent, 'percent memory, stopping container creation!', availContainers.length, 'created');
-		}
-	});
-}
-
-startAll();
 
 module.exports = router;

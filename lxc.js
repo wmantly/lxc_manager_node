@@ -1,9 +1,10 @@
 'use strict';
 var exec = require('child_process').exec;
 
-function sysExec(command, callback){
+function sysExec(command, callback, ip){
+	ip = ip || '104.236.77.157';
 	command = new Buffer(command).toString('base64')
-	command = 'ssh virt@104.236.77.157 "echo ' + command + '|base64 --decode|bash"';
+	command = 'ssh virt@'+ ip + ' "echo ' + command + '|base64 --decode|bash"';
 	// command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command;
 
 	return exec(command, (function(callback){
@@ -39,6 +40,7 @@ var lxcORM = function(){
 };
 
 var lxc = {
+	exec: sysExec,
 	create: function(name, template, config, callback){
 		return sysExec('lxc-create -n '+name+' -t '+template, callback);
 	},
