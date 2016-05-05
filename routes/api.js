@@ -20,7 +20,7 @@ var workers = {
 var getFreeMem = function(ip, callback){
 
 	return lxc.exec(
-		"python3 -c \"a=`head /proc/meminfo|grep MemAvail|grep -Po '\d+'`;t=`head /proc/meminfo|grep MemTotal|grep -Po '\d+'`;print(round(((t-a)/t)*100, 2))\"",
+		"python3 -c \"a=`head /proc/meminfo|grep MemAvail|grep -Po '\\d+'`;t=`head /proc/meminfo|grep MemTotal|grep -Po '\\d+'`;print(round(((t-a)/t)*100, 2))\"",
 		ip,
 		callback
 	);
