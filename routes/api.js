@@ -52,9 +52,9 @@ var runner = function(req, res, container){
 			code: req.body.code
 		});
 	};
-
+	console.log('runner request:', httpOptions);
 	return request.post(httpOptions, function(error, response, body){
-		console.log('runner:', arguments)
+		console.log('runner response:', arguments)
 		body = JSON.parse(body);
 		body['ip'] = container.label;
 		return res.json(body);
