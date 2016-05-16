@@ -62,11 +62,11 @@ var runner = function(req, res, container){
 };
 
 var startWorkers = function(clworker, stopPercent){
-	stopPercent = stopPercent || 81;
+	stopPercent = stopPercent || 75;
 	console.log(clworker)
 	getFreeMem(clworker.ip, function(usedMemPercent){
 		console.log(arguments)
-		if(usedMemPercent < 81 ){
+		if(usedMemPercent < 75 ){
 			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
 			return lxc.startEphemeral(name, 'crunner0', clworker.ip, function(data){
 				console.log('worker:', clworker.name, 'name:', name)
