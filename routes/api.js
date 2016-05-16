@@ -47,7 +47,7 @@ var runner = function(req, res, container){
 	var httpOptions = {
 		url: 'http://' + container.worker.ip,
 		headers: {
-			host: container.name
+			Host: container.name
 		},
 		body: JSON.stringify({
 			code: req.body.code
@@ -63,7 +63,7 @@ var runner = function(req, res, container){
 };
 
 var startWorkers = function(clworker, stopPercent){
-	stopPercent = stopPercent || 20;
+	stopPercent = stopPercent || 30;
 	console.log(clworker)
 	getFreeMem(clworker.ip, function(usedMemPercent){
 		console.log(arguments)
