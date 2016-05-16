@@ -63,7 +63,7 @@ var runner = function(req, res, container){
 };
 
 var startWorkers = function(clworker, stopPercent){
-	stopPercent = stopPercent || 10;
+	stopPercent = stopPercent || 20;
 	console.log(clworker)
 	getFreeMem(clworker.ip, function(usedMemPercent){
 		console.log(arguments)
