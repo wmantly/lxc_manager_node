@@ -71,6 +71,8 @@ var startWorkers = function(clworker, stopPercent){
 			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
 			return lxc.startEphemeral(name, 'crunner0', clworker.ip, function(data){
 				console.log('worker:', clworker.name, 'name:', name)
+				if( !data.ip ) return setTimeout(startWorkers(clworker),0);
+
 				availContainers.push({
 					ip: data.ip,
 					name: name,
