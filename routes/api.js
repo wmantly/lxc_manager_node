@@ -42,6 +42,7 @@ var lxcTimeout = function(container, time){
 
 var runner = function(req, res, container){
 	lxcTimeout(container);
+	console.log('calling runner:', container);
 
 	var httpOptions = {
 		url: 'http://' + container.worker.ip,
