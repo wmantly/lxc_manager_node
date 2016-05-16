@@ -166,6 +166,7 @@ router.post('/run/:ip?', function doRun(req, res, next){
 		return runner(req, res, container);
 	}else{
 		container = availContainers.splice(0,1);
+		console.log(container)
 		label2container[container.worker.name+':'+container.name] = container;
 		return runner(req, res, container);
 	}
