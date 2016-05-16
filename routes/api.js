@@ -63,7 +63,7 @@ var runner = function(req, res, container){
 };
 
 var startWorkers = function(clworker, stopPercent){
-	stopPercent = stopPercent || 30;
+	stopPercent = stopPercent || 40;
 	console.log(clworker)
 	getFreeMem(clworker.ip, function(usedMemPercent){
 		console.log(arguments)
@@ -166,7 +166,7 @@ router.post('/run/:ip?', function doRun(req, res, next){
 		return runner(req, res, container);
 	}else{
 		container = availContainers.splice(0,1);
-		console.log(container)
+		console.log(container[0])
 		label2container[container.worker.name+':'+container.name] = container;
 		return runner(req, res, container);
 	}
