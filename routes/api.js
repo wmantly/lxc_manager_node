@@ -154,20 +154,18 @@ router.get('/list', function(req, res, next) {
 
 router.post('/run/:ip?', function doRun(req, res, next){
 	// check if server is
+	console.log('hit runner!')
 
-	return lxc.list(function(data){
-		if(!req.params.ip) data = [];
-		var container = label2container[req.params.ip] || null;
+	var container = label2container[req.params.ip] || null;
 
 
-		if(container){
-			return runner(req, res, container);
-		}else{
-			container = availContainers.splice(0,1);
-			label2container[container.worker.name+':'+container.name] = container;
-			return runner(req, res, container);
-		}
-	});
+	if(container){
+		return runner(req, res, container);
+	}else{
+		container = availContainers.splice(0,1);
+		label2container[container.worker.name+':'+container.name] = container;
+		return runner(req, res, container);
+	}
 
 });
 
