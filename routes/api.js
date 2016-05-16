@@ -50,7 +50,7 @@ var runner = function(req, res, container){
 		},
 		body: JSON.stringify({
 			code: req.body.code
-		});
+		})
 	};
 	console.log('runner request:', httpOptions);
 	return request.post(httpOptions, function(error, response, body){
