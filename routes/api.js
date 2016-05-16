@@ -10,7 +10,7 @@ var timeoutEvents = {};
 var label2container = {};
 var availContainers = [];
 var usedContainers = [];
-var workers = { 
+var workers = {
 	clworker0: {
 		ip: '104.236.77.157',
 		name: 'clworker0'
@@ -28,7 +28,7 @@ var getFreeMem = function(ip, callback){
 
 var lxcTimeout = function(container, time){
 	time = time || 900000; // 15 minutes
-	var keys = Object.keys(timeoutEvents)
+	var keys = Object.keys(timeoutEvents);
 
 	if(keys.indexOf(container.label) !== -1){
 		clearTimeout(timeoutEvents[container.label])
@@ -38,8 +38,7 @@ var lxcTimeout = function(container, time){
 		lxc.stop(name, container);
 		return startAll(container.worker);
 	}, time);
-}
-
+};
 
 var runner = function(req, res, container){
 	lxcTimeout(container);
@@ -51,10 +50,11 @@ var runner = function(req, res, container){
 		},
 		body: JSON.stringify({
 			code: req.body.code
-		})
+		});
 	};
 
 	return request.post(httpOptions, function(error, response, body){
+		console.log('runner:', arguments)
 		body = JSON.parse(body);
 		body['ip'] = container.label;
 		return res.json(body);
