@@ -1,19 +1,16 @@
 var request = require('request');
 
-
 api = function(key){
 	key = key || require('./secrets.js').doAPI;
 	this.BASEURL = 'https://api.digitalocean.com/v2/';
-	
 	this.headers = {
 		'Content-Type': 'application/json',
 		'Authorization': 'Bearer '+key
 	}
 
-	// API mathods
 	this.account = function(callback){
 		var options = {
-			url: this.BASEURL+"account",
+			url: this.BASEURL+'account',
 			headers: this.headers
 		};
 
@@ -38,7 +35,7 @@ api = function(key){
 			resources: [
 				{
 					resource_id: dropletID,
-					resource_type: "droplet"
+					resource_type: 'droplet'
 				}
 			]
 		};
@@ -56,9 +53,9 @@ api = function(key){
 	this.dropletCreate = function(args, callback){
 		var data = {
 			name: args.name, // || return false,
-			region: args.region || "nyc3",
-			size: args.size || "512mb",
-			image: args.image || "ubuntu-14-04-x64",
+			region: args.region || 'nyc3',
+			size: args.size || '512mb',
+			image: args.image || 'ubuntu-14-04-x64',
 			ssh_keys: args.ssh_key || null,
 			backups: args.backup || false,
 			private_networking: args.private_networking || true,
@@ -77,7 +74,7 @@ api = function(key){
 
 	this.dropletDestroy = function(dropletID, callback){
 		var options = {
-			url: this.BASEURL+"droplets/"+dropletID,
+			url: this.BASEURL+'droplets/'+dropletID,
 			headers: this.headers
 		};
 
@@ -88,7 +85,7 @@ api = function(key){
 
 	this.dropletInfo = function(dropletID, callback){
 		var options = {
-			url: this.BASEURL+"droplets/"+dropletID,
+			url: this.BASEURL+'droplets/'+dropletID,
 			headers: this.headers
 		};
 
