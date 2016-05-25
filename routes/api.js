@@ -34,6 +34,7 @@ var getWorkers = function(){
 		data = JSON.parse(data);
 		data.forEach(function(value){
 			workers[value.name] = makeWokerObj(value);
+			startWorkers(workers[value.name]);
 		});
 	});
 };
@@ -107,7 +108,8 @@ var startWorkers = function(clworker, stopPercent){
 	});
 };
 
-startWorkers(workers.clworker0);
+
+getWorkers();
 
 router.get('/start/:name', function(req, res, next){
 	return lxc.start(req.params.name, function(data){
@@ -161,6 +163,10 @@ router.get('/destroy/:name', function(req, res, next){
 			return res.json({status: 200});
 		}
 	});
+});
+
+router.get('/liststuff', function(req, res, next){
+	res.json({'workers': workers, 'availContainers': availContainers})
 });
 
 router.get('/info/:name', function(req, res, next){
