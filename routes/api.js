@@ -32,7 +32,7 @@ var getFreeMem = function(ip, callback){
 var getWorkers = function(){
 	doapi.dropletsByTag('clworker', function(data){
 		data = JSON.parse(data);
-		data.forEach(function(value){
+		data['droplets'].forEach(function(value){
 			workers[value.name] = makeWokerObj(value);
 			startWorkers(workers[value.name]);
 		});
