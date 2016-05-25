@@ -5,17 +5,20 @@ var router = express.Router();
 var extend = require('node.extend');
 var request = require('request');
 var lxc = require('../lxc');
+var doapi = require('../doapi')();
 
 var timeoutEvents = {};
 var label2container = {};
 var availContainers = [];
 var usedContainers = [];
-var workers = {
-	clworker0: {
-		ip: '104.236.77.157',
-		name: 'clworker0'
-	}
-};
+var workers = {};
+
+// var workers = {
+// 	clworker0: {
+// 		ip: '104.236.77.157',
+// 		name: 'clworker0'
+// 	}
+// };
 
 var getFreeMem = function(ip, callback){
 
@@ -24,6 +27,15 @@ var getFreeMem = function(ip, callback){
 		ip,
 		callback
 	);
+};
+
+var getWorkers = function(){
+	doapi.dropletsByTag('clworker', function(data){
+		data = JSON.parse(data);
+		data.forEach(function(value){
+			workers[value.name] = makeWokerObj(value);
+		});
+	});
 };
 
 var lxcTimeout = function(container, time){
@@ -60,6 +72,14 @@ var runner = function(req, res, container){
 		body['ip'] = container.label;
 		return res.json(body);
 	});
+};
+
+var makeWokerObj = function(woker){
+	worker.networks.forEach(function(value){
+		worker[value.type+'IP'] = value.ip_address;
+	});
+	worker.ip = worker.privateIP;
+	return worker;
 };
 
 var startWorkers = function(clworker, stopPercent){
