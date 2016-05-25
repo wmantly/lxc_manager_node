@@ -76,6 +76,7 @@ var runner = function(req, res, container){
 };
 
 var makeWokerObj = function(worker){
+	console.log(worker);
 	worker.networks.forEach(function(value){
 		worker[value.type+'IP'] = value.ip_address;
 	});
