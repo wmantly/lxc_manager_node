@@ -75,7 +75,7 @@ var runner = function(req, res, container){
 	});
 };
 
-var makeWokerObj = function(woker){
+var makeWokerObj = function(worker){
 	worker.networks.forEach(function(value){
 		worker[value.type+'IP'] = value.ip_address;
 	});
