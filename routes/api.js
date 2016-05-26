@@ -97,10 +97,11 @@ var getWorkers = function(){
 var getAvailContainer = function(){
 	var i = -1;
 	while(workers[++i].availContainers.length){
-		console.log('found avail');
+		console.log('found avail on worker:', i);
 		var container = wrokers[i].availContainers.pop();
 		label2container[container.label] = container;
 		container.worker.usedContainer++;
+		console.log('return container:', container);
 		return container;
 	}
 };
