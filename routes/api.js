@@ -104,22 +104,22 @@ var getAvailContainer = function(){
 	}
 };
 
-var startWorker = function(clworker, stopPercent){
+var startWorker = function(worker, stopPercent){
 	stopPercent = stopPercent || 30;
-	getFreeMem(clworker.ip, function(usedMemPercent){
+	getFreeMem(worker.ip, function(usedMemPercent){
 		if(usedMemPercent < stopPercent ){
 			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
-			return lxc.startEphemeral(name, 'crunner0', clworker.ip, function(data){
+			return lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
 
-				if( !data.ip ) return setTimeout(startWorker(clworker),0);
+				if( !data.ip ) return setTimeout(startWorker(worker),0);
 
 				worker.availContainers.push({
 					ip: data.ip,
 					name: name,
-					worker: clworker,
-					label: clworker.name+':'+name
+					worker: worker,
+					label: worker.name+':'+name
 				});
-				return setTimeout(startWorker(clworker, stopPercent), 0);
+				return setTimeout(startWorker(worker, stopPercent), 0);
 			});
 		}else{
 			console.log('using', usedMemPercent, 'percent memory, stopping container creation!', worker.availContainers.length, 'created');
