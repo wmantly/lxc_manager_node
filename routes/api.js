@@ -98,7 +98,7 @@ var getAvailContainer = function(){
 	var i = -1;
 	while(workers[++i].availContainers.length){
 		console.log('found avail on worker:', i);
-		var container = wrokers[i].availContainers.pop();
+		var container = workers[i].availContainers.pop();
 		label2container[container.label] = container;
 		container.worker.usedContainer++;
 		console.log('return container:', container);
@@ -107,7 +107,7 @@ var getAvailContainer = function(){
 };
 
 var startWorker = function(worker, stopPercent){
-	stopPercent = stopPercent || 30;
+	stopPercent = stopPercent || 60;
 	getFreeMem(worker.ip, function(usedMemPercent){
 		if(usedMemPercent < stopPercent ){
 			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
