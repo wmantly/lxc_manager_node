@@ -97,6 +97,7 @@ var getWorkers = function(){
 var getAvailContainer = function(){
 	var i = -1;
 	while(workers[++i].availContainers.length){
+		console.log('found avail');
 		var container = wrokers[i].availContainers.pop();
 		label2container[container.label] = container;
 		container.worker.usedContainer++;
@@ -117,7 +118,7 @@ var startWorker = function(worker, stopPercent){
 					ip: data.ip,
 					name: name,
 					worker: worker,
-					label: worker.name+':'+name
+					label: worker.name + ':' + name
 				});
 				return setTimeout(startWorker(worker, stopPercent), 0);
 			});
@@ -196,7 +197,7 @@ router.get('/stop/:name', function(req, res, next){
 });
 
 router.get('/liststuff', function(req, res, next){
-	res.json({'workers': workers, 'availContainers': availContainers})
+	res.json({'workers': workers})
 });
 
 router.post('/run/:ip?', function doRun(req, res, next){
