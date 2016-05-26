@@ -110,8 +110,8 @@ var startWorker = function(worker, stopPercent){
 		if(usedMemPercent < stopPercent ){
 			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
 			return lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
-
 				if( !data.ip ) return setTimeout(startWorker(worker),0);
+				console.log('started container')
 
 				worker.availContainers.push({
 					ip: data.ip,
