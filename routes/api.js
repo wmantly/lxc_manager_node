@@ -21,7 +21,7 @@ var checkDroplet = function(id, time){
 			workers.push(makeWokerObj(worker));
 			isCheckingWorkers = false;
 			return ch;
-		}else if(worker.status == 'new'){
+		}else{
 			setTimeout(function(){
 				checkDroplet(id)
 			}, time);
