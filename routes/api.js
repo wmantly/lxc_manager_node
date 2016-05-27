@@ -24,7 +24,7 @@ var getFreeMem = function(ip, callback){
 };
 
 var containerFree = function(container){
-	lxc.stop(name, container);
+	lxc.stop(container.name, container.worker.ip);
 	container.worker.usedContainer--;
 	delete label2container[container.label];
 };

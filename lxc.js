@@ -30,7 +30,7 @@ var lxc = {
 	destroy: function(name, callback){
 		return sysExec('lxc-destroy -n '+ name, function(data){
 			var info = data.match(/Destroyed container/);
-			console.log('destroy info:', info);
+			// console.log('destroy info:', info);
 			var args = [true].concat(Array.prototype.slice.call(arguments, 1));
 			return callback.apply(this, args);
 		});
@@ -43,7 +43,7 @@ var lxc = {
 	startEphemeral: function(name, base_name, ip, callback){
 		var command = 'lxc-start-ephemeral -o '+base_name+ ' -n '+name +' --union-type overlayfs -d';
 		return sysExec(command, ip, function(data){
-			console.log('startEphemeral', arguments);
+			// console.log('startEphemeral', arguments);
 			if(data.match("doesn't exist.")){
 				return callback({status: 500, error: "doesn't exist."});
 			}
@@ -58,7 +58,7 @@ var lxc = {
 		});
 	},
 
-	stop: function(name, callback, ip){
+	stop: function(name, ip, callback){
 		return sysExec('lxc-stop -n '+ name, ip, callback);
 	},
 
@@ -72,7 +72,7 @@ var lxc = {
 
 	info: function(name, callback){
 		return sysExec('lxc-info -n '+name, function(data){
-			console.log('info', arguments);
+			// console.log('info', arguments);
 			if(data.match("doesn't exist")){
 				return callback({state: 'NULL'});
 			}
