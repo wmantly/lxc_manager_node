@@ -179,7 +179,7 @@ var startRunners = function(worker, stopPercent){
 				return setTimeout(startRunners(worker, stopPercent), 0);
 			});
 		}else{
-			checkWorkersBalance();
+			setTimeout(checkWorkersBalance, 30000);
 			console.log('using', usedMemPercent, 'percent memory, stopping runner creation!', worker.availrunners.length, 'created');
 		}
 	});
