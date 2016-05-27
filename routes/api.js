@@ -51,7 +51,7 @@ var checkWorkersBalance = function(){
 	if(isCheckingWorkers) return false;
 
 	isCheckingWorkers = true;
-	if(!workers){
+	if(workers.length < 2){
 		console.log('No workers, starting droplet');
 		return workerCreate();
 	}
