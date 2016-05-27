@@ -106,6 +106,7 @@ var getAvailContainer = function(){
 };
 
 var startWorker = function(worker, stopPercent){
+	console.log('starting runners on', worker.name)
 	stopPercent = stopPercent || 80;
 	getFreeMem(worker.ip, function(usedMemPercent){
 		if(usedMemPercent < stopPercent ){
@@ -202,8 +203,6 @@ router.get('/liststuff', function(req, res, next){
 });
 
 router.post('/run/:ip?', function doRun(req, res, next){
-	// check if server is
-	console.log('hit runner!')
 
 	var container = label2container[req.params.ip] || getAvailContainer();
 	
