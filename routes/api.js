@@ -19,11 +19,11 @@ var checkDroplet = function(id, time){
 	doapi.dropletInfo(id, function(data){
 		newWorker = JSON.parse(data)['droplet'];
 		if(newWorker.status == 'active'){
-			console.log('Runner is now active, starting runners in 10 seconds')
+			console.log('Runner is now active, starting runners in 15 seconds')
 			setTimeout(function(){
 				console.log('Ready to start runners!')
 				startRunners(workers[workers.push(makeWorkerObj(newWorker))-1])
-			}, 10000);
+			}, 15000);
 			isCheckingWorkers = false;
 			return true;
 		}else{
