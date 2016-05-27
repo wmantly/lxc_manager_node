@@ -158,7 +158,7 @@ var getAvailrunner = function(runner){
 
 var startRunners = function(worker, stopPercent){
 	console.log('starting runners on', worker.name)
-	stopPercent = stopPercent || 80;
+	stopPercent = stopPercent || 15;
 	ramPercentUsed(worker.ip, function(usedMemPercent){
 		if(usedMemPercent < stopPercent ){
 			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
