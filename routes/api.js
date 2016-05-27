@@ -18,7 +18,7 @@ var checkDroplet = function(id, time){
 	doapi.dropletInfo(id, function(data){
 		var worker = JSON.parse(data)['droplet'];
 		if(worker.status == 'active'){
-			startRunners(workers[workers.push(makeWokerObj(worker))-1]);
+			setTimeout(startRunners(workers[workers.push(makeWokerObj(worker))-1]), 5000);
 			isCheckingWorkers = false;
 			return true;
 		}else{
@@ -52,14 +52,15 @@ var checkWorkersBalance = function(){
 
 	isCheckingWorkers = true;
 	if(!workers){
+		console.log('No workers, starting droplet');
 		return workerCreate();
 	}
 	if(workers[workers.length-1].availrunners.length === 0){
-		console.log('starting new droplet!');
+		console.log('last droplet has no free runners, starting droplet');
 		return workerCreate();
 	}
 	if(workers[workers.length-1].usedrunner === 0 && workers[workers.length-2].usedrunner === 0){
-		
+		console.log('Last 2 runners not used, killing last runner');
 		workerDestroy();
 	}
 	isCheckingWorkers = false;
