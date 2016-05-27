@@ -21,6 +21,7 @@ var checkDroplet = function(id, time){
 		if(newWorker.status == 'active'){
 			console.log('Runner is now active, starting runners in 10 seconds')
 			setTimeout(function(){
+				console.log('Ready to start runners!')
 				startRunners(workers[workers.push(makeWorkerObj(newWorker))-1])
 			}, 10000);
 			isCheckingWorkers = false;
