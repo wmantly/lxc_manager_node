@@ -59,7 +59,7 @@ var checkWorkersBalance = function(){
 		console.log('No workers, starting droplet');
 		return workerCreate();
 	}
-	if(workers[workers.length-1].availrunners.length === 0){
+	if(workers[workers.length-1].usedrunner !== 0){
 		console.log('last droplet has no free runners, starting droplet');
 		return workerCreate();
 	}
