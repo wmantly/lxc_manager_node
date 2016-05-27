@@ -2,7 +2,7 @@
 
 var express = require('express');
 var router = express.Router();
-var extend = require('node.extend');
+var util = require('util');
 var request = require('request');
 var lxc = require('../lxc');
 var doapi = require('../doapi')();
@@ -43,7 +43,6 @@ var lxcTimeout = function(container, time){
 };
 
 var runner = function(req, res, container){
-	console.log('calling runner:', container);
 
 	var httpOptions = {
 		url: 'http://' + container.worker.ip,
@@ -56,7 +55,7 @@ var runner = function(req, res, container){
 	};
 	
 	return request.post(httpOptions, function(error, response, body){
-		console.log('runner response:', arguments)
+		// console.log('runner response:', arguments)
 		body = JSON.parse(body);
 		var i = -1;
 		while(workers[++i].availContainers.length && workers[i].index < container.worker.index){
@@ -97,11 +96,11 @@ var getWorkers = function(){
 var getAvailContainer = function(){
 	var i = -1;
 	while(workers[++i].availContainers.length){
-		console.log('found avail on worker:', i);
+
 		var container = workers[i].availContainers.pop();
 		label2container[container.label] = container;
 		container.worker.usedContainer++;
-		console.log('return container:', container);
+
 		return container;
 	}
 };
@@ -198,7 +197,9 @@ router.get('/stop/:name', function(req, res, next){
 });
 
 router.get('/liststuff', function(req, res, next){
-	res.json({'workers': workers})
+	var obj = util.inspect(workers);
+	console.log('worker inspected:', obj)
+	res.send(obj);
 });
 
 router.post('/run/:ip?', function doRun(req, res, next){
