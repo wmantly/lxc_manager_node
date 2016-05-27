@@ -137,6 +137,7 @@ var makeWorkerObj = function(worker){
 	worker.index = workers.length,
 	worker.getRunner = function(){
 		if(this.availrunners === 0) return false;
+		console.log('geting runner from ', worker.name, ' aval length ', this.availrunners);
 		var runner = this.availrunners.pop();
 		this.usedrunner++;
 		label2runner[runner.label] = runner;
@@ -264,9 +265,9 @@ router.get('/liststuff', function(req, res, next){
 });
 
 router.post('/run/:ip?', function doRun(req, res, next){
-
+	console.log('hit runner route')
 	var runner = label2runner[req.params.ip] || getAvailrunner();
-	
+	console.log('')
 	return runner(req, res, runner);
 });
 
