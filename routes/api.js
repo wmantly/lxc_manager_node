@@ -158,7 +158,7 @@ var initWorkers = function(){
 
 var getAvailrunner = function(runner){
 	for(let worker of workers){
-		if(!worker.availrunners) continue;
+		if(worker.availrunners.length !== 0) continue;
 		// if(runner) runnerFree(runner);
 		return worker.getRunner();
 	}
