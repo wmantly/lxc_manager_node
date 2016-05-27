@@ -21,7 +21,7 @@ var checkDroplet = function(id, time){
 		if(newWorker.status == 'active'){
 			setTimeout(function(){
 				startRunners(workers[workers.push(makeWorkerObj(newWorker))-1])
-			}, 5000);
+			}, 10000);
 			isCheckingWorkers = false;
 			return true;
 		}else{
@@ -156,12 +156,12 @@ var initWorkers = function(){
 };
 
 var getAvailrunner = function(runner){
-	var i = -1;
-	while(workers[++i].availrunners.length !== 0 /*&& ( runner && workers[i].index < runner.worker.index )*/){
-		if(runner) runnerFree(runner);
-		return workers[i].getRunner();
+	for(let worker of workers){
+		if(!worker.availrunners) continue;
+		// if(runner) runnerFree(runner);
+		return worker.getRunner();
 	}
-	if(runner) return runner;
+	// if(runner) return runner;
 
 };
 
