@@ -27,6 +27,7 @@ var containerFree = function(container){
 	lxc.stop(container.name, container.worker.ip);
 	container.worker.usedContainer--;
 	delete label2container[container.label];
+	return startWorker(container.worker);
 };
 
 var lxcTimeout = function(container, time){
@@ -38,7 +39,6 @@ var lxcTimeout = function(container, time){
 
 	return container.timeout = setTimeout(function(){
 		containerFree(container)
-		return startAll(container.worker);
 	}, time);
 };
 
