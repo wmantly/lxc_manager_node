@@ -38,7 +38,7 @@ var workerCreate = function(){
 		dopletNewID = data.droplet.id;
 		doapi.dropletSetTag('clworker', data.droplet.id, function(data){
 			console.log('Set tag data:', data)
-			setTimeout(function(){checkDroplet(dropletNewId)}, 10000);
+			setTimeout(function(){checkDroplet(dopletNewID)}, 10000);
 		});
 	});
 };
@@ -180,7 +180,7 @@ var startRunners = function(worker, stopPercent){
 			});
 		}else{
 			setTimeout(checkWorkersBalance, 30000);
-			console.log('using', usedMemPercent, 'percent memory, stopping runner creation!', worker.availrunners.length, 'created');
+			console.log('using', usedMemPercent, 'percent memory, stopping runner creation!', worker.availrunners.length, 'created on ', worker.name);
 		}
 	});
 };
