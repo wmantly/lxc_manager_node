@@ -18,7 +18,7 @@ var checkDroplet = function(id, time){
 	doapi.dropletInfo(id, function(data){
 		var worker = JSON.parse(data)['droplet'];
 		if(worker.status == 'active'){
-			workers.push(makeWokerObj(worker));
+			startRunners(workers[workers.push(makeWokerObj(worker))-1]);
 			isCheckingWorkers = false;
 			return true;
 		}else{
@@ -37,7 +37,6 @@ var workerCreate = function(){
 		data = JSON.parse(data);
 		dopletNewID = data.droplet.id;
 		doapi.dropletSetTag('clworker', data.droplet.id, function(data){
-			console.log('Set tag data:', data)
 			setTimeout(function(){checkDroplet(dopletNewID)}, 10000);
 		});
 	});
