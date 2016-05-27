@@ -7,14 +7,63 @@ var request = require('request');
 var lxc = require('../lxc');
 var doapi = require('../doapi')();
 
-var label2container = {};
+var label2runner = {};
 var workers = [];
+var isCheckingWorkers = false;
 
-var checkBalance = function(){
-
+var checkWorker = function(id, time){
+	time = time || 30000;
+	doapi.dropletInfo(id, function(data){
+		worker = JSON.parse(data)['droplet'];
+		if(worker.status == 'active'){
+			workers.push(makeWokerObj(worker));
+			isCheckingWorkers = false;
+			return ch;
+		}else if(worker.status == 'new'){
+			setTimeout(function(){
+				checkWorker(id)
+			}, time);
+		}
+	});
 };
 
-var getFreeMem = function(ip, callback){
+var workerCreate = function(){
+	doapi.dropletCreate({	
+		name: 'clworker'+(Math.random()*100).toString().replace('.',''),
+		image: '17375637'
+	}, function(data){
+		data = JSON.parse(data);
+		doapi.dropletSetTag('clworker', data.droplet.id, function(data){
+			setTimeout(setTimeout(function(){checkWorker(data.droplet.id)}, time);)
+		});
+	});
+};
+
+var workerDestroy = function(worker){
+	worker = worker || workers.pop();
+	doapi.dropletDestroy(worker.id, function(){});
+};
+
+var checkWorkers = function(){
+	if(isCheckingWorkers) return false;
+
+	isCheckingWorkers = true;
+	if(!workers ){
+		return workerCreate();
+	}
+	if(workers[workers.length-1].usedrunner){
+		return workerCreate();
+	}
+	if(workers[workers.length-1].usedrunner && workers[workers.length-2].usedrunner){
+		
+		workerDestroy();
+	}
+	isCheckingWorkers = false;
+};
+
+var start
+
+var ramPercentUsed = function(ip, callback){
 
 	return lxc.exec(
 		"python3 -c \"a=`head /proc/meminfo|grep MemAvail|grep -Po '\\d+'`;t=`head /proc/meminfo|grep MemTotal|grep -Po '\\d+'`;print(round(((t-a)/t)*100, 2))\"",
@@ -23,31 +72,35 @@ var getFreeMem = function(ip, callback){
 	);
 };
 
-var containerFree = function(container){
-	lxc.stop(container.name, container.worker.ip);
-	container.worker.usedContainer--;
-	delete label2container[container.label];
-	return startWorker(container.worker);
+var runnerFree = function(runner){
+	lxc.stop(runner.name, runner.worker.ip);
+	runner.worker.usedrunner--;
+	if(runner.hasOwnProperty('timeout')){
+		clearTimeout(runner.timeout);
+	}
+	delete label2runner[runner.label];
+
+	startRunners(runner.worker);
 };
 
-var lxcTimeout = function(container, time){
+var lxcTimeout = function(runner, time){
 	time = time || 60000 // 900000; // 15 minutes
 
-	if(container.hasOwnProperty('timeout')){
-		clearTimeout(container.timeout);
+	if(runner.hasOwnProperty('timeout')){
+		clearTimeout(runner.timeout);
 	}
 
-	return container.timeout = setTimeout(function(){
-		containerFree(container)
+	return runner.timeout = setTimeout(function(){
+		runnerFree(runner)
 	}, time);
 };
 
-var runner = function(req, res, container){
+var runner = function(req, res, runner){
 
 	var httpOptions = {
-		url: 'http://' + container.worker.ip,
+		url: 'http://' + runner.worker.ip,
 		headers: {
-			Host: container.name
+			Host: runner.name
 		},
 		body: JSON.stringify({
 			code: req.body.code
@@ -57,15 +110,9 @@ var runner = function(req, res, container){
 	return request.post(httpOptions, function(error, response, body){
 		// console.log('runner response:', arguments)
 		body = JSON.parse(body);
-		var i = -1;
-		while(workers[++i].availContainers.length && workers[i].index < container.worker.index){
-			containerFree(container);
 
-			container = workers[i].availContainers.pop();
-			container.usedContainer++;
-		}
-		body['ip'] = container.label;
-		lxcTimeout(container);
+		body['ip'] = getAvailrunner(runner).label;
+		lxcTimeout(runner);
 		return res.json(body);
 
 	});
@@ -75,61 +122,66 @@ var makeWokerObj = function(worker){
 	worker.networks.v4.forEach(function(value){
 		worker[value.type+'IP'] = value.ip_address;
 	});
-	worker.availContainers = [];
+	worker.availrunners = [];
 	worker.ip = worker.privateIP;
-	worker.usedContainer = 0;
+	worker.usedrunner = 0;
+	worker.index = workers.length,
+	worker.getRunner = function(){
+		if(this.availrunners === 0) return false;
+		var runner = this.availrunners.pop();
+		this.usedrunner++;
+		label2runner[runner.label] = runner;
+		
+		return runner;
+	}
 	return worker;
 };
 
-var getWorkers = function(){
+var initWorkers = function(){
 	doapi.dropletsByTag('clworker', function(data){
 		data = JSON.parse(data);
 		data['droplets'].forEach(function(value){
-			var workerIDX = workers.push(makeWokerObj(value)) - 1;
-			workers[workerIDX].index = workerIDX;
-
-			startWorker(workers[workerIDX]);
+			startRunners(workers[workers.push(makeWokerObj(value))-1]);
 		});
 	});
 };
 
-var getAvailContainer = function(){
+var getAvailrunner = function(runner){
 	var i = -1;
-	while(workers[++i].availContainers.length){
-
-		var container = workers[i].availContainers.pop();
-		label2container[container.label] = container;
-		container.worker.usedContainer++;
-
-		return container;
+	while(workers[++i].availrunners.length && ( runner && workers[i].index < runner.worker.index )){
+		if(runner) runnerFree(runner);
+		return workers[i].getRunner();
 	}
+	if(runner) return runner;
+
 };
 
-var startWorker = function(worker, stopPercent){
+var startRunners = function(worker, stopPercent){
 	console.log('starting runners on', worker.name)
 	stopPercent = stopPercent || 80;
-	getFreeMem(worker.ip, function(usedMemPercent){
+	ramPercentUsed(worker.ip, function(usedMemPercent){
 		if(usedMemPercent < stopPercent ){
 			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
 			return lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
-				if( !data.ip ) return setTimeout(startWorker(worker),0);
-				console.log('started container')
+				if( !data.ip ) return setTimeout(startRunners(worker),0);
+				console.log('started runner')
 
-				worker.availContainers.push({
+				worker.availrunners.push({
 					ip: data.ip,
 					name: name,
 					worker: worker,
 					label: worker.name + ':' + name
 				});
-				return setTimeout(startWorker(worker, stopPercent), 0);
+				return setTimeout(startRunners(worker, stopPercent), 0);
 			});
 		}else{
-			console.log('using', usedMemPercent, 'percent memory, stopping container creation!', worker.availContainers.length, 'created');
+			checkWorker();
+			console.log('using', usedMemPercent, 'percent memory, stopping runner creation!', worker.availrunners.length, 'created');
 		}
 	});
 };
 
-getWorkers();
+initWorkers();
 
 // router.get('/start/:name', function(req, res, next){
 // 	return lxc.start(req.params.name, function(data){
@@ -155,7 +207,7 @@ getWorkers();
 // router.get('/clone/:template/:name', function(req, res, next){
 // 	return lxc.clone(req.params.name, req.params.template, function(data){
 // 		console.log('clone', arguments);
-// 		if( data.match(/Created container/) ){
+// 		if( data.match(/Created runner/) ){
 // 			return res.json({status: 200});
 // 		}else{
 // 			return res.json({status: 500, message: data});
@@ -204,9 +256,9 @@ router.get('/liststuff', function(req, res, next){
 
 router.post('/run/:ip?', function doRun(req, res, next){
 
-	var container = label2container[req.params.ip] || getAvailContainer();
+	var runner = label2runner[req.params.ip] || getAvailrunner();
 	
-	return runner(req, res, container);
+	return runner(req, res, runner);
 });
 
 module.exports = router;
