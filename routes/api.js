@@ -35,7 +35,7 @@ var workerCreate = function(){
 		data = JSON.parse(data);
 		console.log(data);
 		doapi.dropletSetTag('clworker', data.droplet.id, function(data){
-			setTimeout(setTimeout(function(){checkDroplet(data.droplet.id)}, 10000))
+			setTimeout(function(){checkDroplet(data.droplet.id)}, 10000);
 		});
 	});
 };
