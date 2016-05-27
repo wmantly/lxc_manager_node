@@ -11,6 +11,8 @@ var label2runner = {};
 var workers = [];
 var isCheckingWorkers = false;
 
+var dopletNewID = 0;
+
 var checkDroplet = function(id, time){
 	time = time || 30000;
 	doapi.dropletInfo(id, function(data){
@@ -33,9 +35,10 @@ var workerCreate = function(){
 		image: '17375637'
 	}, function(data){
 		data = JSON.parse(data);
-		console.log(data);
 		doapi.dropletSetTag('clworker', data.droplet.id, function(data){
-			setTimeout(function(){checkDroplet(data.droplet.id)}, 10000);
+			console.log('Set tag data:', data)
+			dopletNewID = data.droplet.id;
+			setTimeout(function(){checkDroplet(dropletNewId)}, 10000);
 		});
 	});
 };
