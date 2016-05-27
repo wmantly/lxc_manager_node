@@ -140,8 +140,8 @@ var makeWorkerObj = function(worker){
 	worker.usedrunner = 0;
 	worker.index = workers.length,
 	worker.getRunner = function(){
-		if(this.availrunners === 0) return false;
-		console.log('geting runner from ', worker.name, ' aval length ', this.availrunners);
+		if(this.availrunners.length === 0) return false;
+		console.log('geting runner from ', worker.name, ' aval length ', this.availrunners.length);
 		var runner = this.availrunners.pop();
 		this.usedrunner++;
 		label2runner[runner.label] = runner;
