@@ -55,11 +55,11 @@ var checkWorkersBalance = function(){
 	if(!workers){
 		return workerCreate();
 	}
-	if(!workers[workers.length-1].availrunners.length){
+	if(workers[workers.length-1].availrunners.length === 0){
 		console.log('starting new droplet!');
 		return workerCreate();
 	}
-	if(!workers[workers.length-1].availrunners.length && !workers[workers.length-2].availrunners.length){
+	if(workers[workers.length-1].usedrunner === 0 && workers[workers.length-2].usedrunner === 0){
 		
 		workerDestroy();
 	}
