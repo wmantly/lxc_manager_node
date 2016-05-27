@@ -49,13 +49,13 @@ var checkWorkersBalance = function(){
 	if(isCheckingWorkers) return false;
 
 	isCheckingWorkers = true;
-	if(!workers ){
+	if(!workers){
 		return workerCreate();
 	}
-	if(workers[workers.length-1].usedrunner){
+	if(!workers[workers.length-1].availrunners.length){
 		return workerCreate();
 	}
-	if(workers[workers.length-1].usedrunner && workers[workers.length-2].usedrunner){
+	if(!workers[workers.length-1].availrunners.length && !workers[workers.length-2].availrunners.length){
 		
 		workerDestroy();
 	}
