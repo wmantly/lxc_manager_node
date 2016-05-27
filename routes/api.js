@@ -107,7 +107,7 @@ var getAvailContainer = function(){
 };
 
 var startWorker = function(worker, stopPercent){
-	stopPercent = stopPercent || 60;
+	stopPercent = stopPercent || 80;
 	getFreeMem(worker.ip, function(usedMemPercent){
 		if(usedMemPercent < stopPercent ){
 			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
