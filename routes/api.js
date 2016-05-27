@@ -11,7 +11,7 @@ var label2runner = {};
 var workers = [];
 var isCheckingWorkers = false;
 
-var checkWorker = function(id, time){
+var checkDroplet = function(id, time){
 	time = time || 30000;
 	doapi.dropletInfo(id, function(data){
 		var worker = JSON.parse(data)['droplet'];
@@ -21,7 +21,7 @@ var checkWorker = function(id, time){
 			return ch;
 		}else if(worker.status == 'new'){
 			setTimeout(function(){
-				checkWorker(id)
+				checkDroplet(id)
 			}, time);
 		}
 	});
@@ -35,7 +35,7 @@ var workerCreate = function(){
 		data = JSON.parse(data);
 		console.log(data);
 		doapi.dropletSetTag('clworker', data.droplet.id, function(data){
-			setTimeout(setTimeout(function(){checkWorker(data.droplet.id)}, 10000))
+			setTimeout(setTimeout(function(){checkDroplet(data.droplet.id)}, 10000))
 		});
 	});
 };
@@ -45,7 +45,7 @@ var workerDestroy = function(worker){
 	doapi.dropletDestroy(worker.id, function(){});
 };
 
-var checkWorkers = function(){
+var checkWorkersBalance = function(){
 	if(isCheckingWorkers) return false;
 
 	isCheckingWorkers = true;
@@ -176,7 +176,7 @@ var startRunners = function(worker, stopPercent){
 				return setTimeout(startRunners(worker, stopPercent), 0);
 			});
 		}else{
-			checkWorker();
+			checkWorkersBalance();
 			console.log('using', usedMemPercent, 'percent memory, stopping runner creation!', worker.availrunners.length, 'created');
 		}
 	});
