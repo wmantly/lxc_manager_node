@@ -31,7 +31,7 @@ var containerFree = function(container){
 };
 
 var lxcTimeout = function(container, time){
-	time = time || 900000; // 15 minutes
+	time = time || 60000 // 900000; // 15 minutes
 
 	if(container.hasOwnProperty('timeout')){
 		clearTimeout(container.timeout);
@@ -197,8 +197,7 @@ router.get('/stop/:name', function(req, res, next){
 });
 
 router.get('/liststuff', function(req, res, next){
-	var obj = util.inspect(workers);
-	console.log('worker inspected:', obj)
+	var obj = util.inspect(workers, {depth: 4});
 	res.send(obj);
 });
 
