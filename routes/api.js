@@ -14,13 +14,13 @@ var isCheckingWorkers = false;
 var dopletNewID = 0;
 
 var checkDroplet = function(id, time){
-	time = time || 30000;
+	time = time || 5000;
 	doapi.dropletInfo(id, function(data){
 		var worker = JSON.parse(data)['droplet'];
 		if(worker.status == 'active'){
 			workers.push(makeWokerObj(worker));
 			isCheckingWorkers = false;
-			return ch;
+			return true;
 		}else{
 			setTimeout(function(){
 				checkDroplet(id)
@@ -56,6 +56,7 @@ var checkWorkersBalance = function(){
 		return workerCreate();
 	}
 	if(!workers[workers.length-1].availrunners.length){
+		console.log('starting new droplet!');
 		return workerCreate();
 	}
 	if(!workers[workers.length-1].availrunners.length && !workers[workers.length-2].availrunners.length){
@@ -179,7 +180,7 @@ var startRunners = function(worker, stopPercent){
 				return setTimeout(startRunners(worker, stopPercent), 0);
 			});
 		}else{
-			setTimeout(checkWorkersBalance, 30000);
+			setTimeout(checkWorkersBalance, 10000);
 			console.log('using', usedMemPercent, 'percent memory, stopping runner creation!', worker.availrunners.length, 'created on ', worker.name);
 		}
 	});
