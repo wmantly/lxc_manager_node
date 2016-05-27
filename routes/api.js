@@ -19,7 +19,9 @@ var checkDroplet = function(id, time){
 	doapi.dropletInfo(id, function(data){
 		newWorker = JSON.parse(data)['droplet'];
 		if(newWorker.status == 'active'){
-			setTimeout(function(){startRunners(workers[workers.push(makeWokerObj(newWorker))-1])}, 5000);
+			setTimeout(function(){
+				startRunners(workers[workers.push(makeWorkerObj(newWorker))-1])
+			}, 5000);
 			isCheckingWorkers = false;
 			return true;
 		}else{
@@ -46,6 +48,7 @@ var workerCreate = function(){
 var workerDestroy = function(worker){
 	worker = worker || workers.pop();
 	doapi.dropletDestroy(worker.id, function(){});
+	checkWorkersBalance();
 };
 
 var checkWorkersBalance = function(){
@@ -60,7 +63,7 @@ var checkWorkersBalance = function(){
 		console.log('last droplet has no free runners, starting droplet');
 		return workerCreate();
 	}
-	if(workers.length>1 && workers[workers.length-1].usedrunner === 0 && workers[workers.length-2].usedrunner === 0){
+	if(workers.length > 2 && workers[workers.length-1].usedrunner === 0 && workers[workers.length-2].usedrunner === 0){
 		console.log('Last 2 runners not used, killing last runner');
 		workerDestroy();
 	}
@@ -97,7 +100,7 @@ var lxcTimeout = function(runner, time){
 	}
 
 	return runner.timeout = setTimeout(function(){
-		runnerFree(runner)
+		runnerFree(runner);
 	}, time);
 };
 
@@ -124,7 +127,7 @@ var runner = function(req, res, runner){
 	});
 };
 
-var makeWokerObj = function(worker){
+var makeWorkerObj = function(worker){
 	worker.networks.v4.forEach(function(value){
 		worker[value.type+'IP'] = value.ip_address;
 	});
@@ -147,14 +150,14 @@ var initWorkers = function(){
 	doapi.dropletsByTag('clworker', function(data){
 		data = JSON.parse(data);
 		data['droplets'].forEach(function(value){
-			startRunners(workers[workers.push(makeWokerObj(value))-1]);
+			startRunners(workers[workers.push(makeWorkerObj(value))-1]);
 		});
 	});
 };
 
 var getAvailrunner = function(runner){
 	var i = -1;
-	while(workers[++i].availrunners.length && ( runner && workers[i].index < runner.worker.index )){
+	while(workers[++i].availrunners.length !== 0 /*&& ( runner && workers[i].index < runner.worker.index )*/){
 		if(runner) runnerFree(runner);
 		return workers[i].getRunner();
 	}
