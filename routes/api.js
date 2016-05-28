@@ -19,12 +19,12 @@ var checkDroplet = function(id, time){
 	doapi.dropletInfo(id, function(data){
 		newWorker = JSON.parse(data)['droplet'];
 		if(newWorker.status == 'active'){
-			console.log('Runner is now active, starting runners in 15 seconds')
+			console.log('Droplet is now active, starting runners in 20 seconds')
 			setTimeout(function(){
 				console.log('Ready to start runners!')
 				startRunners(workers[workers.push(makeWorkerObj(newWorker))-1])
-			}, 15000);
-			isCheckingWorkers = false;
+				isCheckingWorkers = false;
+			}, 20000);
 			return true;
 		}else{
 			console.log('Worker not ready, check again in ', time, 'MS');
@@ -43,7 +43,7 @@ var workerCreate = function(){
 		data = JSON.parse(data);
 		dopletNewID = data.droplet.id;
 		doapi.dropletSetTag('clworker', data.droplet.id, function(data){
-			setTimeout(function(){checkDroplet(dopletNewID)}, 10000);
+			setTimeout(function(){checkDroplet(dopletNewID)}, 60000);
 		});
 	});
 };
@@ -56,7 +56,7 @@ var workerDestroy = function(worker){
 
 var checkWorkersBalance = function(){
 	if(isCheckingWorkers) return false;
-
+	var changed = false;
 	isCheckingWorkers = true;
 	if(workers.length < 2){
 		console.log('less then 2 workers, starting a droplet');
@@ -70,8 +70,17 @@ var checkWorkersBalance = function(){
 		console.log('Last 2 runners not used, killing last runner');
 		workerDestroy();
 	}
+
+	for(let worker of workers){
+		if(worker.availrunners.length === 0 && worker.usedrunner === 0){
+			workerDestroy(worker);
+			changed = true;
+		}
+	}
+
 	console.log('stopping workers balancing check');
 	isCheckingWorkers = false;
+	if(changed) checkWorkersBalance();
 };
 
 var start
@@ -164,11 +173,12 @@ var getAvailrunner = function(runner){
 	for(let worker of workers){
 		console.log('checking ', worker.name, ' with ', worker.availrunners.length, ' free workers');
 		if(worker.availrunners.length === 0) continue;
-		// if(runner) runnerFree(runner);
+		if(runner && runner.worker.index <= worker.index) break;
+		if(runner) runnerFree(runner);
 		return worker.getRunner();
 	}
-	// if(runner) return runner;
-
+	if(runner) return runner;
+	return false;
 };
 
 var startRunners = function(worker, stopPercent){
