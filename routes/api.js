@@ -7,6 +7,10 @@ var request = require('request');
 var lxc = require('../lxc');
 var doapi = require('../doapi')();
 
+var workerTag = clworker;
+var workerShapID = '17575764'
+
+
 var label2runner = {};
 var workers = [];
 var isCheckingWorkers = false;
@@ -37,12 +41,12 @@ var checkDroplet = function(id, time){
 
 var workerCreate = function(){
 	doapi.dropletCreate({	
-		name: 'clworker'+(Math.random()*100).toString().replace('.',''),
+		name: 'clw'+workerShapID+'-'+(Math.random()*100).toString().replace('.',''),
 		image: '17575764'
 	}, function(data){
 		data = JSON.parse(data);
 		dopletNewID = data.droplet.id;
-		doapi.dropletSetTag('clworker', data.droplet.id, function(data){
+		doapi.dropletSetTag('clw'+'17575764', data.droplet.id, function(data){
 			setTimeout(function(){checkDroplet(dopletNewID)}, 60000);
 		});
 	});
@@ -56,8 +60,8 @@ var workerDestroy = function(worker){
 
 var checkWorkersBalance = function(){
 	if(isCheckingWorkers) return false;
-	var changed = false;
 	isCheckingWorkers = true;
+	var changed = false;
 	if(workers.length < 2){
 		console.log('less then 2 workers, starting a droplet');
 		return workerCreate();
@@ -133,7 +137,7 @@ var run = function(req, res, runner){
 	
 	return request.post(httpOptions, function(error, response, body){
 		// console.log('runner response:', arguments)
-		console.log()
+		if(error) return false;
 		body = JSON.parse(body);
 
 		body['ip'] = getAvailrunner(runner).label;
@@ -164,11 +168,11 @@ var makeWorkerObj = function(worker){
 };
 
 var initWorkers = function(){
-	doapi.dropletsByTag('clworker', function(data){
+	doapi.dropletsByTag('clw'+workerShapID, function(data){
 		data = JSON.parse(data);
 		if(data.droplets.length === 0) return checkWorkersBalance();
-		data['droplets'].forEach(function(value){
-			startRunners(workers[workers.push(makeWorkerObj(value))-1]);
+		data['droplets'].forEach(function(worker){
+			doapi.dropletDestroy(worker.id, function(){});
 		});
 	});
 };
