@@ -38,7 +38,7 @@ var checkDroplet = function(id, time){
 var workerCreate = function(){
 	doapi.dropletCreate({	
 		name: 'clworker'+(Math.random()*100).toString().replace('.',''),
-		image: '17375637'
+		image: '17575764'
 	}, function(data){
 		data = JSON.parse(data);
 		dopletNewID = data.droplet.id;
