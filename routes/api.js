@@ -7,7 +7,6 @@ var request = require('request');
 var lxc = require('../lxc');
 var doapi = require('../doapi')();
 
-var workerTag = clworker;
 var workerShapID = '17575764'
 
 
