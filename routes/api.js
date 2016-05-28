@@ -163,6 +163,7 @@ var makeWorkerObj = function(worker){
 var initWorkers = function(){
 	doapi.dropletsByTag('clworker', function(data){
 		data = JSON.parse(data);
+		if(data.droplets.length === 0) return checkWorkersBalance();
 		data['droplets'].forEach(function(value){
 			startRunners(workers[workers.push(makeWorkerObj(value))-1]);
 		});
