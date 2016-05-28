@@ -58,12 +58,13 @@ var workerDestroy = function(worker){
 	checkWorkersBalance();
 };
 
-var checkWorkersBalance = function(count){
+var checkWorkersBalance = function(){
 	if(isCheckingWorkers) return false;
 	isCheckingWorkers = true;
 	var changed = false;
 	console.log('checking balance');
-	if(workers.length < count){
+
+	if(workers.length < 2){
 		console.log('less then 2 workers, starting a droplet');
 		return workerCreate();
 	}
