@@ -62,7 +62,7 @@ var checkWorkersBalance = function(count){
 	if(isCheckingWorkers) return false;
 	isCheckingWorkers = true;
 	var changed = false;
-
+	console.log('checking balance');
 	if(workers.length < count){
 		console.log('less then 2 workers, starting a droplet');
 		return workerCreate();
