@@ -9,7 +9,7 @@ var doapi = require('../doapi')();
 
 var workerShapID = '17575764'
 
-console.log = function(){};
+// console.log = function(){};
 
 var label2runner = {};
 var workers = [];
@@ -62,6 +62,7 @@ var checkWorkersBalance = function(count){
 	if(isCheckingWorkers) return false;
 	isCheckingWorkers = true;
 	var changed = false;
+
 	if(workers.length < count){
 		console.log('less then 2 workers, starting a droplet');
 		return workerCreate();
