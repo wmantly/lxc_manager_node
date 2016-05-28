@@ -80,7 +80,9 @@ var checkWorkersBalance = function(){
 
 	console.log('stopping workers balancing check');
 	isCheckingWorkers = false;
-	if(changed) checkWorkersBalance();
+	if(changed) setTimeout(function(){
+		checkWorkersBalance();
+	}, 3000);
 };
 
 var start
@@ -131,6 +133,7 @@ var run = function(req, res, runner){
 	
 	return request.post(httpOptions, function(error, response, body){
 		// console.log('runner response:', arguments)
+		console.log()
 		body = JSON.parse(body);
 
 		body['ip'] = getAvailrunner(runner).label;
