@@ -7,7 +7,7 @@ var request = require('request');
 var lxc = require('../lxc');
 var doapi = require('../doapi')();
 
-var workerShapID = '17575764'
+var workerSnapID = 'V1'
 
 // console.log = function(){};
 
@@ -41,12 +41,12 @@ var checkDroplet = function(id, time){
 
 var workerCreate = function(){
 	doapi.dropletCreate({	
-		name: 'clw'+workerShapID+'-'+(Math.random()*100).toString().replace('.',''),
+		name: 'clw'+workerSnapID+'-'+(Math.random()*100).toString().replace('.',''),
 		image: '17575764'
 	}, function(data){
 		data = JSON.parse(data);
 		dopletNewID = data.droplet.id;
-		doapi.dropletSetTag('clw'+'17575764', data.droplet.id, function(data){
+		doapi.dropletSetTag('clw'+workerSnapID, data.droplet.id, function(data){
 			setTimeout(function(){checkDroplet(dopletNewID)}, 60000);
 		});
 	});
@@ -90,7 +90,7 @@ var checkWorkersBalance = function(count){
 	}, 3000);
 };
 
-var start
+// var start
 
 var ramPercentUsed = function(ip, callback){
 
@@ -169,12 +169,13 @@ var makeWorkerObj = function(worker){
 };
 
 var initWorkers = function(){
-	doapi.dropletsByTag('clw'+workerShapID, function(data){
+	doapi.dropletsByTag('clw'+workerSnapID, function(data){
 		data = JSON.parse(data);
-		if(data.droplets.length === 0) return checkWorkersBalance();
 		data['droplets'].forEach(function(worker){
+
 			doapi.dropletDestroy(worker.id, function(){});
 		});
+		checkWorkersBalance();
 	});
 };
 
