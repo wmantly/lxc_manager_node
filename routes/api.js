@@ -108,7 +108,7 @@ var lxcTimeout = function(runner, time){
 	}, time);
 };
 
-var runner = function(req, res, runner){
+var run = function(req, res, runner){
 
 	var httpOptions = {
 		url: 'http://' + runner.worker.ip,
@@ -273,7 +273,7 @@ router.post('/run/:ip?', function doRun(req, res, next){
 	console.log('hit runner route')
 	var runner = label2runner[req.params.ip] || getAvailrunner();
 	console.log('')
-	return runner(req, res, runner);
+	return run(req, res, runner);
 });
 
 module.exports = router;
