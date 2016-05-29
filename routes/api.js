@@ -40,6 +40,7 @@ var checkDroplet = function(id, time){
 };
 
 var workerCreate = function(count){
+	console.log('creating worker. ', count);
 	doapi.dropletCreate({	
 		name: 'clw'+workerSnapID+'-'+(Math.random()*100).toString().replace('.',''),
 		image: '17575764'
@@ -52,9 +53,10 @@ var workerCreate = function(count){
 			}, 60000);
 		});
 	});
-	if(count) setTimeout(function(){
+	if(count) setTimeout(function(){ 
+		console.log('making ', count-1, 'more');
 		workerCreate(--count);
-	}, 1000);
+	}, 2000);
 };
 
 var workerDestroy = function(worker){
@@ -71,7 +73,7 @@ var checkWorkersBalance = function(){
 
 	if(workers.length < 2){
 		console.log('less then 2 workers, starting a droplet');
-		for(var i=0; i<2; i++) workerCreate();
+		workerCreate(2);
 		return ;
 	}
 	if(workers[workers.length-1].usedrunner !== 0){
