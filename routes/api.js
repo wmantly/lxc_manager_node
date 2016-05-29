@@ -17,84 +17,143 @@ var isCheckingWorkers = false;
 
 var dopletNewID = 0;
 
-var checkDroplet = function(id, time){
-	time = time || 5000;
-	doapi.dropletInfo(id, function(data){
-		var worker = JSON.parse(data)['droplet'];
-		if(worker.status == 'active'){
-			console.log('Droplet is now active, starting runners in 20 seconds')
-			setTimeout(function(worker){
-				console.log('Ready to start runners!')
-				startRunners(workers[workers.push(makeWorkerObj(worker))-1])
-				isCheckingWorkers = false;
-			}, 20000, worker);
-			return true;
-		}else{
-			console.log('Worker not ready, check again in ', time, 'MS');
-			setTimeout(function(){
-				checkDroplet(id)
-			}, time);
-		}
-	});
-};
+var workers = (function(){
+	var workers = [];
 
-var workerCreate = function(){
-	doapi.dropletCreate({	
-		name: 'clw'+workerSnapID+'-'+(Math.random()*100).toString().replace('.',''),
-		image: '17575764'
-	}, function(data){
-		data = JSON.parse(data);
-		setTimeout(function(dopletNewID){
-			checkDroplet(dopletNewID)
-		}, 60000, data.droplet.id);
-		doapi.dropletSetTag('clworker', data.droplet.id, function(d){
-			console.log(d)
+	workers.checkDroplet = function(id, time){
+		time = time || 5000;
+		doapi.dropletInfo(id, function(data){
+			var worker = JSON.parse(data)['droplet'];
+			if(worker.status == 'active'){
+				console.log('Droplet is now active, starting runners in 20 seconds')
+				setTimeout(function(worker){
+					console.log('Ready to start runners!')
+					workers.startRunners(workers[workers.push(makeWorkerObj(worker))-1])
+					isCheckingWorkers = false;
+				}, 20000, worker);
+				return true;
+			}else{
+				console.log('Worker not ready, check again in ', time, 'MS');
+				setTimeout(function(){
+					workers.checkDroplet(id);
+				}, time);
+			}
 		});
-	});
+	};
 
-};
+	workers.create = function(){
+		doapi.dropletCreate({	
+			name: 'clw'+workerSnapID+'-'+(Math.random()*100).toString().replace('.',''),
+			image: '17575764'
+		}, function(data){
+			data = JSON.parse(data);
+			setTimeout(function(dopletNewID){
+				workers.checkDroplet(dopletNewID);
+			}, 60000, data.droplet.id);
+			doapi.dropletSetTag('clworker', data.droplet.id, function(){});
+		});
 
-var workerDestroy = function(worker){
-	worker = worker || workers.pop();
-	doapi.dropletDestroy(worker.id, function(){});
-	checkWorkersBalance();
-};
+	};
 
-var checkWorkersBalance = function(){
-	if(isCheckingWorkers) return false;
-	isCheckingWorkers = true;
-	var changed = false;
-	console.log('checking balance');
+	workers.destroy = function(worker){
+		worker = worker || workers.pop();
+		doapi.dropletDestroy(worker.id, function(){});
+		workers.checkBalance();
+	};
 
-	if(workers.length < 2){
-		console.log('less then 2 workers, starting a droplet');
-		for(var i=2; i--;) workerCreate();
-		return ;
-	}
-	if(workers[workers.length-1].usedrunner !== 0){
-		console.log('last droplet has no free runners, starting droplet');
-		return workerCreate();
-	}
-	if(workers.length > 2 && workers[workers.length-1].usedrunner === 0 && workers[workers.length-2].usedrunner === 0){
-		console.log('Last 2 runners not used, killing last runner');
-		workerDestroy();
-	}
-
-	for(let worker of workers){
-		if(worker.availrunners.length === 0 && worker.usedrunner === 0){
-			workerDestroy(worker);
-			changed = true;
+	workers.makeWorkerObj = function(worker){
+		worker.networks.v4.forEach(function(value){
+			worker[value.type+'IP'] = value.ip_address;
+		});
+		worker.availrunners = [];
+		worker.ip = worker.privateIP;
+		worker.usedrunner = 0;
+		worker.index = workers.length,
+		worker.getRunner = function(){
+			if(this.availrunners.length === 0) return false;
+			console.log('geting runner from ', worker.name, ' aval length ', this.availrunners.length);
+			var runner = this.availrunners.pop();
+			this.usedrunner++;
+			label2runner[runner.label] = runner;
+			
+			return runner;
 		}
-	}
+		return worker;
+	};
 
-	console.log('stopping workers balancing check');
-	isCheckingWorkers = false;
-	if(changed) setTimeout(function(){
-		checkWorkersBalance();
-	}, 3000);
-};
+	workers.destroyOld = function(){
+		doapi.dropletsByTag('clworker', function(data){
+			data = JSON.parse(data);
+			data['droplets'].forEach(function(worker){
+				console.log('found old droplet, killing it');
+				doapi.dropletDestroy(worker.id, function(){});
+			});
+			workers.checkBalance();
+		});
+	};
 
-// var start
+	workers.startRunners = function(worker, stopPercent){
+		console.log('starting runners on', worker.name)
+		stopPercent = stopPercent || 80;
+		ramPercentUsed(worker.ip, function(usedMemPercent){
+			if(usedMemPercent < stopPercent ){
+				var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
+				return lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
+					if( !data.ip ) return setTimeout(startRunners(worker),0);
+					console.log('started runner')
+
+					worker.availrunners.push({
+						ip: data.ip,
+						name: name,
+						worker: worker,
+						label: worker.name + ':' + name
+					});
+					return setTimeout(startRunners(worker, stopPercent), 0);
+				});
+			}else{
+				setTimeout(workers.checkBalance, 10000);
+				console.log('using', usedMemPercent, 'percent memory, stopping runner creation!', worker.availrunners.length, 'created on ', worker.name);
+			}
+		});
+	};
+
+	workers.checkBalance = function(){
+		if(isCheckingWorkers) return false;
+		isCheckingWorkers = true;
+		var changed = false;
+		console.log('checking balance');
+
+		if(workers.length < 2){
+			console.log('less then 2 workers, starting a droplet');
+			for(var i=2; i--;) workers.workerCreate();
+			return ;
+		}
+		if(workers[workers.length-1].usedrunner !== 0){
+			console.log('last droplet has no free runners, starting droplet');
+			return workers.workerCreate();
+		}
+		if(workers.length > 2 && workers[workers.length-1].usedrunner === 0 && workers[workers.length-2].usedrunner === 0){
+			console.log('Last 2 runners not used, killing last runner');
+			workers.workerDestroy();
+		}
+
+		for(let worker of workers){
+			if(worker.availrunners.length === 0 && worker.usedrunner === 0){
+				workers.workerDestroy(worker);
+				changed = true;
+			}
+		}
+
+		console.log('stopping workers balancing check');
+		isCheckingWorkers = false;
+		if(changed) setTimeout(function(){
+			workers.checkBalance();
+		}, 3000);
+	};
+
+	return workers;
+
+})();
 
 var ramPercentUsed = function(ip, callback){
 
@@ -113,7 +172,7 @@ var runnerFree = function(runner){
 	}
 	delete label2runner[runner.label];
 
-	startRunners(runner.worker);
+	workers.startRunners(runner.worker);
 };
 
 var lxcTimeout = function(runner, time){
@@ -152,37 +211,6 @@ var run = function(req, res, runner){
 	});
 };
 
-var makeWorkerObj = function(worker){
-	worker.networks.v4.forEach(function(value){
-		worker[value.type+'IP'] = value.ip_address;
-	});
-	worker.availrunners = [];
-	worker.ip = worker.privateIP;
-	worker.usedrunner = 0;
-	worker.index = workers.length,
-	worker.getRunner = function(){
-		if(this.availrunners.length === 0) return false;
-		console.log('geting runner from ', worker.name, ' aval length ', this.availrunners.length);
-		var runner = this.availrunners.pop();
-		this.usedrunner++;
-		label2runner[runner.label] = runner;
-		
-		return runner;
-	}
-	return worker;
-};
-
-var initWorkers = function(){
-	doapi.dropletsByTag('clworker', function(data){
-		data = JSON.parse(data);
-		data['droplets'].forEach(function(worker){
-			console.log('found old droplet, killing it');
-			doapi.dropletDestroy(worker.id, function(){});
-		});
-		checkWorkersBalance();
-	});
-};
-
 var getAvailrunner = function(runner){
 	for(let worker of workers){
 		console.log('checking ', worker.name, ' with ', worker.availrunners.length, ' free workers');
@@ -193,31 +221,6 @@ var getAvailrunner = function(runner){
 	}
 	if(runner) return runner;
 	return false;
-};
-
-var startRunners = function(worker, stopPercent){
-	console.log('starting runners on', worker.name)
-	stopPercent = stopPercent || 80;
-	ramPercentUsed(worker.ip, function(usedMemPercent){
-		if(usedMemPercent < stopPercent ){
-			var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
-			return lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
-				if( !data.ip ) return setTimeout(startRunners(worker),0);
-				console.log('started runner')
-
-				worker.availrunners.push({
-					ip: data.ip,
-					name: name,
-					worker: worker,
-					label: worker.name + ':' + name
-				});
-				return setTimeout(startRunners(worker, stopPercent), 0);
-			});
-		}else{
-			setTimeout(checkWorkersBalance, 10000);
-			console.log('using', usedMemPercent, 'percent memory, stopping runner creation!', worker.availrunners.length, 'created on ', worker.name);
-		}
-	});
 };
 
 initWorkers();
