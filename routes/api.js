@@ -223,7 +223,7 @@ var getAvailrunner = function(runner){
 	return false;
 };
 
-initWorkers();
+workers.destroyOld();
 
 // router.get('/start/:name', function(req, res, next){
 // 	return lxc.start(req.params.name, function(data){
