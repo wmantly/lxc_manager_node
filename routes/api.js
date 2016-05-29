@@ -39,17 +39,22 @@ var checkDroplet = function(id, time){
 	});
 };
 
-var workerCreate = function(){
+var workerCreate = function(count){
 	doapi.dropletCreate({	
 		name: 'clw'+workerSnapID+'-'+(Math.random()*100).toString().replace('.',''),
 		image: '17575764'
 	}, function(data){
 		data = JSON.parse(data);
 		dopletNewID = data.droplet.id;
-		doapi.dropletSetTag('clw'+workerSnapID, data.droplet.id, function(data){
-			setTimeout(function(){checkDroplet(dopletNewID)}, 60000);
+		doapi.dropletSetTag('clworker', data.droplet.id, function(data){
+			setTimeout(function(){
+				checkDroplet(dopletNewID)
+			}, 60000);
 		});
 	});
+	if(count) setTimeout(function(){
+		workerCreate(--count);
+	}, 1000);
 };
 
 var workerDestroy = function(worker){
@@ -171,7 +176,7 @@ var makeWorkerObj = function(worker){
 };
 
 var initWorkers = function(){
-	doapi.dropletsByTag('clw'+workerSnapID, function(data){
+	doapi.dropletsByTag('clworker', function(data){
 		data = JSON.parse(data);
 		data['droplets'].forEach(function(worker){
 
