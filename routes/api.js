@@ -43,10 +43,11 @@ var workerCreate = function(){
 		name: 'clw'+workerSnapID+'-'+(Math.random()*100).toString().replace('.',''),
 		image: '17575764'
 	}, function(data){
+		data = JSON.parse(data);
 		doapi.dropletSetTag('clworker', data.droplet.id, function(data){
 			setTimeout(function(dopletNewID){
 				checkDroplet(dopletNewID)
-			}, 60000, JSON.parse(data).droplet.id);
+			}, 60000, data.droplet.id);
 		});
 	});
 
