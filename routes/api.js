@@ -202,6 +202,7 @@ var run = function(req, res, runner){
 	return request.post(httpOptions, function(error, response, body){
 		// console.log('runner response:', arguments)
 		if(error) return false;
+		console.log('body', body);
 		body = JSON.parse(body);
 
 		body['ip'] = getAvailrunner(runner).label;
