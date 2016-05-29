@@ -16,19 +16,18 @@ var workers = [];
 var isCheckingWorkers = false;
 
 var dopletNewID = 0;
-var newWorker = {};
 
 var checkDroplet = function(id, time){
 	time = time || 5000;
 	doapi.dropletInfo(id, function(data){
-		newWorker = JSON.parse(data)['droplet'];
-		if(newWorker.status == 'active'){
+		var worker = JSON.parse(data)['droplet'];
+		if(worker.status == 'active'){
 			console.log('Droplet is now active, starting runners in 20 seconds')
-			setTimeout(function(){
+			setTimeout(function(worker){
 				console.log('Ready to start runners!')
-				startRunners(workers[workers.push(makeWorkerObj(newWorker))-1])
+				startRunners(workers[workers.push(makeWorkerObj(worker))-1])
 				isCheckingWorkers = false;
-			}, 20000);
+			}, 20000, worker);
 			return true;
 		}else{
 			console.log('Worker not ready, check again in ', time, 'MS');
@@ -39,24 +38,18 @@ var checkDroplet = function(id, time){
 	});
 };
 
-var workerCreate = function(count){
-	console.log('creating worker. ', count);
+var workerCreate = function(){
 	doapi.dropletCreate({	
 		name: 'clw'+workerSnapID+'-'+(Math.random()*100).toString().replace('.',''),
 		image: '17575764'
 	}, function(data){
-		data = JSON.parse(data);
-		dopletNewID = data.droplet.id;
 		doapi.dropletSetTag('clworker', data.droplet.id, function(data){
-			setTimeout(function(){
+			setTimeout(function(dopletNewID){
 				checkDroplet(dopletNewID)
-			}, 60000);
+			}, 60000, JSON.parse(data).droplet.id);
 		});
 	});
-	if(count) setTimeout(function(){ 
-		console.log('making ', count-1, 'more');
-		workerCreate(--count);
-	}, 2000);
+
 };
 
 var workerDestroy = function(worker){
@@ -73,7 +66,7 @@ var checkWorkersBalance = function(){
 
 	if(workers.length < 2){
 		console.log('less then 2 workers, starting a droplet');
-		workerCreate(2);
+		for(var i=2; i--;) workerCreate();
 		return ;
 	}
 	if(workers[workers.length-1].usedrunner !== 0){
