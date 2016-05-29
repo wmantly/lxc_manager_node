@@ -28,7 +28,7 @@ var workers = (function(){
 				console.log('Droplet is now active, starting runners in 20 seconds')
 				setTimeout(function(worker){
 					console.log('Ready to start runners!')
-					workers.workers.startRunners(workers[workers.push(workers.makeWorkerObj(worker))-1])
+					workers.startRunners(workers[workers.push(workers.makeWorkerObj(worker))-1])
 					isCheckingWorkers = false;
 				}, 20000, worker);
 				return true;
