@@ -44,11 +44,11 @@ var workerCreate = function(){
 		image: '17575764'
 	}, function(data){
 		data = JSON.parse(data);
+		setTimeout(function(dopletNewID){
+			checkDroplet(dopletNewID)
+		}, 60000, data.droplet.id);
 		doapi.dropletSetTag('clworker', data.droplet.id, function(d){
 			console.log(d)
-			setTimeout(function(dopletNewID){
-				checkDroplet(dopletNewID)
-			}, 60000, data.droplet.id);
 		});
 	});
 
@@ -176,7 +176,7 @@ var initWorkers = function(){
 	doapi.dropletsByTag('clworker', function(data){
 		data = JSON.parse(data);
 		data['droplets'].forEach(function(worker){
-
+			console.log('found old droplet, killing it');
 			doapi.dropletDestroy(worker.id, function(){});
 		});
 		checkWorkersBalance();

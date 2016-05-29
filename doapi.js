@@ -94,6 +94,17 @@ api = function(key){
 		});
 	};
 
+	this.tagsList = function(callback){
+		var options = {
+			url: this.BASEURL+'tags',
+			headers: this.headers
+		};
+
+		return request.get(options, function(e,r,b){
+			callback(b,r,e);
+		});
+	};
+
 	return this;
 }
 
