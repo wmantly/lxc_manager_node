@@ -66,7 +66,8 @@ var checkWorkersBalance = function(){
 
 	if(workers.length < 2){
 		console.log('less then 2 workers, starting a droplet');
-		return workerCreate();
+		for(var i=0; i<2) workerCreate();
+		return ;
 	}
 	if(workers[workers.length-1].usedrunner !== 0){
 		console.log('last droplet has no free runners, starting droplet');
