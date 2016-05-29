@@ -28,7 +28,7 @@ var workers = (function(){
 				console.log('Droplet is now active, starting runners in 20 seconds')
 				setTimeout(function(worker){
 					console.log('Ready to start runners!')
-					workers.startRunners(workers[workers.push(workers.makeWorkerObj(worker))-1])
+					workers.workers.startRunners(workers[workers.push(workers.makeWorkerObj(worker))-1])
 					isCheckingWorkers = false;
 				}, 20000, worker);
 				return true;
@@ -99,7 +99,7 @@ var workers = (function(){
 			if(usedMemPercent < stopPercent ){
 				var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
 				return lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
-					if( !data.ip ) return setTimeout(startRunners(worker),0);
+					if( !data.ip ) return setTimeout(workers.startRunners(worker),0);
 					console.log('started runner')
 
 					worker.availrunners.push({
@@ -108,7 +108,7 @@ var workers = (function(){
 						worker: worker,
 						label: worker.name + ':' + name
 					});
-					return setTimeout(startRunners(worker, stopPercent), 0);
+					return setTimeout(workers.startRunners(worker, stopPercent), 0);
 				});
 			}else{
 				setTimeout(workers.checkBalance, 10000);
