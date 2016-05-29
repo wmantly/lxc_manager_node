@@ -44,7 +44,8 @@ var workerCreate = function(){
 		image: '17575764'
 	}, function(data){
 		data = JSON.parse(data);
-		doapi.dropletSetTag('clworker', data.droplet.id, function(data){
+		doapi.dropletSetTag('clworker', data.droplet.id, function(d){
+			console.log(d)
 			setTimeout(function(dopletNewID){
 				checkDroplet(dopletNewID)
 			}, 60000, data.droplet.id);
