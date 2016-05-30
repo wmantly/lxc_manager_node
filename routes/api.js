@@ -203,13 +203,14 @@ var run = function(req, res, runner){
 			code: req.body.code
 		})
 	};
+	runner = getAvailrunner(runner);
 	
 	return request.post(httpOptions, function(error, response, body){
 		// console.log('runner response:', arguments)
 		if(error || response.statusCode !== 200) return run(req, res, getAvailrunner());
 		body = JSON.parse(body);
 
-		body['ip'] = getAvailrunner(runner).label;
+		body['ip'] = runner.label;
 		lxcTimeout(runner);
 		return res.json(body);
 
@@ -305,9 +306,8 @@ router.get('/liststuff', function(req, res, next){
 
 router.post('/run/:ip?', function doRun(req, res, next){
 	console.log('hit runner route')
-	var runner = label2runner[req.params.ip] || false;
-	console.log('')
-	return run(req, res, runner);
+
+	return run(req, res, label2runner[req.params.ip]);
 });
 
 module.exports = router;
