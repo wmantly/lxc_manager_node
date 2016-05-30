@@ -134,11 +134,11 @@ var workers = (function(){
 			for(var i=minWorkers-workers.length; i--;) workers.create();
 			return ;
 		}
-		if(workers[workers.length-1].usedrunner !== 0){
+		if(workers[workers.length-2].usedrunner !== 0){
 			console.log('last droplet has no free runners, starting droplet');
 			return workers.create();
 		}
-		if(workers.length > minWorkers && workers[workers.length-1].usedrunner === 0 && workers[workers.length-2].usedrunner === 0){
+		if(workers.length > minWorkers && workers[workers.length-2].usedrunner === 0 && workers[workers.length-1].usedrunner === 0 && workers[workers.length-2].usedrunner === 0){
 			console.log('Last 2 runners not used, killing last runner', workers.length);
 			return workers.destroy();
 		}
@@ -228,7 +228,7 @@ var getAvailrunner = function(runner){
 };
 setTimeout(function(){
 	console.log('Starting balance checking in 30 seconds')
-	setInterval(workers.checkBalance, 30000);
+	setInterval(workers.checkBalance, 15000);
 }, 180000);
 workers.destroyOld();
 workers.checkBalance();
