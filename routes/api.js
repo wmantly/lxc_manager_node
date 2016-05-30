@@ -181,7 +181,7 @@ var runnerFree = function(runner){
 };
 
 var lxcTimeout = function(runner, time){
-	time = time || 60000 // 900000; // 15 minutes
+	time = time || 900000; // 15 minutes
 
 	if(runner.hasOwnProperty('timeout')){
 		clearTimeout(runner.timeout);
@@ -305,7 +305,7 @@ router.get('/liststuff', function(req, res, next){
 
 router.post('/run/:ip?', function doRun(req, res, next){
 	console.log('hit runner route')
-	var runner = label2runner[req.params.ip] || getAvailrunner();
+	var runner = label2runner[req.params.ip] || false;
 	console.log('')
 	return run(req, res, runner);
 });
