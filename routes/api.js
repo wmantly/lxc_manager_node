@@ -89,7 +89,7 @@ var workers = (function(){
 				console.log('found old droplet, killing it');
 				doapi.dropletDestroy(worker.id, function(){});
 			});
-			workers.checkBalance();
+			// workers.checkBalance();
 		});
 	};
 
@@ -122,20 +122,22 @@ var workers = (function(){
 		if(isCheckingWorkers) return false;
 		isCheckingWorkers = true;
 		var changed = false;
+		var minWorkers = 3;
 		console.log('checking balance');
 
-		if(workers.length < 3){
+		if(workers.length < minWorkers){
 			console.log('less then 3 workers, starting a droplet');
-			for(var i=2; i--;) workers.create();
+			for(var i=minWorkers; i--;) workers.create();
 			return ;
 		}
 		if(workers[workers.length-1].usedrunner !== 0){
 			console.log('last droplet has no free runners, starting droplet');
 			return workers.create();
 		}
-		if(workers.length > 3 && workers[workers.length-1].usedrunner === 0 && workers[workers.length-2].usedrunner === 0){
+		if(workers.length > minWorkers && workers[workers.length-1].usedrunner === 0 && workers[workers.length-2].usedrunner === 0){
 			console.log('Last 2 runners not used, killing last runner');
 			workers.destroy();
+			changed = true;
 		}
 
 		for(let worker of workers){
@@ -150,7 +152,7 @@ var workers = (function(){
 		isCheckingWorkers = false;
 		if(changed) setTimeout(function(){
 			workers.checkBalance();
-		}, 3000);
+		}, 5000);
 	};
 
 	return workers;
