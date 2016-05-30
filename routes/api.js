@@ -20,6 +20,11 @@ var dopletNewID = 0;
 var workers = (function(){
 	var workers = [];
 
+	workers.push = function(item){
+		console.log('pushing item ', item, ' to workers')
+		return Array.prototype.push.call(this, item);
+	};
+
 	workers.checkDroplet = function(id, time){
 		time = time || 10000;
 		doapi.dropletInfo(id, function(data){
@@ -109,7 +114,7 @@ var workers = (function(){
 						worker: worker,
 						label: worker.name + ':' + name
 					});
-					return setTimeout(workers.startRunners(worker, stopPercent), 0);
+					return setTimeout(workers.startRunners(worker, false ,stopPercent), 0);
 				});
 			}else{
 				console.log('using', String(usedMemPercent), 'percent memory, stopping runner creation!', worker.availrunners.length, 'created on ', worker.name);
