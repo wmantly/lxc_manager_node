@@ -28,7 +28,7 @@ var workers = (function(){
 				console.log('Droplet is now active, starting runners in 20 seconds')
 				setTimeout(function(worker){
 					console.log('Ready to start runners!')
-					workers.startRunners(worker, true)
+					workers.startRunners(workers.makeWorkerObj(worker), true)
 					isCheckingWorkers = false;
 				}, 20000, worker);
 				return true;
@@ -84,7 +84,6 @@ var workers = (function(){
 	workers.destroyOld = function(){
 		doapi.dropletsByTag('clworker', function(data){
 			data = JSON.parse(data);
-			console.log('dropletsByTag data:',data);
 			data['droplets'].forEach(function(worker){
 				console.log('found old droplet, killing it');
 				doapi.dropletDestroy(worker.id, function(){});
@@ -103,7 +102,7 @@ var workers = (function(){
 				return lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
 					if(!data.ip) return setTimeout(workers.startRunners(worker, newWorker),0);
 					console.log('started runner')
-					if(newWorker) worker = workers[workers.push(workers.makeWorkerObj(worker))-1]
+					if(newWorker) worker = workers[workers.push(worker)-1]
 
 					worker.availrunners.push({
 						ip: data.ip,
