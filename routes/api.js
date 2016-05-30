@@ -15,31 +15,25 @@ var label2runner = {};
 var workers = [];
 var isCheckingWorkers = false;
 
-var dopletNewID = 0;
-
 var workers = (function(){
 	var workers = [];
 
-	workers.push = function(item){
-		console.log('pushing item ', item, ' to workers')
-		return Array.prototype.push.call(this, item);
-	};
-
 	workers.checkDroplet = function(id, time){
 		time = time || 10000;
-		doapi.dropletInfo(id, function(data){
+
+		return doapi.dropletInfo(id, function(data){
 			var worker = JSON.parse(data)['droplet'];
 			if(worker.status == 'active'){
-				console.log('Droplet is now active, starting runners in 20 seconds')
-				setTimeout(function(worker){
-					console.log('Ready to start runners!')
-					workers.startRunners(workers.makeWorkerObj(worker), true)
-					isCheckingWorkers = false;
+				console.log('Droplet is now active, starting runners in 20 seconds');
+
+				return setTimeout(function(worker){
+					console.log('Ready to start runners!');
+					workers.startRunners(workers.makeWorkerObj(worker), true);
 				}, 20000, worker);
-				return true;
 			}else{
 				console.log('Worker not ready, check again in ', time, 'MS');
-				setTimeout(function(){
+
+				return setTimeout(function(){
 					workers.checkDroplet(id);
 				}, time);
 			}
@@ -47,24 +41,23 @@ var workers = (function(){
 	};
 
 	workers.create = function(){
-		doapi.dropletCreate({	
+		return doapi.dropletCreate({	
 			name: 'clw'+workerSnapID+'-'+(Math.random()*100).toString().replace('.',''),
 			image: '17575764'
 		}, function(data){
 			data = JSON.parse(data);
+
 			setTimeout(function(dopletNewID){
-				workers.checkDroplet(dopletNewID);
+				return workers.checkDroplet(dopletNewID);
 			}, 70000, data.droplet.id);
-			doapi.dropletSetTag('clworker', data.droplet.id, function(){});
+			return doapi.dropletSetTag('clworker', data.droplet.id, function(){});
 		});
 
 	};
 
 	workers.destroy = function(worker){
 		var worker = worker || workers.pop();
-		doapi.dropletDestroy(worker.id, function(){
-			isCheckingWorkers = false;
-		});
+		return doapi.dropletDestroy(worker.id, function(){});
 	};
 
 	workers.makeWorkerObj = function(worker){
@@ -84,6 +77,7 @@ var workers = (function(){
 			
 			return runner;
 		}
+		
 		return worker;
 	};
 
@@ -123,9 +117,7 @@ var workers = (function(){
 	};
 
 	workers.checkBalance = function(){
-		if(isCheckingWorkers) return false;
-		isCheckingWorkers = true;
-		var changed = false;
+
 		var minWorkers = 3;
 		console.log('checking balance');
 
@@ -134,11 +126,11 @@ var workers = (function(){
 			for(var i=minWorkers-workers.length; i--;) workers.create();
 			return ;
 		}
-		if(workers[workers.length-2].usedrunner !== 0){
+		if(workers[workers.length-3].usedrunner !== 0){
 			console.log('last droplet has no free runners, starting droplet');
 			return workers.create();
 		}
-		if(workers.length > minWorkers && workers[workers.length-2].usedrunner === 0 && workers[workers.length-1].usedrunner === 0 && workers[workers.length-2].usedrunner === 0){
+		if(workers.length > minWorkers && workers[workers.length-3].usedrunner === 0 && workers[workers.length-2].usedrunner === 0 && workers[workers.length-1].usedrunner === 0){
 			console.log('Last 2 runners not used, killing last runner', workers.length);
 			return workers.destroy();
 		}
@@ -152,7 +144,6 @@ var workers = (function(){
 		}
 
 		console.log('stopping workers balancing check');
-		isCheckingWorkers = false;
 	};
 
 	return workers;
@@ -226,10 +217,12 @@ var getAvailrunner = function(runner){
 	if(runner) return runner;
 	return false;
 };
+
 setTimeout(function(){
 	console.log('Starting balance checking in 30 seconds')
 	setInterval(workers.checkBalance, 15000);
 }, 180000);
+
 workers.destroyOld();
 workers.checkBalance();
 

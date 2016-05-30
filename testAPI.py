@@ -16,4 +16,4 @@ def testAPI(times=100, sleep=2):
 			print('caught error')
 			errors += 1
 		time.sleep(sleep)
-	print('errors ', errors)
+	print('errors ', errors, (errors/times)*100)
