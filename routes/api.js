@@ -84,6 +84,7 @@ var workers = (function(){
 	workers.destroyOld = function(){
 		doapi.dropletsByTag('clworker', function(data){
 			data = JSON.parse(data);
+			console.log('dropletsByTag data:',data);
 			data['droplets'].forEach(function(worker){
 				console.log('found old droplet, killing it');
 				doapi.dropletDestroy(worker.id, function(){});
