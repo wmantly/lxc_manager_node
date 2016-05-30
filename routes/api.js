@@ -21,7 +21,7 @@ var workers = (function(){
 	var workers = [];
 
 	workers.checkDroplet = function(id, time){
-		time = time || 5000;
+		time = time || 10000;
 		doapi.dropletInfo(id, function(data){
 			var worker = JSON.parse(data)['droplet'];
 			if(worker.status == 'active'){
@@ -49,7 +49,7 @@ var workers = (function(){
 			data = JSON.parse(data);
 			setTimeout(function(dopletNewID){
 				workers.checkDroplet(dopletNewID);
-			}, 60000, data.droplet.id);
+			}, 70000, data.droplet.id);
 			doapi.dropletSetTag('clworker', data.droplet.id, function(){});
 		});
 
@@ -88,7 +88,6 @@ var workers = (function(){
 				console.log('found old droplet, killing it');
 				doapi.dropletDestroy(worker.id, function(){});
 			});
-			workers.checkBalance();
 		});
 	};
 
@@ -96,7 +95,6 @@ var workers = (function(){
 		console.log('starting runners on', worker.name, worker.ip)
 		stopPercent = stopPercent || 80;
 		ramPercentUsed(worker.ip, function(usedMemPercent){
-			console.log('using ', usedMemPercent, ' on ', worker.name, ' continueing');
 			if(usedMemPercent < stopPercent ){
 				var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
 				return lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
@@ -113,7 +111,6 @@ var workers = (function(){
 					return setTimeout(workers.startRunners(worker, stopPercent), 0);
 				});
 			}else{
-				setTimeout(workers.checkBalance, 10000);
 				console.log('using', usedMemPercent, 'percent memory, stopping runner creation!', worker.availrunners.length, 'created on ', worker.name);
 			}
 		});
@@ -145,15 +142,11 @@ var workers = (function(){
 			if(worker.availrunners.length === 0 && worker.usedrunner === 0){
 				console.log('found zombie worker, destroying')
 				workers.destroy(worker);
-				changed = true;
 			}
 		}
 
 		console.log('stopping workers balancing check');
 		isCheckingWorkers = false;
-		if(changed) setTimeout(function(){
-			workers.checkBalance();
-		}, 5000);
 	};
 
 	return workers;
@@ -204,7 +197,7 @@ var run = function(req, res, runner){
 		})
 	};
 	runner = getAvailrunner(runner);
-	
+
 	return request.post(httpOptions, function(error, response, body){
 		// console.log('runner response:', arguments)
 		if(error || response.statusCode !== 200) return run(req, res, getAvailrunner());
@@ -307,7 +300,7 @@ router.get('/liststuff', function(req, res, next){
 router.post('/run/:ip?', function doRun(req, res, next){
 	console.log('hit runner route')
 
-	return run(req, res, label2runner[req.params.ip]);
+	return run(req, res, label2runner[req.params.ip] || null);
 });
 
 module.exports = router;
