@@ -57,7 +57,9 @@ var workers = (function(){
 
 	workers.destroy = function(worker){
 		worker = worker || workers.pop();
-		doapi.dropletDestroy(worker.id, function(){});
+		doapi.dropletDestroy(worker.id, function(){
+			isCheckingWorkers = false;
+		});
 	};
 
 	workers.makeWorkerObj = function(worker){
