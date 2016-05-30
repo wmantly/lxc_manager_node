@@ -56,7 +56,7 @@ var workers = (function(){
 	};
 
 	workers.destroy = function(worker){
-		worker = worker || workers.pop();
+		var worker = worker || workers.pop();
 		doapi.dropletDestroy(worker.id, function(){
 			isCheckingWorkers = false;
 		});
@@ -93,14 +93,14 @@ var workers = (function(){
 	};
 
 	workers.startRunners = function(worker, newWorker, stopPercent){
-		console.log('starting runners on', worker.name, worker.ip)
+		// console.log('starting runners on', worker.name, worker.ip)
 		stopPercent = stopPercent || 80;
 		ramPercentUsed(worker.ip, function(usedMemPercent){
 			if(usedMemPercent < stopPercent ){
 				var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
 				return lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
 					if(!data.ip) return setTimeout(workers.startRunners(worker, newWorker),0);
-					console.log('started runner')
+					console.log('started runner on', worker.name)
 					if(newWorker) worker = workers[workers.push(worker)-1]
 
 					worker.availrunners.push({
@@ -112,7 +112,7 @@ var workers = (function(){
 					return setTimeout(workers.startRunners(worker, stopPercent), 0);
 				});
 			}else{
-				console.log('using', usedMemPercent, 'percent memory, stopping runner creation!', worker.availrunners.length, 'created on ', worker.name);
+				console.log('using', String(usedMemPercent), 'percent memory, stopping runner creation!', worker.availrunners.length, 'created on ', worker.name);
 			}
 		});
 	};
@@ -222,6 +222,7 @@ var getAvailrunner = function(runner){
 	return false;
 };
 setTimeout(function(){
+	console.log('Starting balance checking in 30 seconds')
 	setInterval(workers.checkBalance, 30000);
 }, 180000);
 workers.destroyOld();
