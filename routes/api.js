@@ -195,7 +195,6 @@ var run = function(req, res, runner){
 			code: req.body.code
 		})
 	};
-	runner = getAvailrunner(runner);
 
 	return request.post(httpOptions, function(error, response, body){
 		// console.log('runner response:', arguments)
@@ -297,8 +296,8 @@ router.get('/liststuff', function(req, res, next){
 
 router.post('/run/:ip?', function doRun(req, res, next){
 	console.log('hit runner route')
-
-	return run(req, res, label2runner[req.params.ip] || null);
+	var runner = getAvailrunner(label2runner[req.params.ip]);
+	return run(req, res, runner);
 });
 
 module.exports = router;
