@@ -296,7 +296,7 @@ router.get('/stop/:name', function(req, res, next){
 
 router.get('/liststuff', function(req, res, next){
 	var obj = util.inspect(workers, {depth: 4});
-	res.send("<h1>Workers</h1><pre>"+obj+"</pre><h1>label2runner</h1><pre>"util.inspect(label2runner)+'</pre><h1>DO calls</h1>'+doapi.calls);
+	res.send("<h1>Workers</h1><pre>"+obj+"</pre><h1>label2runner</h1><pre>"+util.inspect(label2runner)+'</pre><h1>DO calls</h1>'+doapi.calls);
 });
 
 router.post('/run/:ip?', function doRun(req, res, next){
