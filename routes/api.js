@@ -94,7 +94,7 @@ var workers = (function(){
 	};
 
 	workers.startRunners = function(worker, newWorker, stopPercent){
-		console.log('starting runners on', worker.name)
+		console.log('starting runners on', worker.name, worker.ip)
 		stopPercent = stopPercent || 80;
 		ramPercentUsed(worker.ip, function(usedMemPercent){
 			console.log('using ', usedMemPercent, ' on ', worker.name, ' continueing');
