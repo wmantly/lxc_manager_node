@@ -7,12 +7,14 @@ api = function(key){
 		'Content-Type': 'application/json',
 		'Authorization': 'Bearer '+key
 	}
+	this.calls = 0;
 
 	this.account = function(callback){
 		var options = {
 			url: this.BASEURL+'account',
 			headers: this.headers
 		};
+		this.calls++;
 
 		return request.get(options, function(error, response, body){
 			return callback(body, response, error);
@@ -24,6 +26,7 @@ api = function(key){
 			url: this.BASEURL+'droplets?tag_name='+tag,
 			headers: this.headers
 		};
+		this.calls++;
 		
 		return request.get(options, function(error, response, body){
 			return callback(body, response, error);
@@ -44,6 +47,7 @@ api = function(key){
 			headers: this.headers,
 			body: JSON.stringify(data)
 		};
+		this.calls++;
 
 		return request.post(options, function(error, response, body){
 			return callback(body, response, error);
@@ -66,6 +70,7 @@ api = function(key){
 			headers: this.headers,
 			body: JSON.stringify(data)
 		};
+		this.calls++;
 
 		return request.post(options, function(error, response, body){
 			return callback(body, response, error);
@@ -77,6 +82,7 @@ api = function(key){
 			url: this.BASEURL+'droplets/'+dropletID,
 			headers: this.headers
 		};
+		this.calls++;
 
 		return request.del(options, function(error, response, body){
 			callback(body, response, error);
@@ -88,6 +94,7 @@ api = function(key){
 			url: this.BASEURL+'droplets/'+dropletID,
 			headers: this.headers
 		};
+		this.calls++;
 
 		return request.get(options, function(error, response, body){
 			callback(body, response, error);
@@ -99,6 +106,7 @@ api = function(key){
 			url: this.BASEURL+'tags',
 			headers: this.headers
 		};
+		this.calls++;
 
 		return request.get(options, function(e,r,b){
 			callback(b,r,e);
