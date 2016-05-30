@@ -141,6 +141,7 @@ var workers = (function(){
 		}
 
 		for(let worker of workers){
+			if(worker.length <= 3) break;
 			if(worker.availrunners.length === 0 && worker.usedrunner === 0){
 				console.log('found zombie worker, destroying')
 				workers.destroy(worker);
