@@ -226,6 +226,7 @@ setTimeout(function(){
 	setInterval(workers.checkBalance, 30000);
 }, 180000);
 workers.destroyOld();
+workers.checkBalance();
 
 // router.get('/start/:name', function(req, res, next){
 // 	return lxc.start(req.params.name, function(data){
