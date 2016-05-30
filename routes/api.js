@@ -58,7 +58,6 @@ var workers = (function(){
 	workers.destroy = function(worker){
 		worker = worker || workers.pop();
 		doapi.dropletDestroy(worker.id, function(){});
-		// workers.checkBalance();
 	};
 
 	workers.makeWorkerObj = function(worker){
@@ -216,7 +215,6 @@ var getAvailrunner = function(runner){
 		if(worker.availrunners.length === 0) continue;
 		if(runner && runner.worker.index <= worker.index) break;
 		if(runner) runnerFree(runner);
-		workers.checkBalance();
 		return worker.getRunner();
 	}
 	if(runner) return runner;
