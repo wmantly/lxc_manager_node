@@ -201,7 +201,7 @@ var run = function(req, res, runner){
 	
 	return request.post(httpOptions, function(error, response, body){
 		// console.log('runner response:', arguments)
-		if(error) return false;
+		if(res.statusCode !== 200 || error) return run(req, res, getAvailrunner());
 		console.log('body', body);
 		body = JSON.parse(body);
 
