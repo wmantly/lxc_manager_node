@@ -124,8 +124,8 @@ var workers = (function(){
 		var changed = false;
 		console.log('checking balance');
 
-		if(workers.length < 2){
-			console.log('less then 2 workers, starting a droplet');
+		if(workers.length < 3){
+			console.log('less then 3 workers, starting a droplet');
 			for(var i=2; i--;) workers.create();
 			return ;
 		}
@@ -133,7 +133,7 @@ var workers = (function(){
 			console.log('last droplet has no free runners, starting droplet');
 			return workers.create();
 		}
-		if(workers.length > 2 && workers[workers.length-1].usedrunner === 0 && workers[workers.length-2].usedrunner === 0){
+		if(workers.length > 3 && workers[workers.length-1].usedrunner === 0 && workers[workers.length-2].usedrunner === 0){
 			console.log('Last 2 runners not used, killing last runner');
 			workers.destroy();
 		}
@@ -226,6 +226,7 @@ var getAvailrunner = function(runner){
 	return false;
 };
 
+setInterval(workers.checkBalance, 30000);
 workers.destroyOld();
 
 // router.get('/start/:name', function(req, res, next){
