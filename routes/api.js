@@ -97,6 +97,7 @@ var workers = (function(){
 		console.log('starting runners on', worker.name)
 		stopPercent = stopPercent || 80;
 		ramPercentUsed(worker.ip, function(usedMemPercent){
+			console.log('using ', usedMemPercent, ' on ', worker.name, ' continueing');
 			if(usedMemPercent < stopPercent ){
 				var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
 				return lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
