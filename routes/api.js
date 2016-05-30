@@ -206,7 +206,7 @@ var run = function(req, res, runner){
 	
 	return request.post(httpOptions, function(error, response, body){
 		// console.log('runner response:', arguments)
-		if(response.statusCode !== 200 || error) return run(req, res, getAvailrunner());
+		if(error || response.statusCode !== 200) return run(req, res, getAvailrunner());
 		body = JSON.parse(body);
 
 		body['ip'] = getAvailrunner(runner).label;
