@@ -93,16 +93,16 @@ var workers = (function(){
 		});
 	};
 
-	workers.startRunners = function(worker, new,stopPercent){
+	workers.startRunners = function(worker, newWorker, stopPercent){
 		console.log('starting runners on', worker.name)
 		stopPercent = stopPercent || 80;
 		ramPercentUsed(worker.ip, function(usedMemPercent){
 			if(usedMemPercent < stopPercent ){
 				var name = 'crunner-'+(Math.random()*100).toString().replace('.','');
 				return lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
-					if( !data.ip ) return setTimeout(workers.startRunners(worker),0);
+					if(!data.ip) return setTimeout(workers.startRunners(worker, newWorker),0);
 					console.log('started runner')
-					if(new) worker = workers[workers.push(workers.makeWorkerObj(worker))-1]
+					if(newWorker) worker = workers[workers.push(workers.makeWorkerObj(worker))-1]
 
 					worker.availrunners.push({
 						ip: data.ip,
