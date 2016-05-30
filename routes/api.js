@@ -58,7 +58,7 @@ var workers = (function(){
 	workers.destroy = function(worker){
 		worker = worker || workers.pop();
 		doapi.dropletDestroy(worker.id, function(){});
-		workers.checkBalance();
+		// workers.checkBalance();
 	};
 
 	workers.makeWorkerObj = function(worker){
@@ -89,7 +89,7 @@ var workers = (function(){
 				console.log('found old droplet, killing it');
 				doapi.dropletDestroy(worker.id, function(){});
 			});
-			// workers.checkBalance();
+			workers.checkBalance();
 		});
 	};
 
