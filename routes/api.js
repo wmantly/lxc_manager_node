@@ -126,7 +126,7 @@ var workers = (function(){
 
 		if(workers.length < minWorkers){
 			console.log('less then 3 workers, starting a droplet');
-			for(var i=minWorkers; i--;) workers.create();
+			for(var i=minWorkers-workers.length; i--;) workers.create();
 			return ;
 		}
 		if(workers[workers.length-1].usedrunner !== 0){
@@ -221,8 +221,9 @@ var getAvailrunner = function(runner){
 	if(runner) return runner;
 	return false;
 };
-
-setInterval(workers.checkBalance, 30000);
+setTimeout(function(){
+	setInterval(workers.checkBalance, 30000);
+}, 180000);
 workers.destroyOld();
 
 // router.get('/start/:name', function(req, res, next){
