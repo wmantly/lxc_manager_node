@@ -139,6 +139,7 @@ var workers = (function(){
 
 		for(let worker of workers){
 			if(worker.availrunners.length === 0 && worker.usedrunner === 0){
+				console.log('found zombie worker, destroying')
 				workers.destroy(worker);
 				changed = true;
 			}
@@ -217,6 +218,7 @@ var getAvailrunner = function(runner){
 		if(worker.availrunners.length === 0) continue;
 		if(runner && runner.worker.index <= worker.index) break;
 		if(runner) runnerFree(runner);
+		workers.checkBalance();
 		return worker.getRunner();
 	}
 	if(runner) return runner;
