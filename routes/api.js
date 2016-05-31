@@ -196,7 +196,8 @@ var run = function(req, res, runner, count){
 	};
 	console.log('run', runner);
 	if(!runner || count > 3){
-		return res.status(503).json({ error: 'No runners, try again soon.' });
+		res.status(503);
+		return res.json({error: 'No runners, try again soon.'});
 	}
 
 	return request.post(httpOptions, function(error, response, body){
@@ -221,6 +222,7 @@ var getAvailrunner = function(runner){
 	}
 	console.log('getAvailrunner, none found', runner);
 	if(runner) return runner;
+	console.log('no..')
 	return false;
 };
 
@@ -304,7 +306,7 @@ router.get('/liststuff', function(req, res, next){
 });
 
 router.post('/run/:ip?', function doRun(req, res, next){
-	console.log('hit runner route')
+	console.log('hit runner route');
 	var runner = getAvailrunner(label2runner[req.params.ip]);
 	return run(req, res, runner);
 });
