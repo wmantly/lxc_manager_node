@@ -194,7 +194,7 @@ var run = function(req, res, runner, count){
 			code: req.body.code
 		})
 	};
-
+	console.log('run', runner);
 	if(!runner || count > 3){
 		return res.status(503).json({ error: 'No runners, try again soon.' });
 	}
@@ -219,7 +219,7 @@ var getAvailrunner = function(runner){
 		if(runner) runnerFree(runner);
 		return worker.getRunner();
 	}
-	console.log(runner);
+	console.log('getAvailrunner, none found', runner);
 	if(runner) return runner;
 	return false;
 };
