@@ -11,7 +11,7 @@ def testAPI(times=100, sleep=2):
 				data={'code': 'pwd'}
 			)
 			if res.status_code != 200: errors += 1
-			print(i, res.status_code, r.content)
+			print(i, res.status_code, res.content)
 		except:
 			print('caught error')
 			errors += 1
