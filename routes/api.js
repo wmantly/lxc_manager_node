@@ -17,7 +17,11 @@ var isCheckingWorkers = false;
 
 var workers = (function(){
 	var workers = [];
+	
+	workers.currentCreatingMax = 2;
 
+	workers.currentCreating = 0;
+	
 	workers.checkDroplet = function(id, time){
 		time = time || 10000;
 
@@ -29,6 +33,7 @@ var workers = (function(){
 				return setTimeout(function(worker){
 					console.log('Ready to start runners!');
 					workers.startRunners(workers.makeWorkerObj(worker), true);
+					workers.currentCreating--;
 				}, 20000, worker);
 			}else{
 				console.log('Worker not ready, check again in ', time, 'MS');
@@ -41,12 +46,13 @@ var workers = (function(){
 	};
 
 	workers.create = function(){
+		if(workers.currentCreating > workers.currentCreatingMax ) 
 		return doapi.dropletCreate({	
 			name: 'clw'+workerSnapID+'-'+(Math.random()*100).toString().slice(-4),
 			image: '17575764'
 		}, function(data){
 			data = JSON.parse(data);
-
+			workers.currentCreating++;
 			setTimeout(function(dopletNewID){
 				return workers.checkDroplet(dopletNewID);
 			}, 70000, data.droplet.id);
