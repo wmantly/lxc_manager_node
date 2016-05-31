@@ -184,7 +184,7 @@ var lxcTimeout = function(runner, time){
 
 var run = function(req, res, runner, count){
 	count = count || 0;
-	console.log('run start', count);
+	console.log('run start', count, runner);
 	var httpOptions = {
 		url: 'http://' + runner.worker.ip,
 		headers: {
@@ -195,7 +195,7 @@ var run = function(req, res, runner, count){
 		})
 	};
 	console.log('run', runner);
-	
+
 	if(!runner || count > 3){
 		res.status(503);
 		return res.json({error: 'No runners, try again soon.'});
