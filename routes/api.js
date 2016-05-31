@@ -49,7 +49,7 @@ var workers = (function(){
 		if(workers.currentCreating > workers.currentCreatingMax ) return false;
 		return doapi.dropletCreate({	
 			name: 'clw'+workerSnapID+'-'+(Math.random()*100).toString().slice(-4),
-			image: '17575764'
+			image: '17640639'
 		}, function(data){
 			data = JSON.parse(data);
 			workers.currentCreating++;
