@@ -185,6 +185,13 @@ var lxcTimeout = function(runner, time){
 var run = function(req, res, runner, count){
 	count = count || 0;
 	console.log('run start', count, runner);
+
+	if(!runner){
+		console.log('no runner');
+		res.status(503);
+		return res.json({error: 'No runners, try again soon.'});
+	}
+
 	var httpOptions = {
 		url: 'http://' + runner.worker.ip,
 		headers: {
@@ -196,11 +203,6 @@ var run = function(req, res, runner, count){
 	};
 	console.log('run', runner);
 
-	if(runner == null){
-		console.log('no runner');
-		res.status(503);
-		return res.json({error: 'No runners, try again soon.'});
-	}
 
 	return request.post(httpOptions, function(error, response, body){
 		// console.log('runner response:', arguments)
@@ -217,16 +219,12 @@ var run = function(req, res, runner, count){
 
 var getAvailrunner = function(runner){
 	for(let worker of workers){
-		console.log('checking ', worker.name, ' with ', worker.availrunners.length, ' free workers');
 		if(worker.availrunners.length === 0) continue;
 		if(runner && runner.worker.index <= worker.index) break;
 		if(runner) runnerFree(runner);
-		console.log('getAvailrunner while loop', runner);
 		return worker.getRunner();
 	}
-	console.log('getAvailrunner, none found', runner);
 	if(runner) return runner;
-	console.log('no..')
 	return null;
 };
 
@@ -312,7 +310,6 @@ router.get('/liststuff', function(req, res, next){
 router.post('/run/:ip?', function doRun(req, res, next){
 	console.log('hit runner route');
 	var runner = getAvailrunner(label2runner[req.params.ip]);
-	console.log('route ', runner);
 	return run(req, res, runner);
 });
 
