@@ -196,7 +196,7 @@ var run = function(req, res, runner, count){
 	};
 	console.log('run', runner);
 
-	if(!runner){
+	if(runner == null){
 		console.log('no runner');
 		res.status(503);
 		return res.json({error: 'No runners, try again soon.'});
@@ -227,7 +227,7 @@ var getAvailrunner = function(runner){
 	console.log('getAvailrunner, none found', runner);
 	if(runner) return runner;
 	console.log('no..')
-	return false;
+	return null;
 };
 
 setTimeout(function(){
