@@ -219,6 +219,7 @@ var getAvailrunner = function(runner){
 		if(runner) runnerFree(runner);
 		return worker.getRunner();
 	}
+	console.log(runner);
 	if(runner) return runner;
 	return false;
 };
