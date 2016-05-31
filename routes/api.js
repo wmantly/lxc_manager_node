@@ -202,6 +202,7 @@ var run = function(req, res, runner, count){
 
 	return request.post(httpOptions, function(error, response, body){
 		// console.log('runner response:', arguments)
+		console.log('in request');
 		if(error || response.statusCode !== 200) return run(req, res, getAvailrunner(), ++count);
 		body = JSON.parse(body);
 
@@ -218,6 +219,7 @@ var getAvailrunner = function(runner){
 		if(worker.availrunners.length === 0) continue;
 		if(runner && runner.worker.index <= worker.index) break;
 		if(runner) runnerFree(runner);
+		console.log('getAvailrunner while loop', runner);
 		return worker.getRunner();
 	}
 	console.log('getAvailrunner, none found', runner);
@@ -308,6 +310,7 @@ router.get('/liststuff', function(req, res, next){
 router.post('/run/:ip?', function doRun(req, res, next){
 	console.log('hit runner route');
 	var runner = getAvailrunner(label2runner[req.params.ip]);
+	console.log('route ', runner);
 	return run(req, res, runner);
 });
 
