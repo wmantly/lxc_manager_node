@@ -197,6 +197,7 @@ var run = function(req, res, runner, count){
 	console.log('run', runner);
 
 	if(!runner || count > 3){
+		console.log('no runner');
 		res.status(503);
 		return res.json({error: 'No runners, try again soon.'});
 	}
