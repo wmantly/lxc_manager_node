@@ -70,14 +70,14 @@ var workers = (function(){
 		worker.index = workers.length,
 		worker.getRunner = function(){
 			if(this.availrunners.length === 0) return false;
-			console.log('geting runner from ', worker.name, ' aval length ', this.availrunners.length);
+			console.log('getting runner from ', worker.name, ' avail length ', this.availrunners.length);
 			var runner = this.availrunners.pop();
 			this.usedrunner++;
 			label2runner[runner.label] = runner;
 			
 			return runner;
 		}
-		
+
 		return worker;
 	};
 
@@ -126,8 +126,8 @@ var workers = (function(){
 			for(var i=minWorkers-workers.length; i--;) workers.create();
 			return ;
 		}
-		if(workers[workers.length-3].usedrunner !== 0){
-			console.log('last droplet has no free runners, starting droplet');
+		if(workers[workers.length-3].usedrunner !== 0 && workers[workers.length-2].usedrunner !== 0 && workers[workers.length-1].usedrunner !== 0){
+			console.log('last 3 workers have no free runners, starting droplet');
 			return workers.create();
 		}
 		if(workers.length > minWorkers && workers[workers.length-3].usedrunner === 0 && workers[workers.length-2].usedrunner === 0 && workers[workers.length-1].usedrunner === 0){
@@ -171,7 +171,7 @@ var runnerFree = function(runner){
 };
 
 var lxcTimeout = function(runner, time){
-	time = time || 900000; // 15 minutes
+	time = time || 300000; // 5 minutes
 
 	if(runner.hasOwnProperty('timeout')){
 		clearTimeout(runner.timeout);
@@ -182,8 +182,9 @@ var lxcTimeout = function(runner, time){
 	}, time);
 };
 
-var run = function(req, res, runner){
+var run = function(req, res, runner, count){
 
+	count = count || 0;
 	var httpOptions = {
 		url: 'http://' + runner.worker.ip,
 		headers: {
@@ -194,9 +195,13 @@ var run = function(req, res, runner){
 		})
 	};
 
+	if(!runner || count > 3){
+		return res.status(503).json({ error: 'No runners, try again soon.' });
+	}
+
 	return request.post(httpOptions, function(error, response, body){
 		// console.log('runner response:', arguments)
-		if(error || response.statusCode !== 200) return run(req, res, getAvailrunner());
+		if(error || response.statusCode !== 200) return run(req, res, getAvailrunner(), ++count);
 		body = JSON.parse(body);
 
 		body['ip'] = runner.label;
