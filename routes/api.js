@@ -42,7 +42,7 @@ var workers = (function(){
 
 	workers.create = function(){
 		return doapi.dropletCreate({	
-			name: 'clw'+workerSnapID+'-'+(Math.random()*100).toString().slice(0,4),
+			name: 'clw'+workerSnapID+'-'+(Math.random()*100).toString().slice(-3,-0),
 			image: '17575764'
 		}, function(data){
 			data = JSON.parse(data);
@@ -96,7 +96,7 @@ var workers = (function(){
 		stopPercent = stopPercent || 80;
 		ramPercentUsed(worker.ip, function(usedMemPercent){
 			if(usedMemPercent < stopPercent ){
-				var name = 'crunner-'+(Math.random()*100).toString().slice(0,4);
+				var name = 'crunner-'+(Math.random()*100).toString().slice(-3,-0);
 				return lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
 					if(!data.ip) return setTimeout(workers.startRunners(worker, newWorker),0);
 					console.log('started runner on', worker.name)
@@ -182,6 +182,17 @@ var lxcTimeout = function(runner, time){
 	}, time);
 };
 
+var getAvailrunner = function(runner){
+	for(let worker of workers){
+		if(worker.availrunners.length === 0) continue;
+		if(runner && runner.worker.index <= worker.index) break;
+		if(runner) runnerFree(runner);
+		return worker.getRunner();
+	}
+	if(runner) return runner;
+	return null;
+};
+
 var run = function(req, res, runner, count){
 	count = count || 0;
 	console.log('run start', count, runner);
@@ -215,17 +226,6 @@ var run = function(req, res, runner, count){
 		return res.json(body);
 
 	});
-};
-
-var getAvailrunner = function(runner){
-	for(let worker of workers){
-		if(worker.availrunners.length === 0) continue;
-		if(runner && runner.worker.index <= worker.index) break;
-		if(runner) runnerFree(runner);
-		return worker.getRunner();
-	}
-	if(runner) return runner;
-	return null;
 };
 
 setTimeout(function(){
