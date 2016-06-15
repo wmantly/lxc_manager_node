@@ -79,7 +79,9 @@ var workers = (function(){
 			console.log('getting runner from ', worker.name, ' avail length ', this.availrunners.length);
 			var runner = this.availrunners.pop();
 			this.usedrunner++;
+			lxcTimeout(runner);
 			label2runner[runner.label] = runner;
+			
 			
 			return runner;
 		}
