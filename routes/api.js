@@ -100,7 +100,7 @@ var workers = (function(){
 		doapi.dropletsByTag('clworker', function(data){
 			data = JSON.parse(data);
 			data['droplets'].forEach(function(worker){
-				if(worker.id in currentIDs) return false;
+				if(~currentIDs.indexOf(worker.id)) return false;
 
 				console.log('found old droplet, killing it');
 				doapi.dropletDestroy(worker.id, function(){});
