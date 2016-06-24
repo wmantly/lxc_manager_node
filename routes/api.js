@@ -48,7 +48,7 @@ var workers = (function(){
 		if(workers.currentCreating > workers.currentCreatingMax ) return false;
 		return doapi.dropletCreate({	
 			name: 'clw'+workerSnapID+'-'+(Math.random()*100).toString().slice(-4),
-			image: '17640639'
+			image: '17641214'
 		}, function(data){
 			data = JSON.parse(data);
 			workers.currentCreating++;
@@ -78,7 +78,9 @@ var workers = (function(){
 			// console.log('getting runner from ', worker.name, ' avail length ', this.availrunners.length);
 			var runner = this.availrunners.pop();
 			this.usedrunner++;
+			lxcTimeout(runner);
 			label2runner[runner.label] = runner;
+			
 			
 			return runner;
 		}
