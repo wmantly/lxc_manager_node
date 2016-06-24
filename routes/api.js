@@ -332,7 +332,7 @@ router.get('/stop/:name', function(req, res, next){
 		}
 	});
 });
-router.get('destroyOld', function(req, res, next) {
+router.get('/destroyOld', function(req, res, next) {
 	workers.destroyOld();
 	res.send('?');
 });
