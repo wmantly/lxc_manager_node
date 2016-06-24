@@ -104,7 +104,7 @@ var workers = (function(){
 			console.log('current worker ids', currentIDs)
 			console.log('do droplets', data['droplets'].length, data['droplets'])
 			data['droplets'].forEach(function(worker){
-				console.log('checking', worker.id)
+				console.log('checking', worker.name, worker.id)
 				if(~currentIDs.indexOf(worker.id)) return false;
 
 				console.log('found old droplet, killing it');
