@@ -102,7 +102,7 @@ var workers = (function(){
 		doapi.dropletsByTag('clworker', function(data){
 			data = JSON.parse(data);
 			console.log('current worker ids', currentIDs)
-			console.log('do droplets', data)
+			console.log('do droplets', data['droplets'].length, data['droplets'])
 			data['droplets'].forEach(function(worker){
 				console.log('checking', worker.id)
 				if(~currentIDs.indexOf(worker.id)) return false;
