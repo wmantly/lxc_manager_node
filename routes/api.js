@@ -12,7 +12,6 @@ var workerSnapID = 'V1'
 // console.log = function(){};
 
 var label2runner = {};
-var workers = [];
 var isCheckingWorkers = false;
 
 var workers = (function(){
@@ -28,15 +27,15 @@ var workers = (function(){
 		return doapi.dropletInfo(id, function(data){
 			var worker = JSON.parse(data)['droplet'];
 			if(worker.status == 'active'){
-				console.log('Droplet is now active, starting runners in 20 seconds');
+				// console.log('Droplet is now active, starting runners in 20 seconds');
 
 				return setTimeout(function(worker){
-					console.log('Ready to start runners!');
+					// console.log('Ready to start runners!');
 					workers.startRunners(workers.makeWorkerObj(worker), true);
 					workers.currentCreating--;
 				}, 20000, worker);
 			}else{
-				console.log('Worker not ready, check again in ', time, 'MS');
+				// console.log('Worker not ready, check again in ', time, 'MS');
 
 				return setTimeout(function(){
 					workers.checkDroplet(id);
@@ -63,7 +62,7 @@ var workers = (function(){
 
 	workers.destroy = function(worker){
 		var worker = worker || workers.pop();
-		return doapi.dropletDestroy(worker.id, function(){});
+		return doapi.dropletDestroy(worker.id, console.log);
 	};
 
 	workers.makeWorkerObj = function(worker){
@@ -76,7 +75,7 @@ var workers = (function(){
 		worker.index = workers.length,
 		worker.getRunner = function(){
 			if(this.availrunners.length === 0) return false;
-			console.log('getting runner from ', worker.name, ' avail length ', this.availrunners.length);
+			// console.log('getting runner from ', worker.name, ' avail length ', this.availrunners.length);
 			var runner = this.availrunners.pop();
 			this.usedrunner++;
 			label2runner[runner.label] = runner;
@@ -87,10 +86,20 @@ var workers = (function(){
 		return worker;
 	};
 
+	workers.__workersId = function(argument){
+		return workers.map(function(item){
+			return item.id;
+		});
+
+	};
+
 	workers.destroyOld = function(){
+		var currentIDs = workers.__workersId()
 		doapi.dropletsByTag('clworker', function(data){
 			data = JSON.parse(data);
 			data['droplets'].forEach(function(worker){
+				if(worker.id in currentIDs) return false;
+
 				console.log('found old droplet, killing it');
 				doapi.dropletDestroy(worker.id, function(){});
 			});
@@ -105,7 +114,7 @@ var workers = (function(){
 				var name = 'crunner-'+(Math.random()*100).toString().slice(-4);
 				return lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
 					if(!data.ip) return setTimeout(workers.startRunners(worker, newWorker),0);
-					console.log('started runner on', worker.name)
+					// console.log('started runner on', worker.name)
 					if(newWorker) worker = workers[workers.push(worker)-1]
 
 					worker.availrunners.push({
@@ -201,12 +210,18 @@ var getAvailrunner = function(runner){
 
 var run = function(req, res, runner, count){
 	count = count || 0;
-	console.log('run start', count, runner);
+	console.log('run start', count);
 
 	if(!runner){
 		console.log('no runner');
 		res.status(503);
 		return res.json({error: 'No runners, try again soon.'});
+	}
+
+	if(count > 3){
+		console.log('to many reties on runner');
+		res.status(400);
+		return res.json({error: 'Runner restarted to many times'});
 	}
 
 	var httpOptions = {
@@ -235,9 +250,13 @@ var run = function(req, res, runner, count){
 };
 
 setTimeout(function(){
-	console.log('Starting balance checking in 30 seconds')
+	// console.log('Starting balance checking in 30 seconds')
 	setInterval(workers.checkBalance, 15000);
-}, 180000);
+}, 180000); 
+
+setInterval(function(argument) {
+	workers.destroyOld();
+}, 3600000); // 1 hour
 
 workers.destroyOld();
 workers.checkBalance();
