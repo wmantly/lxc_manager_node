@@ -188,7 +188,7 @@ var runnerFree = function(runner){
 };
 
 var lxcTimeout = function(runner, time){
-	time = time || 300000; // 5 minutes
+	time = time || 60000; // 1 minutes
 
 	if(runner.hasOwnProperty('timeout')){
 		clearTimeout(runner.timeout);
