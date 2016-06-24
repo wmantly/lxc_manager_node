@@ -103,7 +103,7 @@ var workers = (function(){
 			data = JSON.parse(data);
 			console.log('current worker ids', currentIDs)
 			console.log('do droplets', data['droplets'].length, data['droplets'].map(function(item){
-				return item.id + item.name;
+				return item.name+'| '+item.id;
 			}));
 			data['droplets'].forEach(function(worker){
 				console.log('checking', worker.name, worker.id)
