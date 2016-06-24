@@ -110,7 +110,7 @@ var workers = (function(){
 				if(~currentIDs.indexOf(worker.id)) return false;
 
 				console.log('found old droplet, killing it');
-				doapi.dropletDestroy(worker.id, function(){});
+				doapi.dropletDestroy(worker.id, function(body){console.log('delete body', body)});
 			});
 		});
 	};
