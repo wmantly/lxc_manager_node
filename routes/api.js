@@ -62,7 +62,9 @@ var workers = (function(){
 
 	workers.destroy = function(worker){
 		var worker = worker || workers.pop();
-		return doapi.dropletDestroy(worker.id, console.log);
+		return doapi.dropletDestroy(worker.id, function(body) {
+			console.log('body of destroy', body)
+		});
 	};
 
 	workers.makeWorkerObj = function(worker){
@@ -100,6 +102,7 @@ var workers = (function(){
 		doapi.dropletsByTag('clworker', function(data){
 			data = JSON.parse(data);
 			data['droplets'].forEach(function(worker){
+				console.log('current worker ids', currentIDs)
 				if(~currentIDs.indexOf(worker.id)) return false;
 
 				console.log('found old droplet, killing it');
@@ -235,7 +238,7 @@ var run = function(req, res, runner, count){
 			code: req.body.code
 		})
 	};
-	console.log('run', runner);
+	console.log('run');
 
 
 	return request.post(httpOptions, function(error, response, body){
