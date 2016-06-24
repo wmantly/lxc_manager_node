@@ -101,8 +101,10 @@ var workers = (function(){
 		var currentIDs = workers.__workersId()
 		doapi.dropletsByTag('clworker', function(data){
 			data = JSON.parse(data);
+			console.log('current worker ids', currentIDs)
+			console.log('do droplets', data)
 			data['droplets'].forEach(function(worker){
-				console.log('current worker ids', currentIDs)
+				console.log('checking', worker.id)
 				if(~currentIDs.indexOf(worker.id)) return false;
 
 				console.log('found old droplet, killing it');
@@ -238,12 +240,10 @@ var run = function(req, res, runner, count){
 			code: req.body.code
 		})
 	};
-	console.log('run');
 
 
 	return request.post(httpOptions, function(error, response, body){
 		// console.log('runner response:', arguments)
-		console.log('in request');
 		if(error || response.statusCode !== 200) return run(req, res, getAvailrunner(), ++count);
 		body = JSON.parse(body);
 
