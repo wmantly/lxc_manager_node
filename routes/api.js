@@ -321,6 +321,7 @@ workers.checkBalance();
 // 	});
 // });
 
+
 router.get('/stop/:name', function(req, res, next){
 	return lxc.stop(req.params.name, function(data){
 		console.log('stop', arguments);
@@ -330,6 +331,10 @@ router.get('/stop/:name', function(req, res, next){
 			return res.json({status: 200});
 		}
 	});
+});
+router.get('destroyOld', function(req, res, next) {
+	workers.destroyOld();
+	res.send('?');
 });
 
 router.get('/liststuff', function(req, res, next){
