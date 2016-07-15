@@ -113,6 +113,20 @@ api = function(key){
 		});
 	};
 
+	this.domianAddRecord = function(args, callback){
+
+		var options = {
+			url: this.BASEURL+'domains/'+ args.domain +'/records',
+			headers: this.headers,
+			body: JSON.stringify(args)
+		};
+		this.calls++;
+
+		return request.post(options, function(error, response, body){
+			return callback(body, response, error);
+		});
+	}
+
 	return this;
 }
 
