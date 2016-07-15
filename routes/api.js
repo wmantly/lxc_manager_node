@@ -263,6 +263,8 @@ var run = function(req, res, runner, count){
 		body = JSON.parse(body);
 
 		body['ip'] = runner.label;
+		body['rname'] = runner.name;
+		body['wname'] = runner.worker.name;
 		lxcTimeout(runner);
 		return res.json(body);
 
