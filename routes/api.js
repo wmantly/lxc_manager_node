@@ -134,7 +134,7 @@ var workers = (function(){
 						doapi.domianAddRecord({
 							domain: "codeland.us",
 							type: "A",
-							name: "*."+worker.name+".workers.codeland.us",
+							name: "*."+worker.name+".workers",
 							data: worker.publicIP
 						}, function(){});
 					}
