@@ -135,7 +135,7 @@ var workers = (function(){
 							domain: "codeland.us",
 							type: "A",
 							name: "*."+worker.name+".workers.codeland.us",
-							data: worker.ip
+							data: worker.publicIP
 						}, function(){});
 					}
 
