@@ -114,7 +114,7 @@ var workers = (function(){
 				console.log('found old droplet, killing it');
 				setTimeout(function(id) {
 					// body...
-					doapi.dropletDestroy(.id, function(body){console.log('delete body', body)});
+					doapi.dropletDestroy(id, function(body){console.log('delete body', body)});
 				}, Math.floor(Math.random() * 9) + 1, worker.id)
 			});
 		});
