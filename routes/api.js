@@ -48,13 +48,14 @@ var workers = (function(){
 		if(workers.currentCreating > workers.currentCreatingMax ) return false;
 		return doapi.dropletCreate({	
 			name: 'clw'+workerSnapID+'-'+(Math.random()*100).toString().slice(-4),
-			image: '17641214'
+			image: '18473675'
 		}, function(data){
 			data = JSON.parse(data);
 			workers.currentCreating++;
 			setTimeout(function(dopletNewID){
 				return workers.checkDroplet(dopletNewID);
 			}, 70000, data.droplet.id);
+
 			return doapi.dropletSetTag('clworker', data.droplet.id, function(){});
 		});
 
@@ -124,7 +125,15 @@ var workers = (function(){
 				return lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
 					if(!data.ip) return setTimeout(workers.startRunners(worker, newWorker),0);
 					// console.log('started runner on', worker.name)
-					if(newWorker) worker = workers[workers.push(worker)-1]
+					if(newWorker){
+						worker = workers[workers.push(worker)-1];
+						doapi.domianAddRecord({
+							domain: "codeland.us",
+							type: "A",
+							name: "*."+worker.name+".workers.codeland.us",
+							data: worker.ip
+						}, function(){});
+					}
 
 					worker.availrunners.push({
 						ip: data.ip,
