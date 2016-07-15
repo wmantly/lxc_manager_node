@@ -160,22 +160,22 @@ var workers = (function(){
 			for(var i=minWorkers-workers.length; i--;) workers.create();
 			return ;
 		}
-		if(workers[workers.length-3].usedrunner !== 0 && workers[workers.length-2].usedrunner !== 0 && workers[workers.length-1].usedrunner !== 0){
-			console.log('last 3 workers have no free runners, starting droplet');
-			return workers.create();
-		}
-		if(workers.length > minWorkers && workers[workers.length-3].usedrunner === 0 && workers[workers.length-2].usedrunner === 0 && workers[workers.length-1].usedrunner === 0){
-			console.log('Last 2 runners not used, killing last runner', workers.length);
-			return workers.destroy();
-		}
+		// if(workers[workers.length-3].usedrunner !== 0 && workers[workers.length-2].usedrunner !== 0 && workers[workers.length-1].usedrunner !== 0){
+		// 	console.log('last 3 workers have no free runners, starting droplet');
+		// 	return workers.create();
+		// }
+		// if(workers.length > minWorkers && workers[workers.length-3].usedrunner === 0 && workers[workers.length-2].usedrunner === 0 && workers[workers.length-1].usedrunner === 0){
+		// 	console.log('Last 2 runners not used, killing last runner', workers.length);
+		// 	return workers.destroy();
+		// }
 
-		for(let worker of workers){
-			if(worker.length <= 3) break;
-			if(worker.availrunners.length === 0 && worker.usedrunner === 0){
-				console.log('found zombie worker, destroying')
-				workers.destroy(worker);
-			}
-		}
+		// for(let worker of workers){
+		// 	if(worker.length <= 3) break;
+		// 	if(worker.availrunners.length === 0 && worker.usedrunner === 0){
+		// 		console.log('found zombie worker, destroying')
+		// 		workers.destroy(worker);
+		// 	}
+		// }
 
 		console.log('stopping workers balancing check');
 	};
