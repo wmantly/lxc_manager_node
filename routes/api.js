@@ -112,7 +112,10 @@ var workers = (function(){
 				if(~currentIDs.indexOf(worker.id)) return false;
 
 				console.log('found old droplet, killing it');
-				doapi.dropletDestroy(worker.id, function(body){console.log('delete body', body)});
+				setTimeout(function(id) {
+					// body...
+					doapi.dropletDestroy(.id, function(body){console.log('delete body', body)});
+				}, Math.floor(Math.random() * 9) + 1, worker.id)
 			});
 		});
 	};
@@ -152,7 +155,7 @@ var workers = (function(){
 
 	workers.checkBalance = function(){
 
-		var minWorkers = 3;
+		var minWorkers = 1;
 		console.log('checking balance');
 
 		if(workers.length < minWorkers){
