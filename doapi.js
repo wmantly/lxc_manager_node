@@ -77,6 +77,28 @@ api = function(key){
 		});
 	}
 
+	this.dropletToActive = function(args){
+		var doapi = this;
+		this.dropletCreate(args, function(data){
+			data = JSON.parse(data);
+			setTimeout(function(id, args, doapi){
+				time = args.time || 10000;
+
+				doapi.dropletInfo(id, function check(data){
+					var droplet = JSON.parse(data)['droplet'];
+					if(droplet.status == 'active'){
+
+						return args.onActive(worker);
+					}else{
+						 setTimeout(function(check){
+							checkDroplet(id);
+						}, time, check, .droplet.id);
+					}
+				}, 70000, data.droplet.id, args, doapi);
+			});
+		});
+	}
+
 	this.dropletDestroy = function(dropletID, callback){
 		var options = {
 			url: this.BASEURL+'droplets/'+dropletID,
