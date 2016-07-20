@@ -34,6 +34,7 @@ api = function(key){
 	};
 
 	this.dropletSetTag = function(tag, dropletID, callback) {
+		callback = callback || function(){};
 		var data = {
 			resources: [
 				{
@@ -55,6 +56,8 @@ api = function(key){
 	};
 	
 	this.dropletCreate = function(args, callback){
+		callback = callback || function(){};
+
 		var data = {
 			name: args.name, // || return false,
 			region: args.region || 'nyc3',
@@ -79,27 +82,30 @@ api = function(key){
 
 	this.dropletToActive = function(args){
 		var doapi = this;
+		args.onCreated = args.onCreate || function(){};
+
 		this.dropletCreate(args, function(data){
 			data = JSON.parse(data);
-			setTimeout(function(id, args, doapi){
+			args.onCreate(data, args);
+			setTimeout(function check(id, args, doapi){
 				time = args.time || 10000;
-
-				doapi.dropletInfo(id, function check(data){
+				doapi.dropletInfo(id, function (data){
 					var droplet = JSON.parse(data)['droplet'];
 					if(droplet.status == 'active'){
 
-						return args.onActive(worker);
+						return args.onActive(droplet, args);
 					}else{
-						 setTimeout(function(check){
-							checkDroplet(id);
-						}, time, check, .droplet.id);
+						 setTimeout(function(check, id){
+							check(id, args, doapi);
+						}, time, check, droplet.id);
 					}
-				}, 70000, data.droplet.id, args, doapi);
-			});
+				});
+			}, 70000, data.droplet.id, args, doapi);
 		});
-	}
+	};
 
 	this.dropletDestroy = function(dropletID, callback){
+		callback = callback || function(){};
 		var options = {
 			url: this.BASEURL+'droplets/'+dropletID,
 			headers: this.headers
@@ -123,6 +129,20 @@ api = function(key){
 		});
 	};
 
+	this.tagCreate = function(tag, callback){
+		callback = callback || function(){};
+		var options = {
+			url: this.BASEURL+'tags',
+			headers: this.headers,
+			body: JSON.stringify({name: tag})
+		};
+		this.calls++;
+
+		return request.post(options, function(error, response, body){
+			return callback(body, response, error);
+		});
+	};
+
 	this.tagsList = function(callback){
 		var options = {
 			url: this.BASEURL+'tags',
@@ -136,7 +156,7 @@ api = function(key){
 	};
 
 	this.domianAddRecord = function(args, callback){
-
+		callback = callback || function(){};
 		var options = {
 			url: this.BASEURL+'domains/'+ args.domain +'/records',
 			headers: this.headers,

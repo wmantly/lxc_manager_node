@@ -11,29 +11,35 @@ var label2runner = {};
 
 var workers = (function(){
 	var workers = [];
-	var worker.settings = require('./workers.json');
+	workers.settings = require('./workers.json');
 
 	workers.currentCreating = 0;
 
 	workers.create = function(){
-		if(workers.currentCreating > workers.settins.max ) return false;
+		if(workers.currentCreating > workers.settings.max ) return false;
 		workers.currentCreating++;
-		return doapi.dropletToActive({	
-			name: 'clw'+workerSnapID+'-'+(Math.random()*100).toString().slice(-4),
-			image: '18473675',
-			size: '2gb',
-			onActive = function(worker){
-				doapi.domianAddRecord({
-					domain: "codeland.us",
-					type: "A",
-					name: "*."+args.worker.name+".workers",
-					data: args.worker.publicIP
-				}, function(){});
-
+		return doapi.dropletToActive({
+			name: 'clw'+workers.settings.version+'-'+(Math.random()*100).toString().slice(-4),
+			image: workers.settings.image,
+			size: workers.settings.size,
+			onCreate: function(data){
+				doapi.dropletSetTag('clw'+workers.settings.version, data.droplet.id);
+			},
+			onActive: function(worker, args){
 				workers.startRunners({
 					worker: workers.makeWorkerObj(worker),
-					onDone: function(worker){
-						workers.push(args.worker)
+					onStart: function(runner, args){
+						workers.push(args.worker);
+						doapi.domianAddRecord({
+							domain: "codeland.us",
+							type: "A",
+							name: "*."+worker.name+".workers",
+							data: worker.publicIP
+						});
+						args.onStart = function(){};
+					},
+					onDone: function(args){
+						console.log("done with workers");
 					}
 				}),
 				workers.currentCreating--;
@@ -48,10 +54,9 @@ var workers = (function(){
 		});
 
 		worker.availrunners = [];
-		worker.ip = worker.privateIP;
+		worker.ip = worker.publicIP;
 		worker.usedrunner = 0;
 		worker.index = workers.length;
-		worker.snapShotId = worker.settings.snapShotId;
 
 		worker.getRunner = function(){
 			if(this.availrunners.length === 0) return false;
@@ -62,6 +67,10 @@ var workers = (function(){
 			
 						
 			return runner;
+		}
+
+		worker.freeAll = function(){
+			this.availrunners.forEach(runnerFree);
 		}
 
 		return worker;
@@ -82,18 +91,15 @@ var workers = (function(){
 	};
 
 	workers.destroyOld = function(tag){
-		if(droplets.length === 0) return true;
-		var droplet = droplets.pop();
-		tag = tag || 'clworker';
+		tag = tag || 'clw'+workers.settings.version;
 		var currentIDs = workers.__workersId();
-
 		var deleteDroplets = function(droplets){
-			console.log('checking', droplet.name, droplet.id);
+			if(droplets.length === 0) return true;
+			var droplet = droplets.pop();
 			if(~currentIDs.indexOf(droplet.id)) return deleteDroplets(droplets);
 			
 			doapi.dropletDestroy(droplet.id, function(body){
-				console.log('delete body', body);
-				setTimeout(deleteDroplets(droplets));
+				setTimeout(deleteDroplets, 1000, droplets);
 			});
 		}
 
@@ -101,7 +107,7 @@ var workers = (function(){
 			data = JSON.parse(data);
 			console.log('current worker ids', currentIDs);
 			console.log('do droplets', data['droplets'].length, data['droplets'].map(function(item){
-				return item.name+'| '+item.id;
+				return item.name+' | '+item.id;
 			}));
 
 			deleteDroplets(data['droplets']);
@@ -109,35 +115,38 @@ var workers = (function(){
 	};
 
 	workers.startRunners = function(args){ 
-		// console.log('starting runners on', worker.name, worker.ip)
-		args.stopPercent = stopPercent || 80;
+		// console.log('starting runners on', args.worker.name, args.worker.ip)
+		args.stopPercent = args.stopPercent || 80;
 		args.onStart = args.onStart || function(){};
 		args.onDone = args.onDone || function(){};
 
 		ramPercentUsed(args.worker.ip, function(usedMemPercent){
-			if(usedMemPercent > stopPercent ){
+			if(usedMemPercent > args.stopPercent ){
 				console.log('using', String(usedMemPercent), 
 					'percent memory, stopping runner creation!', args.worker.availrunners.length, 
 					'created on ', args.worker.name
 				);
-				args.onDone(worker)
+				args.onDone(args)
 				return ;
 			}
 
 			var name = 'crunner-'+(Math.random()*100).toString().slice(-4);
+			// console.log('Free ram check passed!')
 			lxc.startEphemeral(name, 'crunner0', args.worker.ip, function(data){
-				if(!data.ip) return setTimeout(workers.startRunners,0, args);
+				if(!data.ip) return setTimeout(workers.startRunners, 0, args);
 				// console.log('started runner on', args.worker.name)
-				args.onStart(args.worker.availrunners[args.worker.availrunners.length-1])
 
-				args.worker.availrunners.push({
+				var runner = {
 					ip: data.ip,
 					name: name,
-					worker: worker,
+					worker: args.worker,
 					label: args.worker.name + ':' + name
-				});
+				};
+				args.onStart(runner, args)
 
-				setTimeout(workers.startRunners(args), 0);
+				args.worker.availrunners.push(runner);
+
+				setTimeout(workers.startRunners, 0, args);
 			});
 		});
 	};
@@ -151,7 +160,7 @@ var workers = (function(){
 			return ;
 		}
 
-		if(minAvail > 0) return ;
+		if(workers.settings.minAvail > 0) return ;
 
 		var lastMinAval
 		for(let worker of workers.slice(-wokers.settings.minAvail)){
@@ -176,6 +185,11 @@ var workers = (function(){
 		}
 	};
 
+	workers.concat = function(newWorkers){
+		newWorkers.forEach(workers.push)
+	}
+
+	doapi.tagCreate('clw'+workers.settings.version)
 	return workers;
 
 })();
@@ -196,9 +210,7 @@ var runnerTimeout = function(runner, time){
 		clearTimeout(runner.timeout);
 	}
 
-	return runner.timeout = setTimeout(function(){
-		runnerFree(runner);
-	}, time);
+	return runner.timeout = setTimeout(runnerFree, time, runner);
 };
 
 var runnerFree = function(runner){
@@ -209,7 +221,7 @@ var runnerFree = function(runner){
 	}
 	delete label2runner[runner.label];
 
-	workers.startRunners(runner.worker);
+	workers.startRunners({worker: runner.worker});
 };
 
 var getAvailrunner = function(runner){
@@ -234,10 +246,9 @@ var run = function(req, res, runner, count){
 		return res.json({error: 'No runners, try again soon.'});
 	}
 
-	if(count > 3){
+	if(count > 2){
 		console.log('to many reties on runner');
-		res.status(400);
-		return res.json({error: 'Runner restarted to many times'});
+		return res.status(400).json({error: 'Runner restarted to many times'});
 	}
 
 	var httpOptions = {
@@ -250,19 +261,22 @@ var run = function(req, res, runner, count){
 		})
 	};
 
-
 	return request.post(httpOptions, function(error, response, body){
 		// console.log('runner response:', arguments)
 		if(error || response.statusCode !== 200) return run(req, res, getAvailrunner(), ++count);
 		body = JSON.parse(body);
-		res.json(body);
-		
-		if(req.params.once) return runnerFree(runner);
+
+		if(req.query.once){
+			res.json(body);
+			return runnerFree(runner, 0);
+		}
 
 		label2runner[runner.label] = runner;
 		body['ip'] = runner.label;
 		body['rname'] = runner.name;
 		body['wname'] = runner.worker.name;
+		res.json(body);
+
 		runnerTimeout(runner);
 	});
 };
@@ -270,7 +284,7 @@ var run = function(req, res, runner, count){
 setTimeout(function(){
 	// console.log('Starting balance checking in 30 seconds')
 	setInterval(workers.checkBalance, 15000);
-}, 180000);
+}, 600000);
 
 workers.destroyOld();
 workers.checkBalance();
@@ -292,7 +306,42 @@ router.get('/destroyOld', function(req, res, next) {
 });
 
 router.post('/updateID', function(req, res, next){
+	var newWorkers = [];
+	var newWorkersTarget = workers.length;
+	var newWokerImage = req.query.image;
+	for(var i = 0; i<newWorkersTarget; i++){
+		doapi.dropletToActive({	
+			name: 'clw'+(workers.settings.version+1)+'-'+(Math.random()*100).toString().slice(-4),
+			image: newWokerImage,
+			size: workers.settings.size,
+			onCreate: function(data){
+				doapi.dropletSetTag('clw'+(workers.settings.version+1), data.droplet.id);
+			},
+			onActive: function(worker){
+				doapi.domianAddRecord({
+					domain: "codeland.us",
+					type: "A",
+					name: "*."+worker.name+".workers",
+					data: worker.publicIP
+				});
 
+				workers.startRunners({
+					worker: workers.makeWorkerObj(worker),
+					onDone: function(worker){
+						newWorkers.push(worker);
+						if(newWorkers.length === newWorkersTarget){
+							workers.forEach(worker.freeAll);
+							workers.settings.image = newWokerImage;
+							workers.settings.version = workers.settings.version+1;
+
+							workers.concat(newWorkers);
+						}
+					}
+				})
+			}
+		});
+	}
+	res.json({status: "maybe?"});
 });
 
 router.get('/liststuff', function(req, res, next){
@@ -300,7 +349,7 @@ router.get('/liststuff', function(req, res, next){
 	res.send("<h1>Workers</h1><pre>"+obj+"</pre><h1>label2runner</h1><pre>"+util.inspect(label2runner)+'</pre><h1>DO calls</h1>'+doapi.calls);
 });
 
-runner.get('/ping/:runner', function(req, res, next){
+router.get('/ping/:runner', function(req, res, next){
 	runnerTimeout(runner);
 	res.json({res:''});
 });
