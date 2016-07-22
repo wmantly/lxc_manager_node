@@ -81,26 +81,29 @@ api = function(key){
 	}
 
 	this.dropletToActive = function(args){
-		var doapi = this;
+		args.__doapi = this; // hold the DO api in the agrs scope
 		args.onCreated = args.onCreate || function(){};
 
 		this.dropletCreate(args, function(data){
 			data = JSON.parse(data);
 			args.onCreate(data, args);
-			setTimeout(function check(id, args, doapi){
+
+			// check if the server is ready, giving time to allow
+			// digital ocean to do its thing
+			setTimeout(function check(id, args){
 				time = args.time || 10000;
-				doapi.dropletInfo(id, function (data){
+				args.__doapi.dropletInfo(id, function (data){
 					var droplet = JSON.parse(data)['droplet'];
 					if(droplet.status == 'active'){
 
 						return args.onActive(droplet, args);
 					}else{
 						 setTimeout(function(check, id){
-							check(id, args, doapi);
+							check(id, args);
 						}, time, check, droplet.id);
 					}
 				});
-			}, 70000, data.droplet.id, args, doapi);
+			}, 70000, data.droplet.id, args);
 		});
 	};
 

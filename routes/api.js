@@ -4,6 +4,7 @@ var express = require('express');
 var router = express.Router();
 var util = require('util');
 var request = require('request');
+var jsonfile = require('jsonfile');
 var lxc = require('../lxc');
 var doapi = require('../doapi')();
 
@@ -18,12 +19,12 @@ var workers = (function(){
 	workers.create = function(){
 		if(workers.currentCreating > workers.settings.max ) return false;
 		workers.currentCreating++;
-		return doapi.dropletToActive({
+		doapi.dropletToActive({
 			name: 'clw'+workers.settings.version+'-'+(Math.random()*100).toString().slice(-4),
 			image: workers.settings.image,
 			size: workers.settings.size,
 			onCreate: function(data){
-				doapi.dropletSetTag('clw'+workers.settings.version, data.droplet.id);
+				doapi.dropletSetTag('clwV'+workers.settings.version, data.droplet.id);
 			},
 			onActive: function(worker, args){
 				workers.startRunners({
@@ -41,7 +42,7 @@ var workers = (function(){
 					onDone: function(args){
 						console.log("done with workers");
 					}
-				}),
+				});
 				workers.currentCreating--;
 			}
 		});
@@ -64,13 +65,8 @@ var workers = (function(){
 			var runner = this.availrunners.pop();
 			this.usedrunner++;
 			runnerTimeout(runner);
-			
 						
 			return runner;
-		}
-
-		worker.freeAll = function(){
-			this.availrunners.forEach(runnerFree);
 		}
 
 		return worker;
@@ -91,7 +87,7 @@ var workers = (function(){
 	};
 
 	workers.destroyOld = function(tag){
-		tag = tag || 'clw'+workers.settings.version;
+		tag = tag || 'clwV'+workers.settings.version;
 		var currentIDs = workers.__workersId();
 		var deleteDroplets = function(droplets){
 			if(droplets.length === 0) return true;
@@ -116,13 +112,17 @@ var workers = (function(){
 
 	workers.startRunners = function(args){ 
 		// console.log('starting runners on', args.worker.name, args.worker.ip)
-		args.stopPercent = args.stopPercent || 80;
+		if(!args.worker || workers.settings.image > args.worker.image.id){
+			console.log('blocked outdated worker', workers.settings.image, args.worker.image.id)
+			return ;
+		}
+		args.stopPercent = args.stopPercent || 20;
 		args.onStart = args.onStart || function(){};
 		args.onDone = args.onDone || function(){};
 
 		ramPercentUsed(args.worker.ip, function(usedMemPercent){
 			if(usedMemPercent > args.stopPercent ){
-				console.log('using', String(usedMemPercent), 
+				console.log('using', String(usedMemPercent).trim(), 
 					'percent memory, stopping runner creation!', args.worker.availrunners.length, 
 					'created on ', args.worker.name
 				);
@@ -160,9 +160,18 @@ var workers = (function(){
 			return ;
 		}
 
+		for(let worker of workers){
+			console.log("checking", worker.name, "if zombie")
+			if(worker.availrunners.length === 0 && worker.usedrunner === 0){
+				workers.splice(workers.indexOf(worker), 1)
+				console.log('found zombie worker, destroying');
+				workers.destroy(worker);
+			}
+		}
+
 		if(workers.settings.minAvail > 0) return ;
 
-		var lastMinAval
+		var lastMinAval = 0;
 		for(let worker of workers.slice(-wokers.settings.minAvail)){
 			if(worker.usedrunner !== 0){
 				console.log('last 3 workers have no free runners, starting droplet');
@@ -177,19 +186,20 @@ var workers = (function(){
 			return workers.destroy();
 		}
 
-		for(let worker of workers){
-			if(worker.availrunners.length === 0 && worker.usedrunner === 0){
-				console.log('found zombie worker, destroying')
-				workers.destroy(worker);
-			}
-		}
+	};
+	workers.settingsSave = function(){
+		jsonfile.writeFile('./workers.json', workers.settings, {spaces: 2}, function(err) {
+			console.error(err)
+		});
 	};
 
-	workers.concat = function(newWorkers){
-		newWorkers.forEach(workers.push)
-	}
+	workers.add = function(newWorkers){
+		newWorkers.forEach(function(worker){
+			workers.push(worker);
+		});
+	};
 
-	doapi.tagCreate('clw'+workers.settings.version)
+	doapi.tagCreate('clwV'+workers.settings.version);
 	return workers;
 
 })();
@@ -306,38 +316,62 @@ router.get('/destroyOld', function(req, res, next) {
 });
 
 router.post('/updateID', function(req, res, next){
-	var newWorkers = [];
-	var newWorkersTarget = workers.length;
-	var newWokerImage = req.query.image;
-	for(var i = 0; i<newWorkersTarget; i++){
-		doapi.dropletToActive({	
-			name: 'clw'+(workers.settings.version+1)+'-'+(Math.random()*100).toString().slice(-4),
-			image: newWokerImage,
-			size: workers.settings.size,
-			onCreate: function(data){
-				doapi.dropletSetTag('clw'+(workers.settings.version+1), data.droplet.id);
+	var newWorkers = {
+		workers: [],
+		target: workers.length,
+		image: req.query.image,
+		size: req.query.size || workers.settings.size,
+		version: workers.settings.version+1
+	};
+
+	doapi.tagCreate('clwV'+newWorkers.version);
+	for(var i=0; i<newWorkers.target; i++){
+
+		doapi.dropletToActive({
+			name: 'clw'+newWorkers.version+'-'+(Math.random()*100).toString().slice(-4),
+			newWorkers: newWorkers,
+			image: newWorkers.image,
+			size: newWorkers.size,
+			onCreate: function(data, args){
+				doapi.dropletSetTag('clwV'+args.newWorkers.version, data.droplet.id);
 			},
-			onActive: function(worker){
-				doapi.domianAddRecord({
-					domain: "codeland.us",
-					type: "A",
-					name: "*."+worker.name+".workers",
-					data: worker.publicIP
-				});
-
+			onActive: function(droplet, args){
 				workers.startRunners({
-					worker: workers.makeWorkerObj(worker),
-					onDone: function(worker){
-						newWorkers.push(worker);
-						if(newWorkers.length === newWorkersTarget){
-							workers.forEach(worker.freeAll);
-							workers.settings.image = newWokerImage;
-							workers.settings.version = workers.settings.version+1;
+					worker: workers.makeWorkerObj(droplet),
+					newWorkers: args.newWorkers,
+					onStart: function(runner, args){
+						args.newWorkers.workers.push(args.worker);
+						console.log('onStart ');
+						args.onStart = function(){};
+					},
+					onDone: function(args){
+						console.log('new workers:', args.newWorkers.workers.length)
+						doapi.domianAddRecord({
+							domain: "codeland.us",
+							type: "A",
+							name: "*."+args.worker.name+".workers",
+							data: args.worker.publicIP
+						});
+						
+						if(args.newWorkers.workers.length >= args.newWorkers.target){
+							console.log('upgrade complete!')
+							workers.settings.image = args.newWorkers.image;
+							workers.settings.size = args.newWorkers.size;
 
-							workers.concat(newWorkers);
+							workers.forEach(function(worker){
+								worker.availrunners.forEach(function(runner){
+									lxc.stop(runner.name, runner.worker.ip);
+								});
+								worker.availrunners = [];
+							});
+
+							workers.add(args.newWorkers.workers);
+							workers.settingsSave();
+							workers.checkBalance();
 						}
 					}
-				})
+
+				});
 			}
 		});
 	}
