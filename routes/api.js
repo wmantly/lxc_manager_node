@@ -126,7 +126,7 @@ var workers = (function(){
 					'percent memory, stopping runner creation!', args.worker.availrunners.length, 
 					'created on ', args.worker.name
 				);
-				args.onDone(args)
+				args.onDone(args);
 				return ;
 			}
 
@@ -142,7 +142,7 @@ var workers = (function(){
 					worker: args.worker,
 					label: args.worker.name + ':' + name
 				};
-				args.onStart(runner, args)
+				args.onStart(runner, args);
 
 				args.worker.availrunners.push(runner);
 
@@ -161,9 +161,9 @@ var workers = (function(){
 		}
 
 		for(let worker of workers){
-			console.log("checking", worker.name, "if zombie")
+			console.log("checking", worker.name, "if zombie");
 			if(worker.availrunners.length === 0 && worker.usedrunner === 0){
-				workers.splice(workers.indexOf(worker), 1)
+				workers.splice(workers.indexOf(worker), 1);
 				console.log('found zombie worker, destroying');
 				workers.destroy(worker);
 			}
@@ -189,7 +189,7 @@ var workers = (function(){
 	};
 	workers.settingsSave = function(){
 		jsonfile.writeFile('./workers.json', workers.settings, {spaces: 2}, function(err) {
-			console.error(err)
+			console.error(err);
 		});
 	};
 
@@ -318,13 +318,17 @@ router.get('/destroyOld', function(req, res, next) {
 router.post('/updateID', function(req, res, next){
 	var newWorkers = {
 		workers: [],
-		target: workers.length,
 		image: req.query.image,
+		target: req.query.target || workers.length,
 		size: req.query.size || workers.settings.size,
-		version: workers.settings.version+1
+		version: workers.settings.version+1,
+		min: req.query.min || workers.settings,
+		minAvail: req.query.minAvail || workers.settings
 	};
 
 	doapi.tagCreate('clwV'+newWorkers.version);
+	workers.destroyOld('clwV'+newWorkers.version);
+
 	for(var i=0; i<newWorkers.target; i++){
 
 		doapi.dropletToActive({
@@ -341,11 +345,11 @@ router.post('/updateID', function(req, res, next){
 					newWorkers: args.newWorkers,
 					onStart: function(runner, args){
 						args.newWorkers.workers.push(args.worker);
-						console.log('onStart ');
+						console.log('onStart', args.worker.name);
 						args.onStart = function(){};
 					},
 					onDone: function(args){
-						console.log('new workers:', args.newWorkers.workers.length)
+						console.log('new workers:', args.newWorkers.workers.length);
 						doapi.domianAddRecord({
 							domain: "codeland.us",
 							type: "A",
@@ -357,6 +361,8 @@ router.post('/updateID', function(req, res, next){
 							console.log('upgrade complete!')
 							workers.settings.image = args.newWorkers.image;
 							workers.settings.size = args.newWorkers.size;
+							workers.settings.min = args.newWorkers.min;
+							workers.settings.minAvail = args.newWorkers.minAvail;
 
 							workers.forEach(function(worker){
 								worker.availrunners.forEach(function(runner){
