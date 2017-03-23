@@ -24,6 +24,7 @@ var workers = (function(){
 			image: workers.settings.image,
 			size: workers.settings.size,
 			onCreate: function(data){
+				console.log(data)
 				doapi.dropletSetTag('clwV'+workers.settings.version, data.droplet.id);
 			},
 			onActive: function(worker, args){
@@ -116,7 +117,7 @@ var workers = (function(){
 			console.log('blocked outdated worker', workers.settings.image, args.worker.image.id)
 			return ;
 		}
-		args.stopPercent = args.stopPercent || 20;
+		args.stopPercent = args.stopPercent || 80;
 		args.onStart = args.onStart || function(){};
 		args.onDone = args.onDone || function(){};
 
@@ -390,6 +391,7 @@ router.get('/liststuff', function(req, res, next){
 });
 
 router.get('/ping/:runner', function(req, res, next){
+	var runner = label2runner[req.params.runner];
 	runnerTimeout(runner);
 	res.json({res:''});
 });
