@@ -45,7 +45,6 @@ var workers = (function(){
 			image: workers.settings.image,
 			size: workers.settings.size,
 			onCreate: function(data){
-				console.log(data)
 				doapi.dropletSetTag('clwV'+workers.settings.version, data.droplet.id);
 			},
 			onActive: function(worker, args){
@@ -62,7 +61,7 @@ var workers = (function(){
 						args.onStart = function(){};
 					},
 					onDone: function(args){
-						console.log("done with workers");
+						console.log("done with runners on", worker.name);
 					}
 				});
 				workers.currentCreating--;
@@ -353,10 +352,7 @@ var run = function(req, res, runner, count){
 	});
 };
 
-setTimeout(function(){
-	// console.log('Starting balance checking in 30 seconds')
-	setInterval(workers.checkBalance, 15000);
-}, 600000);
+setInterval(workers.checkBalance, 15000);
 
 workers.destroyByTag();
 workers.checkBalance();
