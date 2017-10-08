@@ -199,7 +199,7 @@ var workers = (function(){
 				workers.splice(workers.indexOf(worker), 1);
 				console.log('found zombie worker, destroying');
 				workers.destroy(worker);
-				zombie++;
+				zombies++;
 			}
 		}
 
