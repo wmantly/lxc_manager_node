@@ -170,7 +170,7 @@ var workers = (function(){
 			}
 		}
 
-		if(workers.settings.minAvail > 0) return ;
+		if(workers.currentCreating) return ;
 
 		var lastMinAval = 0;
 		for(let worker of workers.slice(-wokers.settings.minAvail)){
