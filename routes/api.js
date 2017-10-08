@@ -182,7 +182,7 @@ var workers = (function(){
 				lastMinAval++;
 			}
 		}
-		if(lastMinAval == wokers.settings.minAvail){
+		if(lastMinAval == workers.settings.minAvail){
 			console.log('Last 3 runners not used, killing last runner', workers.length);
 			return workers.destroy();
 		}
