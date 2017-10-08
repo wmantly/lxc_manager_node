@@ -173,7 +173,7 @@ var workers = (function(){
 		if(workers.currentCreating) return ;
 
 		var lastMinAval = 0;
-		for(let worker of workers.slice(-wokers.settings.minAvail)){
+		for(let worker of workers.slice(-workers.settings.minAvail)){
 			if(worker.usedrunner !== 0){
 				console.log('last 3 workers have no free runners, starting droplet');
 				return workers.create();
