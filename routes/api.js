@@ -236,12 +236,11 @@ var workers = (function(){
 
 			return workers.destroy();
 
-		}else(lastMinAval < workers.settings.minAvail){
+		} else if(lastMinAval < workers.settings.minAvail){
 			// creates workers if the settings file demands it
 			console.log('last 3 workers have no free runners, starting droplet');
 
 			return workers.create();
-
 		}
 
 	};
