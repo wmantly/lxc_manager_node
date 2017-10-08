@@ -204,7 +204,7 @@ var workers = (function(){
 			}
 		}
 
-		return zombie;
+		return zombies;
 	};
 
 	workers.checkBalance = function(){
