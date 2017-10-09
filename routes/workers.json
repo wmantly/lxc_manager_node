@@ -1,1 +1,9 @@
-{"image":"25092187","version":10,"lastSnapShotId":"23505298","size":"512mb","max":100,"min":3,"minAvail":3}
+{
+	"image":"25092187",
+	"version":10,
+	"lastSnapShotId":"23505298",
+	"size":"512mb",
+	"max":100,
+	"min":3,
+	"minAvail":3
+}
