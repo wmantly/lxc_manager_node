@@ -214,6 +214,7 @@ var workers = (function(){
 
 		workers.checkForZombies();
 
+		console.log(workers.currentCreating+workers.length, workers.currentCreating+workers.length < workers.min)
 		// if there are workers being created, stop scale up and down check
 		if(workers.currentCreating+workers.length < workers.min) null;
 		else if(workers.currentCreating)
