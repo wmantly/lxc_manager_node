@@ -64,10 +64,10 @@ var workers = (function(){
 						args.onStart = function(){};
 					},
 					onDone: function(args){
-						console.log("done with runners on", worker.name);
+						console.log("Seeded runners on", worker.name);
+						workers.currentCreating--;
 					}
 				});
-				workers.currentCreating--;
 			}
 		});
 
@@ -112,7 +112,7 @@ var workers = (function(){
 
 		var worker = worker || workers.pop();
 		return doapi.dropletDestroy(worker.id, function(body) {
-			console.log('body of destroy', body);
+			console.log('Deleted worker', worker.name);
 		});
 	};
 
@@ -120,24 +120,26 @@ var workers = (function(){
 		// Delete works that with
 
 		tag = tag || tagPrefix + workers.settings.version;
-		var currentIDs = workers.__workersId();
+		let currentIDs = workers.__workersId();
 
-		var deleteDroplets = function(droplets){
+		let deleteDroplets = function(droplets){
 			if(droplets.length === 0) return true;
-			var droplet = droplets.pop();
+			let droplet = droplets.pop();
 			if(~currentIDs.indexOf(droplet.id)) return deleteDroplets(droplets);
 			
 			doapi.dropletDestroy(droplet.id, function(body){
 				setTimeout(deleteDroplets, 1000, droplets);
+				if(!droplets.length) console.log(`Finished deleting workers tagged ${tag}.`);
 			});
 		}
 
 		doapi.dropletsByTag(tag, function(data){
 			data = JSON.parse(data);
-			console.log('current worker ids', currentIDs);
-			console.log('do droplets', data['droplets'].length, data['droplets'].map(function(item){
-				return item.name+' | '+item.id;
-			}));
+			console.log(`Deleting ${data['droplets'].length} workers tagged ${tag}. Workers`,
+				data['droplets'].map(function(item){
+					return item.name+' | '+item.id;
+				})
+			);
 
 			deleteDroplets(data['droplets']);
 		});
@@ -148,7 +150,7 @@ var workers = (function(){
 
 		// dont make runners on out dated workers
 		if(!args.worker || workers.settings.image > args.worker.image.id){
-			console.log('blocked outdated worker', workers.settings.image, args.worker.image.id)
+			console.log(`Blocked outdated worker(${args.worker.image.id}), current image ${workers.settings.image}.`)
 			return ;
 		}
 
@@ -194,13 +196,13 @@ var workers = (function(){
 		let zombies = 0;
 
 		for(let worker of workers){
-			console.log("checking", worker.name, "if zombie");
+			console.log(`Checking if ${worker.name} is a zombie worker.`);
 			// if a runner has no available runners and no used runners, its a
 			// zombie. This should happen when a newer image ID has been added
 			// and old workers slowly lose there usefulness.
 			if(worker.availrunners.length === 0 && worker.usedrunners === 0){
 				workers.splice(workers.indexOf(worker), 1);
-				console.log('found zombie worker, destroying');
+				console.log(`Zombie! Worker ${worker.name}, destroying.`);
 				workers.destroy(worker);
 				zombies++;
 			}
@@ -210,15 +212,14 @@ var workers = (function(){
 	};
 
 	workers.checkBalance = function(){
-		console.log('checking balance');
+		console.log(`Checking balance.`);
 
 		workers.checkForZombies();
 
-		console.log(workers.currentCreating+workers.length, workers.currentCreating+workers.length < workers.min)
 		// if there are workers being created, stop scale up and down check
 		if(workers.currentCreating+workers.length < workers.settings.min) null;
 		else if(workers.currentCreating)
-			return console.log('killing balance, worker is being created.');
+			return console.log(`Killing balance, workers are being created.`);
 
 		// hold amount of workers with no used runners
 		var lastMinAval = 0;
@@ -323,16 +324,16 @@ var getAvailrunner = function(runner){
 
 var run = function(req, res, runner, count){
 	count = count || 0;
-	console.log('run start', count);
+	console.log(`Runner starting attempt ${count}.`);
 
 	if(!runner){
-		console.log('no runner');
+		console.log(`No runner available!`);
 		res.status(503);
 		return res.json({error: 'No runners, try again soon.'});
 	}
 
 	if(count > 2){
-		console.log('to many reties on runner');
+		console.log(`Runner attempt failed, to many requests!`);
 		return res.status(400).json({error: 'Runner restarted to many times'});
 	}
 
@@ -366,10 +367,9 @@ var run = function(req, res, runner, count){
 	});
 };
 
+console.log('========STARTING===========')
 setInterval(workers.checkBalance, 15000);
-
 workers.destroyByTag();
-workers.checkBalance();
 
 
 router.get('/stop/:name', function(req, res, next){
@@ -458,7 +458,14 @@ router.post('/updateID', function(req, res, next){
 
 router.get('/liststuff', function(req, res, next){
 	var obj = util.inspect(workers, {depth: 4});
-	res.send("<h1>Workers</h1><pre>"+obj+"</pre><h1>label2runner</h1><pre>"+util.inspect(label2runner)+'</pre><h1>DO calls</h1>'+doapi.calls);
+	res.send(`
+		<h1>Workers</h1>
+		<pre>${obj}</pre>
+		<h1>label2runner</h1>
+		<pre>${util.inspect(label2runner)}</pre>
+		<h1>DO calls</h1>
+		${doapi.calls}
+	`);
 });
 
 router.get('/ping/:runner', function(req, res, next){
@@ -468,7 +475,7 @@ router.get('/ping/:runner', function(req, res, next){
 });
 
 router.post('/run/:runner?', function (req, res, next){
-	console.log('hit runner route');
+	console.log(`Request runner route!`);
 	var runner = getAvailrunner(label2runner[req.params.runner]);
 	return run(req, res, runner);
 });
