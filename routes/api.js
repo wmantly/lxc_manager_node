@@ -12,6 +12,9 @@ var settings = require('./workers.json');
 // mapping of current used runners for quick loop up based on runner label
 var label2runner = {};
 
+// 
+var tagPrefix = settings.tagPrefix || 'clwV';
+
 var workers = (function(){
 	// works array constructor. This will hold the works(order by creation) and all
 	// the methods interacting with the workers.
@@ -45,7 +48,7 @@ var workers = (function(){
 			image: workers.settings.image,
 			size: workers.settings.size,
 			onCreate: function(data){
-				doapi.dropletSetTag('clwV'+workers.settings.version, data.droplet.id);
+				doapi.dropletSetTag(tagPrefix+workers.settings.version, data.droplet.id);
 			},
 			onActive: function(worker, args){
 				workers.startRunners({
@@ -116,7 +119,7 @@ var workers = (function(){
 	workers.destroyByTag = function(tag){
 		// Delete works that with
 
-		tag = tag || 'clwV' + workers.settings.version;
+		tag = tag || tagPrefix + workers.settings.version;
 		var currentIDs = workers.__workersId();
 
 		var deleteDroplets = function(droplets){
@@ -258,7 +261,7 @@ var workers = (function(){
 	};
 
 	// make sure Digital Ocean has a tag for the current worker version
-	doapi.tagCreate('clwV'+workers.settings.version);
+	doapi.tagCreate(tagPrefix+workers.settings.version);
 
 	return workers;
 
@@ -384,8 +387,8 @@ router.post('/updateID', function(req, res, next){
 		minAvail: req.query.minAvail || workers.settings
 	};
 
-	doapi.tagCreate('clwV'+newWorkers.version);
-	workers.destroyByTag('clwV'+newWorkers.version);
+	doapi.tagCreate(tagPrefix+newWorkers.version);
+	workers.destroyByTag(tagPrefix+newWorkers.version);
 
 	for(var i=0; i<newWorkers.target; i++){
 
@@ -395,7 +398,7 @@ router.post('/updateID', function(req, res, next){
 			image: newWorkers.image,
 			size: newWorkers.size,
 			onCreate: function(data, args){
-				doapi.dropletSetTag('clwV'+args.newWorkers.version, data.droplet.id);
+				doapi.dropletSetTag(tagPrefix+args.newWorkers.version, data.droplet.id);
 			},
 			onActive: function(droplet, args){
 				workers.startRunners({

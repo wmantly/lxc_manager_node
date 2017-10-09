@@ -1,6 +1,6 @@
 const request = require('request');
 
-var till = 5;
+var till = 15;
 var completed = 0;
 var errors = 0;
 
@@ -9,7 +9,8 @@ for(let i=0; i<till; i++){
 	let httpOptions = {
 		url: 'http://codeland.bytedev.co:2000/api/run',
 		form: {
-			code: `python3 -c "print(1)"`
+			code: `python3 -c "print(1)"`,
+			once: true,
 		}
 	};
 	request.post(httpOptions, function(error, response, body){
