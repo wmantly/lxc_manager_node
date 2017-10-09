@@ -215,9 +215,10 @@ var workers = (function(){
 		workers.checkForZombies();
 
 		// if there are workers being created, stop scale up and down check
-		if(workers.currentCreating) return ;
+		if(workers.currentCreating+workers.length < workers.min) 'do nothing';
+		else if(workers.currentCreating)
+			return ;
 
-		// scale up and down check
 
 		// hold amount of workers with no used runners
 		var lastMinAval = 0;
@@ -234,13 +235,23 @@ var workers = (function(){
 
 		if(lastMinAval > workers.settings.minAvail){
 			// Remove workers if there are more then the settings states
-			console.log('Last 3 runners not used, killing last runner', workers.length);
+			console.log(
+				'Last 3 runners not used, killing last runner', 
+				'lastMinAval:', lastMinAval,
+				'minAvail:', workers.settings.minAvail,
+				'workers:', workers.length
+			);
 
 			return workers.destroy();
 
 		} else if(lastMinAval < workers.settings.minAvail){
 			// creates workers if the settings file demands it
-			console.log('last 3 workers have no free runners, starting droplet');
+			console.log(
+				'last 3 workers have no free runners, starting droplet',
+				'lastMinAval:', lastMinAval,
+				'minAvail:', workers.settings.minAvail,
+				'workers:', workers.length
+			);
 
 			return workers.create();
 		}
