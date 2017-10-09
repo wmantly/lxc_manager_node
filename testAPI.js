@@ -52,8 +52,10 @@ sleep(${sleepTime})
 
 
 let __do = function(till){
+	if(!till) return ;
+
 	callRunner(String(Math.random())[3]);
-	setTimeout(__do, 1000, --till);
+	setTimeout(__do, 1500, --till);
 };
 
-__do(50)
+__do(30)
