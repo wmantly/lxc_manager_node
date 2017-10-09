@@ -307,7 +307,7 @@ var runnerFree = function(runner){
 	}
 	delete label2runner[runner.label];
 
-	console.log(`Runner freed ${runner.label}.`, worker);
+	console.log(`Runner freed ${runner.label}.`, runner.worker);
 	workers.startRunners({worker: runner.worker});
 };
 
