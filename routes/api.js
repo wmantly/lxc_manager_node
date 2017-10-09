@@ -216,7 +216,7 @@ var workers = (function(){
 
 		console.log(workers.currentCreating+workers.length, workers.currentCreating+workers.length < workers.min)
 		// if there are workers being created, stop scale up and down check
-		if(workers.currentCreating+workers.length < workers.min) null;
+		if(workers.currentCreating+workers.length < workers.settings.min) null;
 		else if(workers.currentCreating)
 			return console.log('killing balance, worker is being created.');
 
