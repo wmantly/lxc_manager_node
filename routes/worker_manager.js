@@ -7,12 +7,120 @@ var settings = require('./workers.json');
 
 var tagPrefix = settings.tagPrefix || 'clwV';
 
+
+var ramPercentUsed = function(ip, callback){
+	// checks the percent of ram used on a worker.
+
+	return lxc.exec(
+		"python3 -c \"a=`head /proc/meminfo|grep MemAvail|grep -Po '\\d+'`;t=`head /proc/meminfo|grep MemTotal|grep -Po '\\d+'`;print(round(((t-a)/t)*100, 2))\"",
+		ip,
+		callback
+	);
+};
+
+var Runner = (function(){
+	var proto = {};
+
+	proto.create = function(config){
+		var runner = Object.create(proto);
+		Object.assign(runner, config);
+		return runner;
+	};
+
+	proto.free = function(){
+		var runner = this;
+		lxc.stop(runner.name, runner.worker.ip);
+		runner.worker.usedrunners--;
+		if(runner.hasOwnProperty('timeout')){
+			clearTimeout(runner.timeout);
+		};
+		
+
+		// TODO: FIX THIS
+		delete label2runner[runner.label];
+
+		console.log(`Runner freed ${runner.label}.`, runner.worker);
+		// Why does this need to run here?
+		workers.startRunners({worker: runner.worker});
+	};
+
+	proto.setTimeout = function(time){
+		time = time || 60000; // 1 minutes
+		var runner = this;
+		if(runner.hasOwnProperty('timeout')){
+			clearTimeout(runner.timeout);
+		}
+
+		return runner.timeout = setTimeout(function(){
+			runner.free();
+		}, time);
+	};
+
+})();
+
+
+var Worker = (function(){
+	var proto = {};
+
+	proto.create = function(config){
+		var worker = Object.create(proto);
+
+		worker.networks.v4.forEach(function(value){
+			worker[value.type+'IP'] = value.ip_address;
+		});
+
+		worker.availrunners = [];
+		worker.ip = worker.publicIP;
+		worker.usedrunners = 0;
+		worker.index = workers.length;
+
+		return worker;
+	};
+
+	proto.getRunner = function(){
+		if(this.availrunners.length === 0) return false;
+		// console.log('getting runner from ', worker.name, ' avail length ', this.availrunners.length);
+		var runner = this.availrunners.pop();
+		this.usedrunners++;
+		runner.setTimeout();
+					
+		return runner;
+	};
+})();
+
+
 var workers = (function(){
 	// works array constructor. This will hold the works(order by creation) and all
 	// the methods interacting with the workers.
 	
 	// base array that will be the workers objects.
 	var workers = [];
+
+	var runnerMap = {};
+
+	workers.setRunner = function(runner){
+		runnerMap[runner.label] = runner;
+	};
+
+
+	workers.getRunner = function(label){
+		return runnerMap[runner.label];
+	};
+
+
+	workers.getAvailableRunner = function(runner){
+		for(let worker of workers){
+			if(worker.availrunners.length === 0) continue;
+			if(runner && runner.worker.index <= worker.index) break;
+			// if(runner) runnerFree(runner);
+			if(runner) runner.free();
+
+			return worker.getRunner();
+		}
+
+		if(runner) return runner;
+	};
+
 
 	// persistent settings object
 	// .image is the currently used Digital Ocean snap shot ID
@@ -62,7 +170,6 @@ var workers = (function(){
 				});
 			}
 		});
-
 	};
 
 	workers.makeWorkerObj = function(worker){
@@ -85,7 +192,7 @@ var workers = (function(){
 			runnerTimeout(runner);
 						
 			return runner;
-		}
+		};
 
 		return worker;
 	};
@@ -95,7 +202,6 @@ var workers = (function(){
 		return workers.map(function(item){
 			return item.id;
 		});
-
 	};
 
 	workers.destroy = function(worker){
@@ -167,12 +273,13 @@ var workers = (function(){
 				if(!data.ip) return setTimeout(workers.startRunners, 0, args);
 				// console.log('started runner on', args.worker.name)
 
-				var runner = {
+				var runner = Runner.create({
 					ip: data.ip,
 					name: name,
 					worker: args.worker,
-					label: args.worker.name + ':' + name
-				};
+					label: args.worker.name + ':' + name,
+
+				});
 				args.onStart(runner, args);
 
 				args.worker.availrunners.push(runner);

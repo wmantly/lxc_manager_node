@@ -15,51 +15,44 @@ var label2runner = {};
 // 
 var tagPrefix = settings.tagPrefix || 'clwV';
 
-var workers = require('./workers_manager.js'); 
+var workers = require('./worker_manager.js');
 
-var ramPercentUsed = function(ip, callback){
-	// checks the percent of ram used on a worker.
 
-	return lxc.exec(
-		"python3 -c \"a=`head /proc/meminfo|grep MemAvail|grep -Po '\\d+'`;t=`head /proc/meminfo|grep MemTotal|grep -Po '\\d+'`;print(round(((t-a)/t)*100, 2))\"",
-		ip,
-		callback
-	);
-};
 
-var runnerTimeout = function(runner, time){
-	time = time || 60000; // 1 minutes
+// var runnerTimeout = function(runner, time){
+// 	time = time || 60000; // 1 minutes
 
-	if(runner.hasOwnProperty('timeout')){
-		clearTimeout(runner.timeout);
-	}
+// 	if(runner.hasOwnProperty('timeout')){
+// 		clearTimeout(runner.timeout);
+// 	}
 
-	return runner.timeout = setTimeout(runnerFree, time, runner);
-};
+// 	return runner.timeout = setTimeout(runnerFree, time, runner);
+// };
 
-var runnerFree = function(runner){
-	lxc.stop(runner.name, runner.worker.ip);
-	runner.worker.usedrunners--;
-	if(runner.hasOwnProperty('timeout')){
-		clearTimeout(runner.timeout);
-	}
-	delete label2runner[runner.label];
+// var runnerFree = function(runner){
+// 	lxc.stop(runner.name, runner.worker.ip);
+// 	runner.worker.usedrunners--;
+// 	if(runner.hasOwnProperty('timeout')){
+// 		clearTimeout(runner.timeout);
+// 	}
+// 	delete label2runner[runner.label];
 
-	console.log(`Runner freed ${runner.label}.`, runner.worker);
-	workers.startRunners({worker: runner.worker});
-};
+// 	console.log(`Runner freed ${runner.label}.`, runner.worker);
+// 	workers.startRunners({worker: runner.worker});
+// };
 
-var getAvailrunner = function(runner){
-	for(let worker of workers){
-		if(worker.availrunners.length === 0) continue;
-		if(runner && runner.worker.index <= worker.index) break;
-		if(runner) runnerFree(runner);
+// var getAvailrunner = function(runner){
+// 	for(let worker of workers){
+// 		if(worker.availrunners.length === 0) continue;
+// 		if(runner && runner.worker.index <= worker.index) break;
+// 		// if(runner) runnerFree(runner);
+// 		if(runner) runner.free();
 
-		return worker.getRunner();
-	}
+// 		return worker.getRunner();
+// 	}
 
-	if(runner) return runner;
-};
+// 	if(runner) return runner;
+// };
 
 var run = function(req, res, runner, count){
 	count = count || 0;
@@ -88,12 +81,14 @@ var run = function(req, res, runner, count){
 
 	return request.post(httpOptions, function(error, response, body){
 		// console.log('runner response:', arguments)
-		if(error || response.statusCode !== 200) return run(req, res, getAvailrunner(), ++count);
+		if(error || response.statusCode !== 200) return run(req, res, workers.getAvailableRunner(), ++count);
 		body = JSON.parse(body);
 
 		if(req.query.once){
 			res.json(body);
-			return runnerFree(runner, 0);
+			// 0 here does nothing
+			// return runnerFree(runner, 0);
+			return runner.free();
 		}
 
 		label2runner[runner.label] = runner;
@@ -102,7 +97,8 @@ var run = function(req, res, runner, count){
 		body['wname'] = runner.worker.name;
 		res.json(body);
 
-		runnerTimeout(runner);
+		// runnerTimeout(runner);
+		runner.setTimeout();
 	});
 };
 
@@ -209,13 +205,14 @@ router.get('/liststuff', function(req, res, next){
 
 router.get('/ping/:runner', function(req, res, next){
 	var runner = label2runner[req.params.runner];
-	runnerTimeout(runner);
+	// runnerTimeout(runner);
+	runner.setTimeout();
 	res.json({res:''});
 });
 
 router.post('/run/:runner?', function (req, res, next){
 	console.log(`Request runner route!`);
-	var runner = getAvailrunner(label2runner[req.params.runner]);
+	var runner = workers.getAvailrunner(workers.getRunner(req.params.runner));
 	return run(req, res, runner);
 });
 
