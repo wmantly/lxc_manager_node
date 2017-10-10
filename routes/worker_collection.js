@@ -96,6 +96,10 @@ var Worker = (function(){
 		});
 	};
 
+	proto.isZombie = function(){
+		return this.availrunners.length === 0 && this.usedrunners === 0;
+	};
+
 	proto.startRunners = function(args){
 		// console.log('starting runners on', args.worker.name, args.worker.ip)
 		
@@ -160,7 +164,6 @@ var WorkerCollection = (function(){
 
 	var tagPrefix = settings.tagPrefix || 'clwV';
 
-	workers.runnerMap = {};
 
 	// persistent settings object
 	// .image is the currently used Digital Ocean snap shot ID
@@ -175,6 +178,11 @@ var WorkerCollection = (function(){
 	// How many droplets are currently in the process of being created. It takes
 	// about 3 minutes to create a worker.
 	workers.currentCreating = 0;
+
+	//**************************************************
+	//**************************************************
+	// temporary until a better location is found
+	workers.runnerMap = {};
 
 	workers.__runnerCleanUp = function(label){
 		delete workers.runnerMap[label];
@@ -194,6 +202,8 @@ var WorkerCollection = (function(){
 		return runnerMap[runner.label];
 	};
 
+	//**************************************************
+	//**************************************************
 
 	workers.getAvailableRunner = function(runner){
 		for(let worker of workers){
@@ -259,7 +269,7 @@ var WorkerCollection = (function(){
 
 	workers.destroy = function(worker){
 		// removes last one 
-		// todo: If worker is passed, check for it in the workers array and
+		// X TODO: If worker is passed, check for it in the workers array and
 		// remove it if found.
 		if ( worker ){
 			var worker_idx = workers.indexOf(worker);
@@ -290,6 +300,7 @@ var WorkerCollection = (function(){
 			});
 		}
 
+		// TODO: move to seperate method
 		doapi.dropletsByTag(tag, function(data){
 			data = JSON.parse(data);
 			console.log(`Deleting ${data['droplets'].length} workers tagged ${tag}. Workers`,
@@ -312,8 +323,8 @@ var WorkerCollection = (function(){
 			// if a runner has no available runners and no used runners, its a
 			// zombie. This should happen when a newer image ID has been added
 			// and old workers slowly lose there usefulness.
-			if(worker.availrunners.length === 0 && worker.usedrunners === 0){
-				workers.splice(workers.indexOf(worker), 1);
+
+			if(worker.isZombie()){
 				console.log(`Zombie! Worker ${worker.name}, destroying.`);
 				workers.destroy(worker);
 				zombies++;
