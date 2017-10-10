@@ -8,23 +8,28 @@ var settings = require('./workers.json');
 
 var Runner = (function(){
 	var proto = {};
-
+	var __empty = function(){};
+	
 	proto.create = function(config){
 		var runner = Object.create(proto);
-		var __empty = function(){};
 		Object.assign(runner, config);
-		runner.afterFreed = runner.afterFreed || __empty;
+		runner.cleanUp = __empty;
 		return runner;
 	};
 
-	proto.free = function(callback){
+	proto.free = function(){
 		var runner = this;
 		lxc.stop(runner.name, runner.worker.ip);
 		runner.worker.usedrunners--;
 		if(runner.hasOwnProperty('timeout')){
 			clearTimeout(runner.timeout);
-		};
-		runner.afterFreed();
+		}
+
+		if(runner.hasOwnProperty('cleanUp')){
+			runner.cleanUp();
+		}
+
+		runner.worker.startRunners();
 	};
 
 	proto.setTimeout = function(time){
@@ -44,6 +49,10 @@ var Runner = (function(){
 
 var Worker = (function(){
 	var proto = {};
+	var __empty = function(){};
+	
+	// settings should probably be retrieved via a function 
+	proto.settings = settings;
 
 	proto.create = function(config){
 		var worker = Object.create(proto);
@@ -86,6 +95,59 @@ var Worker = (function(){
 			console.log('Deleted worker', this.name);
 		});
 	};
+
+	proto.startRunners = function(args){
+		// console.log('starting runners on', args.worker.name, args.worker.ip)
+		
+		var worker = this;
+		// dont make runners on out dated workers
+		if(!worker || worker.settings.image > worker.image.id){
+			console.log(`Blocked outdated worker(${worker.image.id}), current image ${args.settings.image}.`)
+			return ;
+		}
+
+		args = args || {};
+		// percent of used RAM to stop runner creation
+		args.stopPercent = args.stopPercent || 80;
+		args.onStart = args.onStart || __empty;
+		args.onDone = args.onDone || __empty;
+
+
+		worker.ramPercentUsed(function(usedMemPercent){
+			if(usedMemPercent > args.stopPercent ){
+				console.log('using', String(usedMemPercent).trim(),
+					'percent memory, stopping runner creation!', worker.availrunners.length, 
+					'created on ', worker.name
+				);
+				args.onDone(args);
+				return ;
+			}
+
+			var name = 'crunner-'+(Math.random()*100).toString().slice(-4);
+			// console.log('Free ram check passed!')
+			lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
+				if(!data.ip){
+					return setTimeout(worker.startRunners, 0, args);
+				} else {
+
+					// console.log('started runner on', args.worker.name)
+
+					var runner = Runner.create({
+						ip: data.ip,
+						name: name,
+						worker: worker,
+						label: worker.name + ':' + name
+					});
+
+					args.onStart(runner, args);
+
+					worker.availrunners.push(runner);
+
+					setTimeout(worker.startRunners, 0, args);
+				}
+			});
+		});
+	};
 })();
 
 
@@ -114,10 +176,17 @@ var WorkerCollection = (function(){
 	// about 3 minutes to create a worker.
 	workers.currentCreating = 0;
 
-
+	workers.__runnerCleanUp = function(label){
+		delete workers.runnerMap[label];
+	};
 	
 	workers.setRunner = function(runner){
 		runnerMap[runner.label] = runner;
+		var __empty = runner.cleanUp;
+		runner.cleanUp = function(){
+			workers.__runnerCleanUp(runner.label);
+			runner.cleanUp = __empty;
+		};
 	};
 
 
@@ -130,7 +199,6 @@ var WorkerCollection = (function(){
 		for(let worker of workers){
 			if(worker.availrunners.length === 0) continue;
 			if(runner && runner.worker.index <= worker.index) break;
-			// if(runner) runnerFree(runner);
 			if(runner) runner.free();
 
 			return worker.getRunner();
@@ -148,6 +216,8 @@ var WorkerCollection = (function(){
 
 		config = config || workers.settings;
 
+		// move this to Create Droplet function?
+
 		doapi.dropletToActive({
 			name: 'clw' + config.version + '-' + (Math.random()*100).toString().slice(-4),
 			image: config.image,
@@ -159,10 +229,10 @@ var WorkerCollection = (function(){
 				);
 			},
 			onActive: function(data, args){
-				workers.startRunners({
-					worker: Worker.create(data),
+				var worker = Worker.create(data);
+				worker.startRunners({
 					onStart: function(runner, args){
-						workers.push(args.worker);
+						workers.push(worker);
 						doapi.domianAddRecord({
 							domain: "codeland.us",
 							type: "A",
@@ -232,60 +302,6 @@ var WorkerCollection = (function(){
 		});
 	};
 
-	workers.startRunners = function(args){ 
-		// console.log('starting runners on', args.worker.name, args.worker.ip)
-
-		// dont make runners on out dated workers
-		if(!args.worker || workers.settings.image > args.worker.image.id){
-			console.log(`Blocked outdated worker(${args.worker.image.id}), current image ${workers.settings.image}.`)
-			return ;
-		}
-
-		// percent of used RAM to stop runner creation
-		args.stopPercent = args.stopPercent || 80;
-		args.onStart = args.onStart || function(){};
-		args.onDone = args.onDone || function(){};
-
-		args.worker.ramPercentUsed(function(usedMemPercent){
-			if(usedMemPercent > args.stopPercent ){
-				console.log('using', String(usedMemPercent).trim(),
-					'percent memory, stopping runner creation!', args.worker.availrunners.length, 
-					'created on ', args.worker.name
-				);
-				args.onDone(args);
-				return ;
-			}
-
-			var name = 'crunner-'+(Math.random()*100).toString().slice(-4);
-			// console.log('Free ram check passed!')
-			lxc.startEphemeral(name, 'crunner0', args.worker.ip, function(data){
-				if(!data.ip){
-					return setTimeout(workers.startRunners, 0, args);
-				}
-				// console.log('started runner on', args.worker.name)
-
-				var runner = Runner.create({
-					ip: data.ip,
-					name: name,
-					worker: args.worker,
-					label: args.worker.name + ':' + name,
-					afterFreed: function(runner){
-						delete workers.runnerMap[runner.label];
-						console.log(`Runner freed ${runner.label}.`, runner.worker);
-						// Why does this need to run here?
-						workers.startRunners({worker: runner.worker});
-					}
-				});
-
-				args.onStart(runner, args);
-
-				args.worker.availrunners.push(runner);
-
-				setTimeout(workers.startRunners, 0, args);
-			});
-		});
-	};
-
 	workers.checkForZombies = function(){
 		// check to make sure all works are used or usable.
 		
@@ -313,7 +329,7 @@ var WorkerCollection = (function(){
 		workers.checkForZombies();
 
 		// if there are workers being created, stop scale up and down check
-		if(workers.currentCreating+workers.length < workers.settings.min) {
+		if(workers.currentCreating + workers.length < workers.settings.min) {
 			null;
 		} else if(workers.currentCreating){
 			return console.log(`Killing balance, workers are being created.`);
@@ -334,7 +350,7 @@ var WorkerCollection = (function(){
 		}
 
 		if(lastMinAval > workers.settings.minAvail){
-			// Remove workers if there are more then the settings states
+			// Remove workers if there are more than the settings states
 			console.log(
 				`Last ${workers.settings.minAvail} workers not used, killing last worker`, 
 				'lastMinAval:', lastMinAval,
