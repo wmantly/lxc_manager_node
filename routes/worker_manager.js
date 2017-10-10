@@ -79,10 +79,17 @@ var Worker = (function(){
 			callback
 		);
 	};
+
+	proto.destroy = function(){
+		var worker = this;
+		return doapi.dropletDestroy(this.id, function(body) {
+			console.log('Deleted worker', this.name);
+		});
+	};
 })();
 
 
-var workers = (function(){
+var WorkerCollection = (function(){
 	// works array constructor. This will hold the works(order by creation) and all
 	// the methods interacting with the workers.
 	
@@ -181,13 +188,19 @@ var workers = (function(){
 	};
 
 	workers.destroy = function(worker){
+		// removes last one 
 		// todo: If worker is passed, check for it in the workers array and
 		// remove it if found.
-
-		var worker = worker || workers.pop();
-		return doapi.dropletDestroy(worker.id, function(body) {
-			console.log('Deleted worker', worker.name);
-		});
+		if ( worker ){
+			var worker_idx = workers.indexOf(worker);
+			if (~worker_idx){
+				workers.splice(worker_idx, 1);
+				return worker.destroy();
+			}
+		} else {
+			worker = workers.pop();
+			return worker.destroy();
+		}
 	};
 
 	workers.destroyByTag = function(tag){
@@ -366,4 +379,4 @@ var workers = (function(){
 })();
 
 
-module.exports = workers;
+module.exports = WorkerCollection;
