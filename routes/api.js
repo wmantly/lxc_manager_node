@@ -7,7 +7,7 @@ var request = require('request');
 var lxc = require('../lxc');
 var doapi = require('../doapi')();
 
-var workers = require('./worker_manager.js');
+var workers = require('./worker_collection.js');
 
 
 var attemptRun = function(req, res, runner, count){
