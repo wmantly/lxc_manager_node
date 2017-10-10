@@ -9,6 +9,11 @@ var doapi = require('../doapi')();
 
 var workers = require('./worker_collection.js');
 
+(function(){
+	console.log('========STARTING===========')
+	setInterval(workers.checkBalance, 15000);
+	workers.destroyByTag();
+})()
 
 var attemptRun = function(req, res, runner, count){
 	count = count || 0;
@@ -61,11 +66,6 @@ var attemptRun = function(req, res, runner, count){
 		runner.setTimeout();
 	});
 };
-
-console.log('========STARTING===========')
-// TODO: Make this a function
-setInterval(workers.checkBalance, 15000);
-workers.destroyByTag();
 
 // Why is this a GET?
 router.get('/stop/:name', function(req, res, next){
