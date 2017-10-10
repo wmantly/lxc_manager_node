@@ -8,16 +8,6 @@ var settings = require('./workers.json');
 var tagPrefix = settings.tagPrefix || 'clwV';
 
 
-var ramPercentUsed = function(ip, callback){
-	// checks the percent of ram used on a worker.
-
-	return lxc.exec(
-		"python3 -c \"a=`head /proc/meminfo|grep MemAvail|grep -Po '\\d+'`;t=`head /proc/meminfo|grep MemTotal|grep -Po '\\d+'`;print(round(((t-a)/t)*100, 2))\"",
-		ip,
-		callback
-	);
-};
-
 var Runner = (function(){
 	var proto = {};
 
@@ -86,6 +76,16 @@ var Worker = (function(){
 					
 		return runner;
 	};
+
+
+	proto.ramPercentUsed = function(callback){
+	// checks the percent of ram used on a worker.
+		return lxc.exec(
+			"python3 -c \"a=`head /proc/meminfo|grep MemAvail|grep -Po '\\d+'`;t=`head /proc/meminfo|grep MemTotal|grep -Po '\\d+'`;print(round(((t-a)/t)*100, 2))\"",
+			this.ip,
+			callback
+		);
+	};
 })();
 
 
@@ -96,7 +96,7 @@ var workers = (function(){
 	// base array that will be the workers objects.
 	var workers = [];
 
-	var runnerMap = {};
+	workers.runnerMap = {};
 
 	workers.setRunner = function(runner){
 		runnerMap[runner.label] = runner;
@@ -136,23 +136,28 @@ var workers = (function(){
 	// about 3 minutes to create a worker.
 	workers.currentCreating = 0;
 
-	workers.create = function(){
+	workers.create = function(config){
 		// manages the creation of a work from first call to all runners seeded
 
 		// dont create more workers then the settings file allows
 		if(workers.currentCreating > workers.settings.max ) return false;
 		workers.currentCreating++;
 
+		config = config || workers.settings;
+
 		doapi.dropletToActive({
-			name: 'clw'+workers.settings.version+'-'+(Math.random()*100).toString().slice(-4),
-			image: workers.settings.image,
-			size: workers.settings.size,
+			name: 'clw'+config.version+'-'+(Math.random()*100).toString().slice(-4),
+			image: config.image,
+			size: config.size,
 			onCreate: function(data){
-				doapi.dropletSetTag(tagPrefix+workers.settings.version, data.droplet.id);
+				doapi.dropletSetTag(
+					tagPrefix + config.version, 
+					data.droplet.id
+				);
 			},
-			onActive: function(worker, args){
+			onActive: function(data, args){
 				workers.startRunners({
-					worker: workers.makeWorkerObj(worker),
+					worker: Worker.create(data),
 					onStart: function(runner, args){
 						workers.push(args.worker);
 						doapi.domianAddRecord({
@@ -171,32 +176,7 @@ var workers = (function(){
 			}
 		});
 	};
-
-	workers.makeWorkerObj = function(worker){
-		// Create object for each worker.
-
-		worker.networks.v4.forEach(function(value){
-			worker[value.type+'IP'] = value.ip_address;
-		});
-
-		worker.availrunners = [];
-		worker.ip = worker.publicIP;
-		worker.usedrunners = 0;
-		worker.index = workers.length;
-
-		worker.getRunner = function(){
-			if(this.availrunners.length === 0) return false;
-			// console.log('getting runner from ', worker.name, ' avail length ', this.availrunners.length);
-			var runner = this.availrunners.pop();
-			this.usedrunners++;
-			runnerTimeout(runner);
-						
-			return runner;
-		};
-
-		return worker;
-	};
-
+	
 	workers.__workersId = function(argument){
 		// create array of all current worker Digital Ocean ID
 		return workers.map(function(item){
@@ -257,7 +237,7 @@ var workers = (function(){
 		args.onStart = args.onStart || function(){};
 		args.onDone = args.onDone || function(){};
 
-		ramPercentUsed(args.worker.ip, function(usedMemPercent){
+		args.worker.ramPercentUsed(function(usedMemPercent){
 			if(usedMemPercent > args.stopPercent ){
 				console.log('using', String(usedMemPercent).trim(), 
 					'percent memory, stopping runner creation!', args.worker.availrunners.length, 
@@ -270,7 +250,9 @@ var workers = (function(){
 			var name = 'crunner-'+(Math.random()*100).toString().slice(-4);
 			// console.log('Free ram check passed!')
 			lxc.startEphemeral(name, 'crunner0', args.worker.ip, function(data){
-				if(!data.ip) return setTimeout(workers.startRunners, 0, args);
+				if(!data.ip){
+					return setTimeout(workers.startRunners, 0, args);
+				}
 				// console.log('started runner on', args.worker.name)
 
 				var runner = Runner.create({
@@ -280,6 +262,7 @@ var workers = (function(){
 					label: args.worker.name + ':' + name,
 
 				});
+
 				args.onStart(runner, args);
 
 				args.worker.availrunners.push(runner);
@@ -372,7 +355,7 @@ var workers = (function(){
 	};
 
 	// make sure Digital Ocean has a tag for the current worker version
-	doapi.tagCreate(tagPrefix+workers.settings.version);
+	doapi.tagCreate(tagPrefix + workers.settings.version);
 
 	return workers;
 
