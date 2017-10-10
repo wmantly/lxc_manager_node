@@ -4,16 +4,8 @@ var express = require('express');
 var router = express.Router();
 var util = require('util');
 var request = require('request');
-var jsonfile = require('jsonfile');
 var lxc = require('../lxc');
 var doapi = require('../doapi')();
-var settings = require('./workers.json');
-
-// mapping of current used runners for quick loop up based on runner label
-var label2runner = {};
-
-// 
-var tagPrefix = settings.tagPrefix || 'clwV';
 
 var workers = require('./worker_manager.js');
 

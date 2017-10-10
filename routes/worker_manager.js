@@ -5,33 +5,26 @@ var lxc = require('../lxc');
 var doapi = require('../doapi')();
 var settings = require('./workers.json');
 
-var tagPrefix = settings.tagPrefix || 'clwV';
-
 
 var Runner = (function(){
 	var proto = {};
 
 	proto.create = function(config){
 		var runner = Object.create(proto);
+		var __empty = function(){};
 		Object.assign(runner, config);
+		runner.afterFreed = runner.afterFreed || __empty;
 		return runner;
 	};
 
-	proto.free = function(){
+	proto.free = function(callback){
 		var runner = this;
 		lxc.stop(runner.name, runner.worker.ip);
 		runner.worker.usedrunners--;
 		if(runner.hasOwnProperty('timeout')){
 			clearTimeout(runner.timeout);
 		};
-		
-
-		// TODO: FIX THIS
-		delete label2runner[runner.label];
-
-		console.log(`Runner freed ${runner.label}.`, runner.worker);
-		// Why does this need to run here?
-		workers.startRunners({worker: runner.worker});
+		runner.afterFreed();
 	};
 
 	proto.setTimeout = function(time){
@@ -96,8 +89,26 @@ var workers = (function(){
 	// base array that will be the workers objects.
 	var workers = [];
 
+	var tagPrefix = settings.tagPrefix || 'clwV';
+
 	workers.runnerMap = {};
 
+	// persistent settings object
+	// .image is the currently used Digital Ocean snap shot ID
+	// .lastSnapShotId is the previous ID used Digital Ocean snap shot
+	// .version is the current worker version
+	// .size is the base Droplet size for worker creation
+	// .min is the minimum amount of workers that should exist
+	// .max is the maximum amount of works that ca exist
+	// .minAvail is the amount of empty workers there should be
+	workers.settings = settings;
+
+	// How many droplets are currently in the process of being created. It takes
+	// about 3 minutes to create a worker.
+	workers.currentCreating = 0;
+
+
+	
 	workers.setRunner = function(runner){
 		runnerMap[runner.label] = runner;
 	};
@@ -121,21 +132,6 @@ var workers = (function(){
 		if(runner) return runner;
 	};
 
-
-	// persistent settings object
-	// .image is the currently used Digital Ocean snap shot ID
-	// .lastSnapShotId is the previous ID used Digital Ocean snap shot
-	// .version is the current worker version
-	// .size is the base Droplet size for worker creation
-	// .min is the minimum amount of workers that should exist
-	// .max is the maximum amount of works that ca exist
-	// .minAvail is the amount of empty workers there should be
-	workers.settings = settings;
-
-	// How many droplets are currently in the process of being created. It takes
-	// about 3 minutes to create a worker.
-	workers.currentCreating = 0;
-
 	workers.create = function(config){
 		// manages the creation of a work from first call to all runners seeded
 
@@ -146,7 +142,7 @@ var workers = (function(){
 		config = config || workers.settings;
 
 		doapi.dropletToActive({
-			name: 'clw'+config.version+'-'+(Math.random()*100).toString().slice(-4),
+			name: 'clw' + config.version + '-' + (Math.random()*100).toString().slice(-4),
 			image: config.image,
 			size: config.size,
 			onCreate: function(data){
@@ -163,7 +159,7 @@ var workers = (function(){
 						doapi.domianAddRecord({
 							domain: "codeland.us",
 							type: "A",
-							name: "*."+worker.name+".workers",
+							name: "*." + worker.name + ".workers",
 							data: worker.publicIP
 						});
 						args.onStart = function(){};
@@ -176,7 +172,7 @@ var workers = (function(){
 			}
 		});
 	};
-	
+
 	workers.__workersId = function(argument){
 		// create array of all current worker Digital Ocean ID
 		return workers.map(function(item){
@@ -239,7 +235,7 @@ var workers = (function(){
 
 		args.worker.ramPercentUsed(function(usedMemPercent){
 			if(usedMemPercent > args.stopPercent ){
-				console.log('using', String(usedMemPercent).trim(), 
+				console.log('using', String(usedMemPercent).trim(),
 					'percent memory, stopping runner creation!', args.worker.availrunners.length, 
 					'created on ', args.worker.name
 				);
@@ -260,7 +256,12 @@ var workers = (function(){
 					name: name,
 					worker: args.worker,
 					label: args.worker.name + ':' + name,
-
+					afterFreed: function(runner){
+						delete workers.runnerMap[runner.label];
+						console.log(`Runner freed ${runner.label}.`, runner.worker);
+						// Why does this need to run here?
+						workers.startRunners({worker: runner.worker});
+					}
 				});
 
 				args.onStart(runner, args);
@@ -299,16 +300,19 @@ var workers = (function(){
 		workers.checkForZombies();
 
 		// if there are workers being created, stop scale up and down check
-		if(workers.currentCreating+workers.length < workers.settings.min) null;
-		else if(workers.currentCreating)
+		if(workers.currentCreating+workers.length < workers.settings.min) {
+			null;
+		} else if(workers.currentCreating){
 			return console.log(`Killing balance, workers are being created.`);
+		}
 
 		// hold amount of workers with no used runners
 		var lastMinAval = 0;
 
 		// check to make sure the `workers.settings.minAvail` have free runners
 		for(let worker of workers.slice(-workers.settings.minAvail)){
-			if(worker.usedrunners === 0){
+			// INVERT this conditional
+			if(worker.usedrunners !== 0){
 				lastMinAval++;
 			}else{
 				// no need to keep counting, workers need to be created
@@ -353,7 +357,7 @@ var workers = (function(){
 			workers.push(worker);
 		});
 	};
-
+	// does this have to be last?
 	// make sure Digital Ocean has a tag for the current worker version
 	doapi.tagCreate(tagPrefix + workers.settings.version);
 
