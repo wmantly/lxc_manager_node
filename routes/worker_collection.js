@@ -44,6 +44,7 @@ var Runner = (function(){
 		}, time);
 	};
 
+	return proto;
 })();
 
 
@@ -56,7 +57,7 @@ var Worker = (function(){
 
 	proto.create = function(config){
 		var worker = Object.create(proto);
-
+		Object.assign(worker, config);
 		worker.networks.v4.forEach(function(value){
 			worker[value.type+'IP'] = value.ip_address;
 		});
@@ -64,7 +65,8 @@ var Worker = (function(){
 		worker.availrunners = [];
 		worker.ip = worker.publicIP;
 		worker.usedrunners = 0;
-		worker.index = workers.length;
+		worker.age = +(new Date());
+		console.log("AGE:",worker.age);
 
 		return worker;
 	};
@@ -131,7 +133,9 @@ var Worker = (function(){
 			// console.log('Free ram check passed!')
 			lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
 				if(!data.ip){
-					return setTimeout(worker.startRunners, 0, args);
+					return setTimeout(function(){
+						worker.startRunners(args);
+					}, 0);
 				} else {
 
 					// console.log('started runner on', args.worker.name)
@@ -147,11 +151,15 @@ var Worker = (function(){
 
 					worker.availrunners.push(runner);
 
-					setTimeout(worker.startRunners, 0, args);
+					setTimeout(function(){
+							worker.startRunners(args);
+					}, 0);
 				}
 			});
 		});
 	};
+
+	return proto;
 })();
 
 
@@ -189,7 +197,7 @@ var WorkerCollection = (function(){
 	};
 	
 	workers.setRunner = function(runner){
-		runnerMap[runner.label] = runner;
+		workers.runnerMap[runner.label] = runner;
 		var __empty = runner.cleanUp;
 		runner.cleanUp = function(){
 			workers.__runnerCleanUp(runner.label);
@@ -199,7 +207,7 @@ var WorkerCollection = (function(){
 
 
 	workers.getRunner = function(label){
-		return runnerMap[runner.label];
+		return workers.runnerMap[label];
 	};
 
 	//**************************************************
@@ -208,7 +216,7 @@ var WorkerCollection = (function(){
 	workers.getAvailableRunner = function(runner){
 		for(let worker of workers){
 			if(worker.availrunners.length === 0) continue;
-			if(runner && runner.worker.index <= worker.index) break;
+			if(runner && runner.worker.age <= worker.age) break;
 			if(runner) runner.free();
 
 			return worker.getRunner();
@@ -239,9 +247,12 @@ var WorkerCollection = (function(){
 				);
 			},
 			onActive: function(data, args){
+				// TODO: NO GOOD
+				data.index = workers.length;
 				var worker = Worker.create(data);
 				worker.startRunners({
 					onStart: function(runner, args){
+						// TODO: NO GOOD
 						workers.push(worker);
 						doapi.domianAddRecord({
 							domain: "codeland.us",

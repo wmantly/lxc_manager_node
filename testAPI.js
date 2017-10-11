@@ -21,7 +21,7 @@ var callRunner = (function(){
 
 			
 			let httpOptions = {
-				url: 'http://codeland.bytedev.co:2000/api/run?once=true',
+				url: 'http://localhost:2000/api/run?once=true',
 				form: {
 					code: code || `python3 -c "
 from time import sleep

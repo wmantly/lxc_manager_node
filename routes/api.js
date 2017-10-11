@@ -107,7 +107,7 @@ router.get('/ping/:runner', function(req, res, next){
 
 router.post('/run/:runner?', function (req, res, next){
 	console.log(`Request runner route!`);
-	var runner = workers.getAvailrunner(workers.getRunner(req.params.runner));
+	var runner = workers.getAvailableRunner(workers.getRunner(req.params.runner));
 	return attemptRun(req, res, runner);
 });
 
