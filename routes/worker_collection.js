@@ -371,6 +371,11 @@ var WorkerCollection = (function(){
 			}
 		}
 
+		console.log(
+			`LMA: ${lastMinAval}`,
+			`Settings MA: ${workers.settings.minAvail}`,
+			`Workers: ${workers.length}`
+		);
 		if(lastMinAval > workers.settings.minAvail){
 			// Remove workers if there are more than the settings states
 			console.log(
@@ -395,6 +400,7 @@ var WorkerCollection = (function(){
 		}
 
 	};
+	
 	workers.settingsSave = function(){
 		// save the live settings file to disk
 
