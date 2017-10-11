@@ -66,7 +66,7 @@ var Worker = (function(){
 		worker.ip = worker.publicIP;
 		worker.usedrunners = 0;
 		worker.age = +(new Date());
-		console.log("AGE:",worker.age);
+		worker.isBuildingRunners = false;
 
 		return worker;
 	};
@@ -94,12 +94,12 @@ var Worker = (function(){
 	proto.destroy = function(){
 		var worker = this;
 		return doapi.dropletDestroy(this.id, function(body) {
-			console.log('Deleted worker', this.name);
+			console.log('Deleted worker', worker.name);
 		});
 	};
 
 	proto.isZombie = function(){
-		return this.availrunners.length === 0 && this.usedrunners === 0;
+		return this.availrunners.length === 0 && this.usedrunners === 0 && !this.isBuildingRunners;
 	};
 
 	proto.startRunners = function(args){
@@ -111,16 +111,16 @@ var Worker = (function(){
 			console.log(`Blocked outdated worker(${worker.image.id}), current image ${args.settings.image}.`)
 			return ;
 		}
-
 		args = args || {};
 		// percent of used RAM to stop runner creation
 		args.stopPercent = args.stopPercent || 80;
 		args.onStart = args.onStart || __empty;
 		args.onDone = args.onDone || __empty;
 
-
+		worker.isBuildingRunners = true;
 		worker.ramPercentUsed(function(usedMemPercent){
 			if(usedMemPercent > args.stopPercent ){
+				worker.isBuildingRunners = false;
 				console.log('using', String(usedMemPercent).trim(),
 					'percent memory, stopping runner creation!', worker.availrunners.length, 
 					'created on ', worker.name
