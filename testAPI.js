@@ -63,4 +63,4 @@ let __do = function(till){
 	setTimeout(__do, 1500, --till);
 };
 
-__do(500);
+__do(1000);
