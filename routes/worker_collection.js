@@ -110,7 +110,7 @@ var Worker = (function(){
 		console.log('Starting runners on', worker.name, worker.ip);
 		// dont make runners on out dated workers
 		if(!worker || worker.settings.image > worker.image.id || worker.isBuildingRunners){
-			console.log(`Blocked outdated worker(${worker.image.id}), current image ${args.settings.image}.`)
+			console.log(`Blocked outdated worker(${worker.image.id}), current image ${worker.settings.image}.`)
 			return ;
 		}
 		args = args || {};
