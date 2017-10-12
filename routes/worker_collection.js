@@ -59,7 +59,7 @@ var Worker = (function(){
 		var worker = Object.create(proto);
 		Object.assign(worker, config);
 		worker.networks.v4.forEach(function(value){
-			worker[value.type+'IP'] = value.ip_address;
+			worker[ value.type + 'IP' ] = value.ip_address;
 		});
 
 		worker.availrunners = [];
@@ -67,6 +67,7 @@ var Worker = (function(){
 		worker.usedrunners = 0;
 		worker.age = +(new Date());
 		worker.isBuildingRunners = false;
+		worker.canSchedule = true;
 
 		return worker;
 	};
@@ -93,6 +94,7 @@ var Worker = (function(){
 
 	proto.destroy = function(){
 		var worker = this;
+		worker.canSchedule = false;
 		return doapi.dropletDestroy(this.id, function(body) {
 			console.log('Deleted worker', worker.name);
 		});
@@ -103,7 +105,7 @@ var Worker = (function(){
 	};
 
 	proto.startRunners = function(args){
-		// console.log('starting runners on', args.worker.name, args.worker.ip)
+		console.log('Starting runners on', args.worker.name, args.worker.ip);
 		
 		var worker = this;
 		// dont make runners on out dated workers
@@ -189,7 +191,7 @@ var WorkerCollection = (function(){
 
 	//**************************************************
 	//**************************************************
-	// temporary until a better location is found
+	// TODO: Move to Runners
 	workers.runnerMap = {};
 
 	workers.__runnerCleanUp = function(label){
@@ -237,7 +239,7 @@ var WorkerCollection = (function(){
 		// move this to Create Droplet function?
 
 		doapi.dropletToActive({
-			name: 'clw' + config.version + '-' + (Math.random()*100).toString().slice(-4),
+			name: config.tagPrefix + config.version + '-' + (Math.random()*100).toString().slice(-4),
 			image: config.image,
 			size: config.size,
 			onCreate: function(data){
@@ -351,56 +353,65 @@ var WorkerCollection = (function(){
 		workers.checkForZombies();
 
 		// if there are workers being created, stop scale up and down check
-		if(workers.currentCreating + workers.length < workers.settings.min) {
+		if(workers.currentCreating + workers.length > workers.settings.min) {
 			null;
 		} else if(workers.currentCreating){
 			return console.log(`Killing balance, workers are being created.`);
 		}
 
-		// hold amount of workers with no used runners
-		var lastMinAval = 0;
+		// count workers and locate oldest worker
+		var oldestWorker, isNotOlder, workerCount = 0;
 
-		// check to make sure the `workers.settings.minAvail` have free runners
-		for(let worker of workers.slice(-workers.settings.minAvail)){
-			// INVERT this conditional
-			if(worker.usedrunners !== 0){
-				lastMinAval++;
-			}else{
-				// no need to keep counting, workers need to be created
-				break;
+		for(let worker of workers){
+			console.log(`
+				CHECK_BALANCE
+				worker.name: ${worker.name}
+				worker.usedrunners: ${worker.usedrunners}
+				worker.availrunners: ${worker.availrunners.length}
+				workerCount: ${workerCount}
+				compare: ${worker.usedrunners !== 0}
+			`);
+
+			if(worker.usedrunners === 0){
+				workerCount++;
+				isNotOlder = oldestWorker && oldestWorker.age < worker.age
+				oldestWorker = (isNotOlder ? oldestWorker:worker);
 			}
 		}
 
-		console.log(
-			`LMA: ${lastMinAval}`,
-			`Settings MA: ${workers.settings.minAvail}`,
-			`Workers: ${workers.length}`
-		);
-		if(lastMinAval > workers.settings.minAvail){
-			// Remove workers if there are more than the settings states
-			console.log(
-				`Last ${workers.settings.minAvail} workers not used, killing last worker`, 
-				'lastMinAval:', lastMinAval,
-				'minAvail:', workers.settings.minAvail,
-				'workers:', workers.length
-			);
+		if(workerCount > workers.settings.minAvail){
+			// Remove oldest worker if there are more than the settings file state
+			console.log(`
+				Destroying Worker
+				Last ${workers.settings.minAvail} workers not used, killing last worker
+				workerCount: ${workerCount}
+				minAvail: ${workers.settings.minAvail}
+				workers: ${workers.length}
+			`);
+			return workers.destroy(oldestWorker);
 
-			return workers.destroy();
-
-		} else if(lastMinAval < workers.settings.minAvail){
-			// creates workers if the settings file demands it
-			console.log(
-				'last 3 workers have no free runners, starting worker',
-				'lastMinAval:', lastMinAval,
-				'minAvail:', workers.settings.minAvail,
-				'workers:', workers.length
-			);
+		} else if( workerCount < workers.settings.minAvail){
+			// Creates worker if there are less than the settings state
+			console.log(`
+				Creating Worker
+				last 3 workers have no free runners, starting worker,
+				workerCount: ${workerCount}
+				minAvail: ${workers.settings.minAvail}
+				workers: ${workers.length}
+			`);
 
 			return workers.create();
+		} else {
+			console.log(`
+				Blanced
+				LMA: ${workerCount}
+				Settings MA: ${workers.settings.minAvail}
+				Workers: ${workers.length}
+			`);
 		}
 
 	};
-	
+
 	workers.settingsSave = function(){
 		// save the live settings file to disk
 

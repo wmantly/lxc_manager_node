@@ -37,6 +37,11 @@ sleep(${sleepTime})
 					noRunner++;
 				}else if(error || response.statusCode !== 200){
 					errors++;
+					console.log(`
+						ID: ${id} 
+						Error: ${error}
+					`);
+				} else {	
 					body = JSON.parse(body);
 					res = (Buffer.from(body.res, 'base64').toString('ascii'));
 				}
@@ -58,4 +63,4 @@ let __do = function(till){
 	setTimeout(__do, 1500, --till);
 };
 
-__do(30)
+__do(500);
