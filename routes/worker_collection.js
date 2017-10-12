@@ -353,9 +353,7 @@ var WorkerCollection = (function(){
 		workers.checkForZombies();
 
 		// if there are workers being created, stop scale up and down check
-		if(workers.currentCreating + workers.length > workers.settings.min) {
-			null;
-		} else if(workers.currentCreating){
+		if(workers.currentCreating + workers.length >= workers.settings.min){
 			return console.log(`Killing balance, workers are being created.`);
 		}
 
