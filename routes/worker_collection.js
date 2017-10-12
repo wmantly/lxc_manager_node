@@ -109,7 +109,7 @@ var Worker = (function(){
 		
 		console.log('Starting runners on', worker.name, worker.ip);
 		// dont make runners on out dated workers
-		if(!worker || worker.settings.image > worker.image.id){
+		if(!worker || worker.settings.image > worker.image.id || worker.isBuildingRunners){
 			console.log(`Blocked outdated worker(${worker.image.id}), current image ${args.settings.image}.`)
 			return ;
 		}
@@ -363,7 +363,7 @@ var WorkerCollection = (function(){
 
 		for(let worker of workers){
 			console.log(`
-				CHECK_BALANCE
+				Checking worker
 				worker.name: ${worker.name}
 				worker.usedrunners: ${worker.usedrunners}
 				worker.availrunners: ${worker.availrunners.length}
