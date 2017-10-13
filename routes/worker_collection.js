@@ -4,6 +4,19 @@ var jsonfile = require('jsonfile');
 var lxc = require('../lxc');
 var doapi = require('../doapi')();
 var settings = require('./workers.json');
+settings.tagPrefix = settings.tagPrefix || 'clwV';
+
+var utils = (function(){
+	return {
+
+		"uuid": function(){
+			return (Math.random()*100).toString().slice(-4);
+		}
+
+	};
+
+})();
+
 
 
 var Runner = (function(){
@@ -120,13 +133,45 @@ var Worker = (function(){
 		return this.availrunners.length === 0 && this.usedrunners === 0 && !this.isBuildingRunners;
 	};
 
+	proto.register = function(){
+		var worker = this;
+		doapi.domianAddRecord({
+			domain: "codeland.us",
+			type: "A",
+			name: "*." + this.name + ".workers",
+			data: this.publicIP
+		});
+	};
+
+	proto.initialize = function(hooks, config){
+		// Create droplet
+		// Once active the droplet begins to create runners
+		doapi.dropletToActive({
+			name: config.tagPrefix + (config.version+"") + '-' + utils.uuid(),
+			image: config.image,
+			size: config.size,
+			onCreate: function(data){
+				doapi.dropletSetTag(
+					config.tagPrefix + config.version, 
+					data.droplet.id
+				);
+			},
+			onActive: function(data, args){
+				var worker = Worker.create(data);
+				worker.startRunners(hooks);
+			}
+		});
+	};
+
 	proto.startRunners = function(args){
 		var worker = this;
+
+		args.count = args.count || 0;
 		
-		console.log('Starting runners on', worker.name, worker.ip);
+		console.log('Starting runners on', worker.name, worker.ip, args.count);
 		// dont make runners on out dated workers
 		if(!worker || worker.settings.image > worker.image.id || worker.isBuildingRunners){
-			console.log(`Blocked outdated worker(${worker.image.id}), current image ${worker.settings.image}.`)
+			if(worker) console.log(`Blocked worker(${worker.image.id}), current image ${worker.settings.image}. Building: ${worker.isBuildingRunners}`)
 			return ;
 		}
 		args = args || {};
@@ -139,40 +184,41 @@ var Worker = (function(){
 		worker.ramPercentUsed(function(usedMemPercent){
 			if(usedMemPercent > args.stopPercent ){
 				worker.isBuildingRunners = false;
-				console.log('using', String(usedMemPercent).trim(),
+				console.log('---using', String(usedMemPercent).trim(),
 					'percent memory, stopping runner creation!', worker.availrunners.length, 
 					'created on ', worker.name
 				);
 				args.onDone(args);
 				return ;
 			}
+			console.log('+++using', String(usedMemPercent).trim(),
+				'percent memory on ', worker.name, 
+				'Runners:', worker.availrunners.length,
+				`Used? ${usedMemPercent}`
 
-			var name = 'crunner-'+(Math.random()*100).toString().slice(-4);
+			);
+			var name = 'crunner-' + utils.uuid();
 			// console.log('Free ram check passed!')
 			lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
-				if(!data.ip){
-					return setTimeout(function(){
-						worker.startRunners(args);
-					}, 0);
-				} else {
-
-					// console.log('started runner on', args.worker.name)
+				if(data.ip){
+					console.log('started runner on', worker.name)
 
 					var runner = Runner.create({
-						ip: data.ip,
-						name: name,
-						worker: worker,
-						label: worker.name + ':' + name
+						"ip": data.ip,
+						"name": name,
+						"worker": worker,
+						"label": worker.name + ':' + name
 					});
 
-					args.onStart(runner, args);
+					args.onStart(worker, args);
 
 					worker.availrunners.push(runner);
-
-					setTimeout(function(){
-							worker.startRunners(args);
-					}, 0);
 				}
+
+				return setTimeout(function(){
+					worker.isBuildingRunners = false;
+					worker.startRunners(args);
+				}, 0);
 			});
 		});
 	};
@@ -187,8 +233,6 @@ var WorkerCollection = (function(){
 	
 	// base array that will be the workers objects.
 	var workers = [];
-
-	var tagPrefix = settings.tagPrefix || 'clwV';
 
 
 	// persistent settings object
@@ -206,7 +250,7 @@ var WorkerCollection = (function(){
 	workers.currentCreating = 0;
 
 	// REMOVE THIS 
-	worker.runnerMap = Runner.runnerMap;
+	workers.runnerMap = Runner.runnerMap;
 	
 	workers.setRunner = function(runner){
 		Runner.set(runner);
@@ -236,46 +280,23 @@ var WorkerCollection = (function(){
 		// manages the creation of a work from first call to all runners seeded
 
 		// dont create more workers then the settings file allows
-		if(workers.currentCreating > workers.settings.max ) return false;
+		if(workers.length + workers.currentCreating >= workers.settings.max ) return false;
 		workers.currentCreating++;
 
 		config = config || workers.settings;
 
-		// move this to Create Droplet function?
-
-		doapi.dropletToActive({
-			name: config.tagPrefix + config.version + '-' + (Math.random()*100).toString().slice(-4),
-			image: config.image,
-			size: config.size,
-			onCreate: function(data){
-				doapi.dropletSetTag(
-					tagPrefix + config.version, 
-					data.droplet.id
-				);
+		var args = {
+			onStart: function(worker, args){
+				workers.push(worker);
+				worker.register();
+				args.onStart = function(){};
 			},
-			onActive: function(data, args){
-				// TODO: NO GOOD
-				data.index = workers.length;
-				var worker = Worker.create(data);
-				worker.startRunners({
-					onStart: function(runner, args){
-						// TODO: NO GOOD
-						workers.push(worker);
-						doapi.domianAddRecord({
-							domain: "codeland.us",
-							type: "A",
-							name: "*." + worker.name + ".workers",
-							data: worker.publicIP
-						});
-						args.onStart = function(){};
-					},
-					onDone: function(args){
-						console.log("Seeded runners on", worker.name);
-						workers.currentCreating--;
-					}
-				});
+			onDone: function(args){
+				console.log("Seeded runners on", worker.name);
+				workers.currentCreating--;
 			}
-		});
+		};
+		Worker.initialize(args, config);
 	};
 
 	workers.__workersId = function(argument){
@@ -304,7 +325,7 @@ var WorkerCollection = (function(){
 	workers.destroyByTag = function(tag){
 		// Delete works that with
 
-		tag = tag || tagPrefix + workers.settings.version;
+		tag = tag || workers.settings.tagPrefix + workers.settings.version;
 		let currentIDs = workers.__workersId();
 
 		let deleteDroplets = function(droplets){
@@ -321,7 +342,6 @@ var WorkerCollection = (function(){
 		// TODO: move to seperate method
 		doapi.dropletsByTag(tag, function(data){
 			data = JSON.parse(data);
-			console.log(data);
 			console.log(`Deleting ${data['droplets'].length} workers tagged ${tag}. Workers`,
 				data['droplets'].map(function(item){
 					return item.name+' | '+item.id;
@@ -354,7 +374,7 @@ var WorkerCollection = (function(){
 	};
 
 	workers.checkBalance = function(){
-		console.log(`Checking balance.`);
+		console.log(`${(new Date())} Checking balance.`);
 
 		workers.checkForZombies();
 
@@ -432,7 +452,7 @@ var WorkerCollection = (function(){
 	};
 	// does this have to be last?
 	// make sure Digital Ocean has a tag for the current worker version
-	doapi.tagCreate(tagPrefix + workers.settings.version);
+	doapi.tagCreate(workers.settings.tagPrefix + workers.settings.version);
 
 	return workers;
 
