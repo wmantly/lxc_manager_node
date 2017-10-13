@@ -165,10 +165,8 @@ var Worker = (function(){
 
 	proto.startRunners = function(args){
 		var worker = this;
-
-		args.count = args.count || 0;
 		
-		console.log('Starting runners on', worker.name, worker.ip, args.count);
+		console.log('Starting runners on', worker.name, worker.ip);
 		// dont make runners on out dated workers
 		if(!worker || worker.settings.image > worker.image.id || worker.isBuildingRunners){
 			if(worker) console.log(`Blocked worker(${worker.image.id}), current image ${worker.settings.image}. Building: ${worker.isBuildingRunners}`)
@@ -182,44 +180,51 @@ var Worker = (function(){
 
 		worker.isBuildingRunners = true;
 		worker.ramPercentUsed(function(usedMemPercent){
+			console.log(arguments);
 			if(usedMemPercent > args.stopPercent ){
 				worker.isBuildingRunners = false;
 				console.log('---using', String(usedMemPercent).trim(),
 					'percent memory, stopping runner creation!', worker.availrunners.length, 
 					'created on ', worker.name
 				);
-				args.onDone(args);
+				args.onDone(worker, args);
 				return ;
-			}
-			console.log('+++using', String(usedMemPercent).trim(),
-				'percent memory on ', worker.name, 
-				'Runners:', worker.availrunners.length,
-				`Used? ${usedMemPercent}`
+			} else if (usedMemPercent !== ""){
+				console.log('+++using', String(usedMemPercent).trim(),
+					'percent memory on ', worker.name, 
+					'Runners:', worker.availrunners.length,
+					`Used? ${usedMemPercent}`
 
-			);
-			var name = 'crunner-' + utils.uuid();
-			// console.log('Free ram check passed!')
-			lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
-				if(data.ip){
-					console.log('started runner on', worker.name)
+				);
+				var name = 'crunner-' + utils.uuid();
+				// console.log('Free ram check passed!')
+				lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
+					if(data.ip){
+						console.log('started runner on', worker.name);
 
-					var runner = Runner.create({
-						"ip": data.ip,
-						"name": name,
-						"worker": worker,
-						"label": worker.name + ':' + name
-					});
+						var runner = Runner.create({
+							"ip": data.ip,
+							"name": name,
+							"worker": worker,
+							"label": worker.name + ':' + name
+						});
 
-					args.onStart(worker, args);
+						args.onStart(worker, args);
 
-					worker.availrunners.push(runner);
-				}
+						worker.availrunners.push(runner);
+					}
 
+					return setTimeout(function(){
+						worker.isBuildingRunners = false;
+						worker.startRunners(args);
+					}, 0);
+				});
+			} else {
 				return setTimeout(function(){
 					worker.isBuildingRunners = false;
 					worker.startRunners(args);
 				}, 0);
-			});
+			}
 		});
 	};
 
@@ -291,7 +296,7 @@ var WorkerCollection = (function(){
 				worker.register();
 				args.onStart = function(){};
 			},
-			onDone: function(args){
+			onDone: function(worker, args){
 				console.log("Seeded runners on", worker.name);
 				workers.currentCreating--;
 			}
