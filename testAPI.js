@@ -45,7 +45,12 @@ sleep(${sleepTime})
 					body = JSON.parse(body);
 					res = (Buffer.from(body.res, 'base64').toString('ascii'));
 				}
-				console.log(`${id} with results ${res}. Errors ${errors}. No runner ${noRunner}. Completed ${completed}`);
+				console.log(`
+					${id} with results ${res}. 
+					Errors ${errors}. 
+					No runner ${noRunner}. 
+					Completed ${completed}
+				`);
 
 				callback()
 

@@ -9,7 +9,23 @@ var settings = require('./workers.json');
 var Runner = (function(){
 	var proto = {};
 	var __empty = function(){};
+
+	proto.runnerMap = {};
+
+	proto.cleanUp = function(label){
+		delete proto.runnerMap[label];
+	};
 	
+	proto.set = function(runner){
+		proto.runnerMap[runner.label] = runner;
+		proto.runnerMap[runner.label] = runner;
+	};
+
+	proto.get = function(label){
+		return proto.runnerMap[label];
+	};
+	
+
 	proto.create = function(config){
 		var runner = Object.create(proto);
 		Object.assign(runner, config);
@@ -189,27 +205,16 @@ var WorkerCollection = (function(){
 	// about 3 minutes to create a worker.
 	workers.currentCreating = 0;
 
-	//**************************************************
-	//**************************************************
-	// TODO: Move to Runners
-	workers.runnerMap = {};
-
-	workers.__runnerCleanUp = function(label){
-		delete workers.runnerMap[label];
-	};
+	// REMOVE THIS 
+	worker.runnerMap = Runner.runnerMap;
 	
 	workers.setRunner = function(runner){
-		workers.runnerMap[runner.label] = runner;
-		var __empty = runner.cleanUp;
-		runner.cleanUp = function(){
-			workers.__runnerCleanUp(runner.label);
-			runner.cleanUp = __empty;
-		};
+		Runner.set(runner);
 	};
 
 
 	workers.getRunner = function(label){
-		return workers.runnerMap[label];
+		return Runner.get(label);
 	};
 
 	//**************************************************
@@ -316,6 +321,7 @@ var WorkerCollection = (function(){
 		// TODO: move to seperate method
 		doapi.dropletsByTag(tag, function(data){
 			data = JSON.parse(data);
+			console.log(data);
 			console.log(`Deleting ${data['droplets'].length} workers tagged ${tag}. Workers`,
 				data['droplets'].map(function(item){
 					return item.name+' | '+item.id;
