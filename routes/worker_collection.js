@@ -4,6 +4,7 @@ var jsonfile = require('jsonfile');
 var lxc = require('../lxc');
 var doapi = require('../doapi')();
 var settings = require('./workers.json');
+var fs = require('fs');
 settings.tagPrefix = settings.tagPrefix || 'clwV';
 
 var utils = (function(){
@@ -42,7 +43,6 @@ var Runner = (function(){
 	proto.create = function(config){
 		var runner = Object.create(proto);
 		Object.assign(runner, config);
-		runner.cleanUp = __empty;
 		return runner;
 	};
 
@@ -58,7 +58,7 @@ var Runner = (function(){
 			runner.cleanUp();
 		}
 
-		runner.worker.startRunners();
+		runner.worker.newStartRunners();
 	};
 
 	proto.setTimeout = function(time){
@@ -143,7 +143,7 @@ var Worker = (function(){
 		});
 	};
 
-	proto.initialize = function(hooks, config){
+	proto.initialize = function(callback, config){
 		// Create droplet
 		// Once active the droplet begins to create runners
 		doapi.dropletToActive({
@@ -158,10 +158,48 @@ var Worker = (function(){
 			},
 			onActive: function(data, args){
 				var worker = Worker.create(data);
-				worker.startRunners(hooks);
+				worker.newStartRunners(callback);
 			}
 		});
 	};
+	proto.newStartRunners = function(args){
+		// onStart is not necessary
+		var worker = this;
+		args.stopPercent = args.stopPercent || 80;
+		args.callback = args.callback || __empty;
+
+		// dont make runners on out dated workers
+		if(!worker || worker.settings.image > worker.image.id || worker.isBuildingRunners){
+			if(worker) {
+				console.log(`
+					Blocked worker(${worker.image.id}), current image ${worker.settings.image}.
+					Building: ${worker.isBuildingRunners}
+				`);
+			}
+			return;
+		}
+
+		worker.isBuildingRunners = true;
+		fs.read(__dirname + "../allocate_runners.sh", function(error, data){
+			console.log(data);
+			// lxc.exec(data, function(output){
+			// 	// output chould be list of runner names
+			// 	console.log(output);
+			// 	// for name in output:
+			// 	// var runner = Runner.create({
+			// 	// 	"name": name,
+			// 	// 	"worker": worker,
+			// 	// 	"label": worker.name + ':' + name
+			// 	// });
+
+			// 	// worker.availrunners.push(runner);
+			// 	// end for
+			// 	worker.isBuildingRunners = false;
+			// 	args.callback(worker);
+			// });
+		});
+	};
+
 
 	proto.startRunners = function(args){
 		var worker = this;
@@ -179,6 +217,8 @@ var Worker = (function(){
 		args.onDone = args.onDone || __empty;
 
 		worker.isBuildingRunners = true;
+		
+		// no longer needed
 		worker.ramPercentUsed(function(usedMemPercent){
 			console.log(arguments);
 			if(usedMemPercent > args.stopPercent ){
@@ -199,6 +239,11 @@ var Worker = (function(){
 				var name = 'crunner-' + utils.uuid();
 				// console.log('Free ram check passed!')
 				lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
+					setTimeout(function(){
+						worker.isBuildingRunners = false;
+						worker.startRunners(args);
+					}, 0);
+
 					if(data.ip){
 						console.log('started runner on', worker.name);
 
@@ -214,10 +259,6 @@ var Worker = (function(){
 						worker.availrunners.push(runner);
 					}
 
-					return setTimeout(function(){
-						worker.isBuildingRunners = false;
-						worker.startRunners(args);
-					}, 0);
 				});
 			} else {
 				return setTimeout(function(){
@@ -289,19 +330,12 @@ var WorkerCollection = (function(){
 		workers.currentCreating++;
 
 		config = config || workers.settings;
-
-		var args = {
-			onStart: function(worker, args){
-				workers.push(worker);
-				worker.register();
-				args.onStart = function(){};
-			},
-			onDone: function(worker, args){
-				console.log("Seeded runners on", worker.name);
-				workers.currentCreating--;
-			}
-		};
-		Worker.initialize(args, config);
+		Worker.initialize(function(worker){
+			console.log("Seeded runners on", worker.name);
+			workers.push(worker);
+			worker.register();
+			workers.currentCreating--;
+		}, config);
 	};
 
 	workers.__workersId = function(argument){
