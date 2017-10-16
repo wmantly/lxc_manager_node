@@ -9,11 +9,9 @@ var doapi = require('../doapi')();
 
 var workers = require('./worker_collection.js');
 
-(function(){
-	console.log('========STARTING===========')
-	setInterval(workers.checkBalance, 15000);
-	workers.destroyByTag();
-})()
+console.log('========STARTING===========');
+
+workers.start();
 
 var attemptRun = function(req, res, runner, count){
 	count = count || 0;

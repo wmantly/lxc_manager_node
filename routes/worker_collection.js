@@ -495,6 +495,11 @@ var WorkerCollection = (function(){
 
 	};
 
+	workers.start = function(interval){
+		setInterval(workers.checkBalance, interval || 15000);
+		workers.destroyByTag();
+	};
+
 	workers.settingsSave = function(){
 		// save the live settings file to disk
 
