@@ -18,7 +18,7 @@ until [[ $memory -gt $maxMemoryUsage ]]; do
 	lxc-start-ephemeral -o $baseName -n $runnerName --union-type overlayfs -d;
 	
 	if [[ $? -eq 0 ]]; then
-		runners="${runnerName};${runners}";
+		runners="${runners};${runnerName}";
 	fi
 	usedMemoryPercent;
 done

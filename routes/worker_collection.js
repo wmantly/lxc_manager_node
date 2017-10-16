@@ -143,7 +143,7 @@ var Worker = (function(){
 		});
 	};
 
-	proto.initialize = function(callback, config){
+	proto.initialize = function(hooks, config){
 		// Create droplet
 		// Once active the droplet begins to create runners
 		doapi.dropletToActive({
@@ -158,7 +158,7 @@ var Worker = (function(){
 			},
 			onActive: function(data, args){
 				var worker = Worker.create(data);
-				worker.newStartRunners(callback);
+				worker.newStartRunners(hooks);
 			}
 		});
 	};
@@ -195,13 +195,14 @@ var Worker = (function(){
 					console.log(arguments);
 					var runners = data.split(";");
 					for (let idx = 0, stop = runners.length; idx < stop; idx++){
-
-						var runner = Runner.create({
-							"name": runners[idx],
-							"worker": worker,
-							"label": worker.name + ':' + runners[idx]
-						});
-						worker.availrunners.push(runner);
+						if(runners[idx]){
+							var runner = Runner.create({
+								"name": runners[idx],
+								"worker": worker,
+								"label": worker.name + ':' + runners[idx]
+							});
+							worker.availrunners.push(runner);
+						}
 					}
 					worker.isBuildingRunners = false;
 					args.callback(worker);
@@ -211,7 +212,7 @@ var Worker = (function(){
 	};
 
 
-	proto.startRunners = function(args){
+	proto.__XstartRunners = function(args){
 		var worker = this;
 		
 		console.log('Starting runners on', worker.name, worker.ip);
