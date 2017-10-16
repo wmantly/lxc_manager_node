@@ -1,4 +1,3 @@
-maxMemoryUsage=80;
 baseName="crunner0";
 namePrefix="cubs";
 runners="";
@@ -16,9 +15,9 @@ usedMemoryPercent;
 until [[ $memory -gt $maxMemoryUsage ]]; do
 	
 	runnerName="${namePrefix}${RANDOM}";
-	lxc-start-ephemeral -o $baseName -n $runnerName --union-type overlayfs -d
-	if[[ $? -eq 0 ]] 
-	then
+	lxc-start-ephemeral -o $baseName -n $runnerName --union-type overlayfs -d;
+	
+	if[[ "$?" -eq 0 ]]; then
 		runners="${runners};${runnerName}";
 	fi
 	usedMemoryPercent;

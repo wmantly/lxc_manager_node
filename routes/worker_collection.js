@@ -167,6 +167,7 @@ var Worker = (function(){
 		var worker = this;
 		args.stopPercent = args.stopPercent || 80;
 		args.callback = args.callback || __empty;
+		args.errorCallback = args.errorCallback || __empty;
 
 		// dont make runners on out dated workers
 		if(!worker || worker.settings.image > worker.image.id || worker.isBuildingRunners){
@@ -180,23 +181,32 @@ var Worker = (function(){
 		}
 
 		worker.isBuildingRunners = true;
-		fs.read(__dirname + "../allocate_runners.sh", function(error, data){
-			console.log(data);
-			// lxc.exec(data, function(output){
-			// 	// output chould be list of runner names
-			// 	console.log(output);
-			// 	// for name in output:
-			// 	// var runner = Runner.create({
-			// 	// 	"name": name,
-			// 	// 	"worker": worker,
-			// 	// 	"label": worker.name + ':' + name
-			// 	// });
+		fs.readFile(__dirname + "/../allocate_runners.sh", function(error, file){
+			var command = `maxMemoryUsage=${args.stopPercent};\n${file.toString()}`;
+			lxc.exec(command, worker.ip, function(data, error, stderr){
+				// output chould be list of runner names
+				if(error){
+					// ugly
+					console.log("Error", worker.ip, error);
+					worker.isBuildingRunners = false;
+					args.errorCallback(error, worker, args);
+				} else {
+					console.log("exec:");
+					console.log(arguments);
+					var runners = data.split(";");
+					for (let idx = 0, stop = runners.length; idx < stop; idx++){
 
-			// 	// worker.availrunners.push(runner);
-			// 	// end for
-			// 	worker.isBuildingRunners = false;
-			// 	args.callback(worker);
-			// });
+						var runner = Runner.create({
+							"name": runners[idx],
+							"worker": worker,
+							"label": worker.name + ':' + runners[idx]
+						});
+						worker.availrunners.push(runner);
+					}
+					worker.isBuildingRunners = false;
+					args.callback(worker);
+				}
+			});
 		});
 	};
 
@@ -329,12 +339,21 @@ var WorkerCollection = (function(){
 		if(workers.length + workers.currentCreating >= workers.settings.max ) return false;
 		workers.currentCreating++;
 
+		var count = 0;
 		config = config || workers.settings;
-		Worker.initialize(function(worker){
-			console.log("Seeded runners on", worker.name);
-			workers.push(worker);
-			worker.register();
-			workers.currentCreating--;
+		Worker.initialize({
+			"callback": function(worker){
+				console.log("Seeded runners on", worker.name);
+				workers.push(worker);
+				worker.register();
+				workers.currentCreating--;
+			},
+			"errorCallback": function(error, worker, args){
+				if (count++ > 3){
+					args.errorCallback = function(){};
+				}
+				worker.newStartRunners(args);
+			}
 		}, config);
 	};
 
