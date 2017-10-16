@@ -17,10 +17,10 @@ until [[ $memory -gt $maxMemoryUsage ]]; do
 	runnerName="${namePrefix}${RANDOM}";
 	lxc-start-ephemeral -o $baseName -n $runnerName --union-type overlayfs -d;
 	
-	if[[ "$?" -eq 0 ]]; then
-		runners="${runners};${runnerName}";
+	if [[ "$?" -eq 0 ]]; then
+		runners="${runnerName};${runners}";
 	fi
 	usedMemoryPercent;
 done
 
-echo $runners
+echo $runners;
