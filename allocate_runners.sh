@@ -24,3 +24,6 @@ until [[ $memory -gt $maxMemoryUsage ]]; do
 done
 
 echo $runners;
+
+
+exit 0;
