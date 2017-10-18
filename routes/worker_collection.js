@@ -144,9 +144,10 @@ var Worker = (function(){
 		});
 	};
 
-	proto.sync = function(){
+	proto.sync = function(callback){
 		var worker = this;
 		worker.isSyncing = true;
+		callback = callback || __empty;
 		// this will call the droplet or the droplet will send the data using a cron job
 
 		// mainly to update the active runners on the worker
@@ -180,6 +181,8 @@ var Worker = (function(){
 					info.push(mapOut);
 					
 				}
+				console.log(`RUNNERS FOUND[=> ${worker.ip}`);
+				console.log(`RUNNERS FOUND[=> ${info}`);
 				worker.availrunners = [];
 
 				for (let idx = 0, stop = runners.length; idx < stop; idx++){
@@ -193,6 +196,8 @@ var Worker = (function(){
 					}
 				}
 				worker.isBuildingRunners = false;
+				console.log(`RUNNERS AVAILABLE[=> ${worker.availrunners}`);
+				callback(worker);
 			}
 		});
 	};
@@ -245,8 +250,7 @@ var Worker = (function(){
 				// Just send the job over and set a timeout 
 				// to wait before checking runners
 				setTimeout(function(){
-					worker.sync();
-					args.callback(worker);
+					worker.sync(args.callback);
 				}, 10000);
 
 			});
