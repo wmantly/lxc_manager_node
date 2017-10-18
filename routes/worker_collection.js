@@ -182,7 +182,7 @@ var Worker = (function(){
 					
 				}
 				console.log(`RUNNERS FOUND[=> ${worker.ip}`);
-				console.log(`RUNNERS FOUND[=> ${runners}`);
+				console.log(`RUNNERS FOUND[=>`, runners);
 				worker.availrunners = [];
 
 				for (let idx = 0, stop = runners.length; idx < stop; idx++){
@@ -196,7 +196,7 @@ var Worker = (function(){
 					}
 				}
 				worker.isBuildingRunners = false;
-				console.log(`RUNNERS AVAILABLE[=> ${worker.availrunners}`);
+				console.log(`RUNNERS AVAILABLE[=>`, worker.availrunners);
 				callback(worker);
 			}
 		});
