@@ -1,3 +1,4 @@
+# maxMemoryUsage must be defined
 baseName="crunner0";
 namePrefix="cubs";
 runners="";
@@ -12,6 +13,8 @@ function usedMemoryPercent () {
 
 
 usedMemoryPercent;
+
+# maxMemoryUsage must be defined
 until [[ $memory -gt $maxMemoryUsage ]]; do
 	
 	runnerName="${namePrefix}${RANDOM}";

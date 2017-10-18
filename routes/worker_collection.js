@@ -58,7 +58,7 @@ var Runner = (function(){
 			runner.cleanUp();
 		}
 
-		runner.worker.newStartRunners();
+		runner.worker.startRunners();
 	};
 
 	proto.setTimeout = function(time){
@@ -95,8 +95,9 @@ var Worker = (function(){
 		worker.ip = worker.publicIP;
 		worker.usedrunners = 0;
 		worker.age = +(new Date());
-		worker.isBuildingRunners = false;
 		worker.canSchedule = true;
+		worker.isBuildingRunners = false;
+		worker.isSyncing = false;
 
 		return worker;
 	};
@@ -143,6 +144,59 @@ var Worker = (function(){
 		});
 	};
 
+	proto.sync = function(){
+		var worker = this;
+		worker.isSyncing = true;
+		// this will call the droplet or the droplet will send the data using a cron job
+
+		// mainly to update the active runners on the worker
+		// potentially collect stats about the droplet as well
+		// - check memory and check runners
+		// - when does start runners get called?
+
+		// worker.ramPercentUsed();
+
+
+		lxc.exec('lxc-ls --fancy', worker.ip, function(data, error, stderr){
+			if (error){
+				console.log("Sync Error: \n", error);
+			} else {
+				
+				var output = data.split("\n");
+				var keys = output.splice(0,1)[0].split(/\s+/).slice(0,-1);
+				var info = [];
+
+				keys = keys.map(function(v){return v.toLowerCase()});
+				output = output.slice(0).slice(0,-1);
+
+				for(var i in output){
+					if(output[i].match(/^-/)) continue; // compatibility with 1.x and 2.x output
+
+					var aIn = output[i].split(/\s+/).slice(0,-1);
+					var mapOut = {};
+					aIn.map(function(value,idx){
+						mapOut[keys[idx]] = value;
+					});
+					info.push(mapOut);
+					
+				}
+				worker.availrunners = [];
+
+				for (let idx = 0, stop = runners.length; idx < stop; idx++){
+					if(runners[idx].state !== "STOPPED"){
+						var runner = Runner.create({
+							"name": runners[idx].name,
+							"worker": worker,
+							"label": worker.name + ':' + runners[idx].name
+						});
+						worker.availrunners.push(runner);
+					}
+				}
+				worker.isBuildingRunners = false;
+			}
+		});
+	};
+
 	proto.initialize = function(hooks, config){
 		// Create droplet
 		// Once active the droplet begins to create runners
@@ -158,11 +212,12 @@ var Worker = (function(){
 			},
 			onActive: function(data, args){
 				var worker = Worker.create(data);
-				worker.newStartRunners(hooks);
+				worker.startRunners(hooks);
 			}
 		});
 	};
-	proto.newStartRunners = function(args){
+
+	proto.startRunners = function(args){
 		// onStart is not necessary
 		var worker = this;
 		args.stopPercent = args.stopPercent || 80;
@@ -182,101 +237,20 @@ var Worker = (function(){
 
 		worker.isBuildingRunners = true;
 		fs.readFile(__dirname + "/../allocate_runners.sh", function(error, file){
+			
 			var command = `maxMemoryUsage=${args.stopPercent};\n${file.toString()}`;
+			
 			lxc.exec(command, worker.ip, function(data, error, stderr){
-				// output chould be list of runner names
-				if(error){
-					// ugly
-					console.log("Error", worker.ip, error);
-					worker.isBuildingRunners = false;
-					args.errorCallback(error, worker, args);
-				} else {
-					console.log("exec:");
-					console.log(arguments);
-					var runners = data.split(";");
-					for (let idx = 0, stop = runners.length; idx < stop; idx++){
-						if(runners[idx]){
-							var runner = Runner.create({
-								"name": runners[idx],
-								"worker": worker,
-								"label": worker.name + ':' + runners[idx]
-							});
-							worker.availrunners.push(runner);
-						}
-					}
-					worker.isBuildingRunners = false;
+				
+				// Just send the job over and set a timeout 
+				// to wait before checking runners
+				setTimeout(function(){
+					worker.sync();
 					args.callback(worker);
-				}
+				}, 10000);
+
 			});
-		});
-	};
 
-
-	proto.__XstartRunners = function(args){
-		var worker = this;
-		
-		console.log('Starting runners on', worker.name, worker.ip);
-		// dont make runners on out dated workers
-		if(!worker || worker.settings.image > worker.image.id || worker.isBuildingRunners){
-			if(worker) console.log(`Blocked worker(${worker.image.id}), current image ${worker.settings.image}. Building: ${worker.isBuildingRunners}`)
-			return ;
-		}
-		args = args || {};
-		// percent of used RAM to stop runner creation
-		args.stopPercent = args.stopPercent || 80;
-		args.onStart = args.onStart || __empty;
-		args.onDone = args.onDone || __empty;
-
-		worker.isBuildingRunners = true;
-		
-		// no longer needed
-		worker.ramPercentUsed(function(usedMemPercent){
-			console.log(arguments);
-			if(usedMemPercent > args.stopPercent ){
-				worker.isBuildingRunners = false;
-				console.log('---using', String(usedMemPercent).trim(),
-					'percent memory, stopping runner creation!', worker.availrunners.length, 
-					'created on ', worker.name
-				);
-				args.onDone(worker, args);
-				return ;
-			} else if (usedMemPercent !== ""){
-				console.log('+++using', String(usedMemPercent).trim(),
-					'percent memory on ', worker.name, 
-					'Runners:', worker.availrunners.length,
-					`Used? ${usedMemPercent}`
-
-				);
-				var name = 'crunner-' + utils.uuid();
-				// console.log('Free ram check passed!')
-				lxc.startEphemeral(name, 'crunner0', worker.ip, function(data){
-					setTimeout(function(){
-						worker.isBuildingRunners = false;
-						worker.startRunners(args);
-					}, 0);
-
-					if(data.ip){
-						console.log('started runner on', worker.name);
-
-						var runner = Runner.create({
-							"ip": data.ip,
-							"name": name,
-							"worker": worker,
-							"label": worker.name + ':' + name
-						});
-
-						args.onStart(worker, args);
-
-						worker.availrunners.push(runner);
-					}
-
-				});
-			} else {
-				return setTimeout(function(){
-					worker.isBuildingRunners = false;
-					worker.startRunners(args);
-				}, 0);
-			}
 		});
 	};
 
@@ -353,7 +327,7 @@ var WorkerCollection = (function(){
 				if (count++ > 3){
 					args.errorCallback = function(){};
 				}
-				worker.newStartRunners(args);
+				worker.startRunners(args);
 			}
 		}, config);
 	};
