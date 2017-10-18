@@ -182,7 +182,7 @@ var Worker = (function(){
 					
 				}
 				console.log(`RUNNERS FOUND[=> ${worker.ip}`);
-				console.log(`RUNNERS FOUND[=> ${info}`);
+				console.log(`RUNNERS FOUND[=> ${runners}`);
 				worker.availrunners = [];
 
 				for (let idx = 0, stop = runners.length; idx < stop; idx++){
