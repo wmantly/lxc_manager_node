@@ -165,7 +165,7 @@ var Worker = (function(){
 				
 				var output = data.split("\n");
 				var keys = output.splice(0,1)[0].split(/\s+/).slice(0,-1);
-				var info = [];
+				var runners = [];
 
 				keys = keys.map(function(v){return v.toLowerCase()});
 				output = output.slice(0).slice(0,-1);
@@ -178,7 +178,7 @@ var Worker = (function(){
 					aIn.map(function(value,idx){
 						mapOut[keys[idx]] = value;
 					});
-					info.push(mapOut);
+					runners.push(mapOut);
 					
 				}
 				console.log(`RUNNERS FOUND[=> ${worker.ip}`);
