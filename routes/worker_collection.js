@@ -242,16 +242,17 @@ var Worker = (function(){
 
 		worker.isBuildingRunners = true;
 		fs.readFile(__dirname + "/../allocate_runners.sh", function(error, file){
-			
-			var command = `maxMemoryUsage=${args.stopPercent};\n${file.toString()}`;
-			
+			var command = '(crontab -l && echo "1 * * * * export PATH=${PATH};' + `export maxMemoryUsage=${args.stopPercent}; echo '${file.toString("base64")}'|base64 --decode|bash") | crontab -`;
+			// COMMAND:  (crontab -l && echo "1 * * * * export PATH=${PATH};export maxMemoryUsage=80; echo 'IyBtYXhNZW1vcnlVc2FnZSBtdXN0IGJlIGRlZmluZWQKYmFzZU5hbWU9ImNydW5uZXIwIjsKbmFtZVByZWZpeD0iY3VicyI7CnJ1bm5lcnM9IiI7CgpmdW5jdGlvbiB1c2VkTWVtb3J5UGVyY2VudCAoKSB7CgltZW1vcnlBdmFpbGFibGU9JChoZWFkIC9wcm9jL21lbWluZm98Z3JlcCBNZW1BdmFpbHxncmVwIC1QbyAnXGQrJyk7Cgl0b3RhbE1lbW9yeT0kKGhlYWQgL3Byb2MvbWVtaW5mb3xncmVwIE1lbVRvdGFsfGdyZXAgLVBvICdcZCsnKTsKCWRpZmZlcmVuY2U9JChleHByICR0b3RhbE1lbW9yeSAtICRtZW1vcnlBdmFpbGFibGUpOwoJZGlmZmVyZW5jZT0kKGV4cHIgJGRpZmZlcmVuY2UgXCogMTAwKTsKCW1lbW9yeT0kKGV4cHIgJGRpZmZlcmVuY2UgLyAkdG90YWxNZW1vcnkpOwp9CgpmdW5jdGlvbiBidWlsZFJ1bm5lcnMgKCkgewoKCXVzZWRNZW1vcnlQZXJjZW50OwoKCSMgbWF4TWVtb3J5VXNhZ2UgbXVzdCBiZSBkZWZpbmVkCgl1bnRpbCBbWyAkbWVtb3J5IC1ndCAkbWF4TWVtb3J5VXNhZ2UgXV07IGRvCgkJCgkJcnVubmVyTmFtZT0iJHtuYW1lUHJlZml4fSR7UkFORE9NfSI7CgkJbHhjLXN0YXJ0LWVwaGVtZXJhbCAtbyAkYmFzZU5hbWUgLW4gJHJ1bm5lck5hbWUgLS11bmlvbi10eXBlIG92ZXJsYXlmcyAtZDsKCQkKCQlpZiBbWyAkPyAtZXEgMCBdXTsgdGhlbgoJCQlydW5uZXJzPSIke3J1bm5lcnN9OyR7cnVubmVyTmFtZX0iOwoJCWZpCgkJdXNlZE1lbW9yeVBlcmNlbnQ7Cglkb25lCgoJZWNobyAkcnVubmVyczsKfQpidWlsZFJ1bm5lcnM7CmV4aXQgMDs='|base64 --decode|bash") | crontab -
+			// RESULT IN SHELL: no crontab for virt
 			lxc.exec(command, worker.ip, function(data, error, stderr){
-				
+				console.log(arguments);
 				// Just send the job over and set a timeout 
 				// to wait before checking runners
 				setTimeout(function(){
 					worker.sync(args.callback);
-				}, 10000);
+					// 900000 < thats 15 min not 90 sec
+				}, 90000);
 
 			});
 
