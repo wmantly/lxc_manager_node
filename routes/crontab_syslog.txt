@@ -1,0 +1,25 @@
+Oct 20 21:52:16 dev--CLW10-3066 crontab[1885]: (virt) REPLACE (virt)
+Oct 20 21:52:37 dev--CLW10-3066 crontab[2166]: (virt) LIST (virt)
+Oct 20 21:53:03 dev--CLW10-3066 crontab[2168]: (virt) LIST (virt)
+Oct 20 22:01:01 dev--CLW10-3066 CRON[18873]: (virt) CMD (source /home/virt/allocate_runners.sh)
+Oct 20 23:01:01 dev--CLW10-3066 CRON[1867]: (virt) CMD (source /home/virt/allocate_runners.sh)
+
+
+
+
+ALL CRON
+Oct 20 21:52:13 dev--CLW10-3066 cron[1443]: (CRON) INFO (pidfile fd = 3)
+Oct 20 21:52:13 dev--CLW10-3066 cron[1443]: (CRON) INFO (Running @reboot jobs)
+Oct 20 21:52:16 dev--CLW10-3066 crontab[1885]: (virt) REPLACE (virt)
+Oct 20 21:52:37 dev--CLW10-3066 crontab[2166]: (virt) LIST (virt)
+Oct 20 21:53:03 dev--CLW10-3066 crontab[2168]: (virt) LIST (virt)
+Oct 20 22:01:01 dev--CLW10-3066 CRON[18873]: (virt) CMD (source /home/virt/allocate_runners.sh)
+Oct 20 22:01:01 dev--CLW10-3066 CRON[18870]: (CRON) info (No MTA installed, discarding output)
+Oct 20 22:17:01 dev--CLW10-3066 cron[1443]: Authentication token is no longer valid; new one required
+Oct 20 22:17:01 dev--CLW10-3066 CRON[18913]: Authentication token is no longer valid; new one required
+Oct 20 22:17:53 dev--CLW10-3066 cron[1393]: (CRON) INFO (pidfile fd = 3)
+Oct 20 22:17:53 dev--CLW10-3066 cron[1393]: (CRON) INFO (Running @reboot jobs)
+Oct 20 23:01:01 dev--CLW10-3066 CRON[1867]: (virt) CMD (source /home/virt/allocate_runners.sh)
+Oct 20 23:01:01 dev--CLW10-3066 CRON[1865]: (CRON) info (No MTA installed, discarding output)
+Oct 20 23:17:01 dev--CLW10-3066 cron[1393]: Authentication token is no longer valid; new one required
+Oct 20 23:17:01 dev--CLW10-3066 CRON[1897]: Authentication token is no longer valid; new one required

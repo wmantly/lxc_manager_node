@@ -1,7 +1,4 @@
 # maxMemoryUsage must be defined
-baseName="crunner0";
-namePrefix="cubs";
-runners="";
 
 function usedMemoryPercent () {
 	memoryAvailable=$(head /proc/meminfo|grep MemAvail|grep -Po '\d+');
@@ -12,7 +9,9 @@ function usedMemoryPercent () {
 }
 
 function buildRunners () {
-
+	baseName="crunner0";
+	namePrefix="cubs";
+	runners="";
 	usedMemoryPercent;
 
 	# maxMemoryUsage must be defined
@@ -26,8 +25,6 @@ function buildRunners () {
 		fi
 		usedMemoryPercent;
 	done
-
-	echo $runners;
 }
 buildRunners;
 exit 0;

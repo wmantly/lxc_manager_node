@@ -222,7 +222,15 @@ var Worker = (function(){
 		});
 	};
 
-	proto.startRunners = function(args){
+	proto.__buildCommand = function(file, maxMemoryUsage){
+		var command = `echo "export PATH=\${PATH};export maxMemoryUsage=${maxMemoryUsage};`;
+		command += `echo '${file.toString("base64")}'|base64 --decode|bash" | cat > /home/virt/allocate_runners.sh`;
+		command += ` && echo "*/1 * * * * source /home/virt/allocate_runners.sh >> /home/virt/allocate_runners.log 2>&1" | crontab -;`;
+		return command;
+	};
+
+	proto.startRunners = function(args, count){
+		if ( count > 3) return;
 		// onStart is not necessary
 		var worker = this;
 		args.stopPercent = args.stopPercent || 80;
@@ -242,18 +250,24 @@ var Worker = (function(){
 
 		worker.isBuildingRunners = true;
 		fs.readFile(__dirname + "/../allocate_runners.sh", function(error, file){
-			var command = '(crontab -l > /tmp/virtjobs && echo "1 * * * * export PATH=${PATH};' +
-			"export maxMemoryUsage=${args.stopPercent};" + `echo '${file.toString("base64")}'|base64 --decode|bash")` 
-			+ ">> /tmp/virtjobs && crontab /tmp/virtjobs && rm /tmp/virtjobs;";
+			var command = worker.__buildCommand(file, args.stopPercent);
+				
 			lxc.exec(command, worker.ip, function(data, error, stderr){
-				console.log(arguments);
+				if (error) { 
+					console.log("ERROR: ",stderr);
+					setTimeout(function(){
+						count = count || 0;
+						worker.startRunners(args, ++count);
+					}, 0);
+				} else {
+					console.log("SUCCESS: ", data , worker.ip);
+				}
 				// Just send the job over and set a timeout 
 				// to wait before checking runners
 				setTimeout(function(){
 					worker.sync(args.callback);
 					// 900000 < thats 15 min not 90 sec
 				}, 90000);
-
 			});
 
 		});
