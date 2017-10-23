@@ -10,14 +10,14 @@ function usedMemoryPercent () {
 
 function buildRunners () {
 	baseName="crunner0";
-	namePrefix="cubs";
+	namePrefix="crunner-batch-${RANDOM}";
 	runners="";
 	usedMemoryPercent;
 
 	# maxMemoryUsage must be defined
 	until [[ $memory -gt $maxMemoryUsage ]]; do
 		
-		runnerName="${namePrefix}${RANDOM}";
+		runnerName="${namePrefix}-id-${RANDOM}";
 		lxc-start-ephemeral -o $baseName -n $runnerName --union-type overlayfs -d;
 		
 		if [[ $? -eq 0 ]]; then
@@ -27,4 +27,6 @@ function buildRunners () {
 	done
 }
 buildRunners;
+
+# Add curl to manager here. Sending status report to manager
 exit 0;

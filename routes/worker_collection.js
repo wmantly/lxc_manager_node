@@ -209,6 +209,7 @@ var Worker = (function(){
 			name: config.tagPrefix + (config.version+"") + '-' + utils.uuid(),
 			image: config.image,
 			size: config.size,
+			user_data: proto.__buildCommand(config.maxMemoryUsage || 80),
 			onCreate: function(data){
 				doapi.dropletSetTag(
 					config.tagPrefix + config.version, 
@@ -224,8 +225,8 @@ var Worker = (function(){
 
 	proto.__buildCommand = function(file, maxMemoryUsage){
 		var command = `echo "export PATH=\${PATH};export maxMemoryUsage=${maxMemoryUsage};`;
-		command += `echo '${file.toString("base64")}'|base64 --decode|bash" | cat > /home/virt/allocate_runners.sh`;
-		command += ` && echo "*/1 * * * * source /home/virt/allocate_runners.sh >> /home/virt/allocate_runners.log 2>&1" | crontab -;`;
+		command += `echo '${file.toString("base64")}'|base64 --decode|bash" | cat > /home/virt/allocate_runners.sh && chmod virt +x /home/virt/allocate_runners.sh`;
+		command += ` && echo "*/1 * * * * /home/virt/allocate_runners.sh >> /home/virt/allocate_runners.log 2>&1" | crontab -u virt -;`;
 		return command;
 	};
 
