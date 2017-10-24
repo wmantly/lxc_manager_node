@@ -58,7 +58,7 @@ var Runner = (function(){
 			runner.cleanUp();
 		}
 		// TODO: Determine if this call is even needed
-		runner.worker.sync();
+		// runner.worker.sync();
 	};
 
 	proto.setTimeout = function(time){
@@ -84,7 +84,7 @@ var Worker = (function(){
 	// settings should probably be retrieved via a function 
 	proto.settings = settings;
 
-	maxSyncAttempts = 3;
+	var maxSyncAttempts = 6;
 
 	proto.create = function(config){
 		var worker = Object.create(proto);
@@ -150,7 +150,7 @@ var Worker = (function(){
 
 
 	// When should this be called
-	proto.sync = function(maxAttempts, callback, errorCallback){
+	proto.sync = function(callback, errorCallback, maxAttempts){
 		maxAttempts = maxAttempts || maxSyncAttempts;
 
 		var worker = this;
@@ -175,11 +175,11 @@ var Worker = (function(){
 						errorCallback(error, worker);
 					}, 0);
 				} else {
-					console.log("Waiting 30 secongs")
+					console.log("Waiting 10 secongs")
 					worker.syncAttempts++;
 					setTimeout(function(){
 						worker.sync(maxAttempts, callback, errorCallback);
-					}, 30000);
+					}, 15000);
 				}
 			} else {
 				
@@ -220,7 +220,7 @@ var Worker = (function(){
 				worker.isBuildingRunners = false;
 				worker.isSyncing = false;
 				worker.syncAttempts = 0;
-				callback(worker);
+				callback(null, worker);
 			}
 		});
 	};
@@ -230,7 +230,7 @@ var Worker = (function(){
 		// Once active the droplet begins to create runners
 		var maxMemoryUsage = args.maxMemoryUsage || config.maxMemoryUsage || 80;
 		var worker_uuid = utils.uuid();
-		// var phone_home = config.home || "/worker/ping";
+		var phone_home = config.home || "/worker/ping";
 
 		fs.readFile(__dirname + "/../allocate_runners.sh", function(error, file){
 
@@ -271,11 +271,11 @@ var Worker = (function(){
 		
 		createScript = `echo "${script}" | cat > /home/virt/allocate_runners.sh`;
 		
-		makeScriptExecutable = `chmod virt +x /home/virt/allocate_runners.sh`;
+		makeScriptExecutable = `chmod o+x /home/virt/allocate_runners.sh`;
 		
 		setupCrontab = `echo "*/${interval} * * * * /home/virt/allocate_runners.sh > /home/virt/allocate_runners.log 2>&1" | crontab -u virt -`;
 		
-		return `${createScript} && ${makeScriptExecutable} && ${setupCrontab};`;
+		return `#!/bin/bash\n\n${createScript} && ${makeScriptExecutable} && ${setupCrontab};`;
 	};
 
 	proto.startRunners = function(args, count){
@@ -385,7 +385,7 @@ var WorkerCollection = (function(){
 		var count = 0;
 		config = config || workers.settings;
 		Worker.initialize({
-			"callback": function(worker){
+			"callback": function(error, worker){
 				console.log("Seeded runners on", worker.name);
 				workers.push(worker);
 				worker.register();
@@ -393,6 +393,7 @@ var WorkerCollection = (function(){
 			},
 			"errorCallback": function(error, worker){
 				// destroy worker
+				workers.currentCreating--;
 			}
 		}, config);
 	};
@@ -450,37 +451,46 @@ var WorkerCollection = (function(){
 		});
 	};
 
-	workers.checkForZombies = function(){
+	workers.checkForZombies = function(callback){
 		// check to make sure all works are used or usable.
-		
-		let zombies = 0;
+		if (workers.length === 0) callback();
+		let 
+			zombies = 0, 
+			syncedCount = workers.length,
+			workerCleanUp = function(error, worker){
+				console.log(`Zombie! Worker ${worker.name}, destroying.`);
+				workers.destroy(worker);
+				zombies++;
+				if(!--count) callback();
+			};
+
 
 		for(let worker of workers){
 			console.log(`Checking if ${worker.name} is a zombie worker.`);
 			// if a runner has no available runners and no used runners, its a
 			// zombie. This should happen when a newer image ID has been added
 			// and old workers slowly lose there usefulness.
-
-			if(worker.isZombie()){
-				console.log(`Zombie! Worker ${worker.name}, destroying.`);
-				workers.destroy(worker);
-				zombies++;
-			}
+			worker.sync(function(error, worker){
+				if(worker.isZombie()) workerCleanUp(error, worker);
+			}, workerCleanUp);
 		}
-
-		return zombies;
 	};
 
 	workers.checkBalance = function(){
 		console.log(`${(new Date())} Checking balance.`);
 
-		workers.checkForZombies();
+		workers.checkForZombies(function(){
+			// if there are workers being created, stop scale up and down check
+			var skipBalance = workers.currentCreating + workers.length >= workers.settings.min;
+			if(workers.currentCreating && skipBalance){
+				return console.log(`Killing balance, workers are being created.`);
+			}
 
-		// if there are workers being created, stop scale up and down check
-		var skipBalance = workers.currentCreating + workers.length >= workers.settings.min
-		if(workers.currentCreating && skipBalance){
-			return console.log(`Killing balance, workers are being created.`);
-		}
+			workers.balance();
+		});
+	};
+
+	workers.balance = function(){
 
 		// count workers and locate oldest worker
 		var oldestWorker, isNotOlder, workerCount = 0;
@@ -532,6 +542,7 @@ var WorkerCollection = (function(){
 				Workers: ${workers.length}
 			`);
 		}
+
 
 	};
 

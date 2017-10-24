@@ -29,5 +29,5 @@ function buildRunners () {
 buildRunners;
 
 # Add curl to manager here. Sending status report to manager
-curl -X POST "${PHONE_HOME}" -d'{"memory":${memory}, "runnersShort": "${runners}", "runnersLong": "'"$(lxc-ls --fancy)"'", "id": "${WORKER_UUID}"}' 
+# curl -X POST "${PHONE_HOME}" -d'{"memory":${memory}, "runnersShort": "${runners}", "runnersLong": "'"$(lxc-ls --fancy)"'", "id": "${WORKER_UUID}"}' 
 exit 0;
