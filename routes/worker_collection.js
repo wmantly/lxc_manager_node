@@ -94,6 +94,13 @@ var Worker = (function(){
 		});
 
 		worker.availrunners = [];
+		// need map of used runners
+		// need list of all runners
+		// - sync should probably populate the all runners container
+		// - availrunners should the diff of used runners and all runners
+		
+		// runners should probably indicate when they have been used.
+
 		worker.ip = worker.publicIP;
 		worker.usedrunners = 0;
 		worker.age = +(new Date());
@@ -111,8 +118,7 @@ var Worker = (function(){
 		// console.log('getting runner from ', worker.name, ' avail length ', this.availrunners.length);
 		var runner = this.availrunners.pop();
 		this.usedrunners++;
-		runner.setTimeout();
-					
+		runner.setTimeout();	
 		return runner;
 	};
 
@@ -151,9 +157,9 @@ var Worker = (function(){
 
 	// When should this be called
 	proto.sync = function(callback, errorCallback, maxAttempts){
-		maxAttempts = maxAttempts || maxSyncAttempts;
-
 		var worker = this;
+		
+		maxAttempts = maxAttempts || maxSyncAttempts;
 		worker.isSyncing = true;
 		callback = callback || __empty;
 		errorCallback = errorCallback || __empty;
@@ -164,9 +170,6 @@ var Worker = (function(){
 		// - check memory and check runners
 		// - when does start runners get called?
 
-		// worker.ramPercentUsed();
-
-
 		lxc.exec('lxc-ls --fancy', worker.ip, function(data, error, stderr){
 			if (error){
 				console.log("Sync Error: \n", error);
@@ -175,7 +178,7 @@ var Worker = (function(){
 						errorCallback(error, worker);
 					}, 0);
 				} else {
-					console.log("Waiting 10 secongs")
+					console.log("Waiting 15 seconds")
 					worker.syncAttempts++;
 					setTimeout(function(){
 						worker.sync(maxAttempts, callback, errorCallback);
@@ -203,15 +206,18 @@ var Worker = (function(){
 				}
 				console.log(`RUNNERS FOUND[=> ${worker.ip}`);
 				console.log(`RUNNERS FOUND[=>`, runners);
+				// bad
 				worker.availrunners = [];
 
 				for (let idx = 0, stop = runners.length; idx < stop; idx++){
-					if(runners[idx].state !== "STOPPED"){
+					if(runners[idx].state !== "STOPPED" && !Runner.get(worker.name + ':' + runners[idx].name)){
 						var runner = Runner.create({
 							"name": runners[idx].name,
+							"ipv4": runners[idx].ipv4,
 							"worker": worker,
 							"label": worker.name + ':' + runners[idx].name
 						});
+
 						worker.availrunners.push(runner);
 					}
 				}
@@ -225,12 +231,16 @@ var Worker = (function(){
 		});
 	};
 
-	proto.initialize = function(args, config){
+	proto.initialize = function(params, config){
 		// Create droplet
 		// Once active the droplet begins to create runners
 		var maxMemoryUsage = args.maxMemoryUsage || config.maxMemoryUsage || 80;
 		var worker_uuid = utils.uuid();
 		var phone_home = config.home || "/worker/ping";
+
+
+		var callback = params.callback || __empty;
+		var errorCallback = params.errorCallback || empty;
 
 		fs.readFile(__dirname + "/../allocate_runners.sh", function(error, file){
 
@@ -250,11 +260,10 @@ var Worker = (function(){
 					data.worker_uuid = worker_uuid;
 					var worker = Worker.create(data);
 					
-					// Just send the job over and set a timeout 
-					// to wait before checking runners
+					// wait for boot before syncing runners
 					setTimeout(function(){
-						worker.sync(args.callback);
-					}, 90000);
+						worker.sync(callback, errorCallback);
+					}, 75000);
 				}
 			});
 		});
@@ -276,50 +285,6 @@ var Worker = (function(){
 		setupCrontab = `echo "*/${interval} * * * * /home/virt/allocate_runners.sh > /home/virt/allocate_runners.log 2>&1" | crontab -u virt -`;
 		
 		return `#!/bin/bash\n\n${createScript} && ${makeScriptExecutable} && ${setupCrontab};`;
-	};
-
-	proto.startRunners = function(args, count){
-		if ( count > 3) return;
-		// onStart is not necessary
-		var worker = this;
-		args.stopPercent = args.stopPercent || 80;
-		args.callback = args.callback || __empty;
-		args.errorCallback = args.errorCallback || __empty;
-
-		// dont make runners on out dated workers
-		if(!worker || worker.settings.image > worker.image.id || worker.isBuildingRunners){
-			if(worker) {
-				console.log(`
-					Blocked worker(${worker.image.id}), current image ${worker.settings.image}.
-					Building: ${worker.isBuildingRunners}
-				`);
-			}
-			return;
-		}
-
-		worker.isBuildingRunners = true;
-		fs.readFile(__dirname + "/../allocate_runners.sh", function(error, file){
-			var command = worker.__buildCommand(file, args.stopPercent);
-				
-			lxc.exec(command, worker.ip, function(data, error, stderr){
-				if (error) { 
-					console.log("ERROR: ",stderr);
-					setTimeout(function(){
-						count = count || 0;
-						worker.startRunners(args, ++count);
-					}, 0);
-				} else {
-					console.log("SUCCESS: ", data , worker.ip);
-				}
-				// Just send the job over and set a timeout 
-				// to wait before checking runners
-				setTimeout(function(){
-					worker.sync(args.callback);
-					// 900000 < thats 15 min not 90 sec
-				}, 90000);
-			});
-
-		});
 	};
 
 	return proto;
@@ -491,7 +456,7 @@ var WorkerCollection = (function(){
 	};
 
 	workers.balance = function(){
-
+		console.log(`BALANCING: ${(new Date())}`);
 		// count workers and locate oldest worker
 		var oldestWorker, isNotOlder, workerCount = 0;
 
