@@ -2,8 +2,8 @@
 
 var express = require('express');
 var router = express.Router();
+// what is util for??
 var util = require('util');
-var request = require('request');
 var lxc = require('../lxc');
 var doapi = require('../doapi')();
 
@@ -12,58 +12,6 @@ var workers = require('./worker_collection.js');
 console.log('========STARTING===========');
 
 workers.start();
-
-var attemptRun = function(req, res, runner, count){
-	count = count || 0;
-	console.log(`Runner starting attempt ${count}.`);
-
-	if(!runner){
-		console.log(`No runner available!`);
-		res.status(503);
-		return res.json({error: 'No runners, try again soon.'});
-	}
-
-	// TODO: Configurable
-	if(count > 2){
-		console.log(`Runner attempt failed, to many requests!`);
-		return res.status(400).json({error: 'Runner restarted to many times'});
-	}
-
-	var httpOptions = {
-		url: 'http://' + runner.worker.ip,
-		headers: {
-			Host: runner.name
-		},
-		body: JSON.stringify({
-			code: req.body.code
-		})
-	};
-
-	return request.post(httpOptions, function(error, response, body){
-		// console.log('runner response:', arguments)
-		if(error || response.statusCode !== 200) {
-			return attemptRun(req, res, workers.getAvailableRunner(), ++count);
-		}
-		
-		body = JSON.parse(body);
-
-		if(req.query.once){
-			res.json(body);
-			// 0 here does nothing
-			// return runnerFree(runner, 0);
-			return runner.free();
-		}
-
-		workers.setRunner(runner);
-		body['ip'] = runner.label;
-		body['rname'] = runner.name;
-		body['wname'] = runner.worker.name;
-		res.json(body);
-
-		// runnerTimeout(runner);
-		runner.setTimeout();
-	});
-};
 
 // Why is this a GET?
 router.get('/stop/:name', function(req, res, next){
@@ -105,8 +53,21 @@ router.get('/ping/:runner', function(req, res, next){
 
 router.post('/run/:runner?', function (req, res, next){
 	console.log(`Request runner route!`);
-	var runner = workers.getAvailableRunner(workers.getRunner(req.params.runner));
-	return attemptRun(req, res, runner);
+	
+	return workers.attemptRun(
+		req.body.code, req.query.once, req.params.runner, 
+		(body) => {
+			res.json(body);
+		}, 
+		(error, statusCode) => {
+			if (statusCode === 503){
+				res.status(503);
+				return res.json({error: 'No runners, try again soon.'});
+			} else if (statusCode === 400){
+				return res.status(400).json({error: 'Runner restarted too many times'});
+			}
+		}
+	);
 });
 
 module.exports = router;
