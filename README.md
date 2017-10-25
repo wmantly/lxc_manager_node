@@ -1,5 +1,5 @@
 # lxc_manager_node
-This has been tested on **clean** install of ubuntu 14.04 64bit.
+This has been tested on **clean** install of ubuntu 16.04 64bit.
 
 ## install
 Update you system to the newest packages and reboot. You may need to do this several times:
