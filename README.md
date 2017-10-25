@@ -77,7 +77,52 @@ If everything worked you can stop and delete the container
 lxc-stop -n test-ubuntu
 lxc-destroy -n test-ubuntu
 ```
+## Open resty config file
+```lua
+server {
+    listen 80;
 
+    location / {
+        resolver 10.0.3.1;  # use LXC dns
+
+		set $target '';
+		access_by_lua '
+			function mysplit(inputstr, sep)
+				-- http://stackoverflow.com/a/7615129/3140931
+			    if sep == nil then
+			            sep = "%s"
+			    end
+			    local t={} ; i=0
+			    for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+			            t[i] = str
+			            i = i + 1
+			    end
+			    return t,i
+			end
+
+			host, hostLen = mysplit(ngx.var.host, ".")
+
+			if hostLen == 1 then
+				ngx.var.target = host[0]..":15000"
+			elseif hostLen == 6 then
+				ngx.var.target = host[1]..":"..host[0]
+			elseif hostLen == 5 then
+				ngx.var.target = host[0]..":15000"
+			else
+				return ngx.exit(599)
+			end
+		';
+
+        proxy_pass http://$target;
+        proxy_set_header X-Real-IP  $remote_addr;
+        proxy_set_header X-Forwarded-For  $remote_addr;
+        proxy_set_header Host $host;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+```
 
 # auto start
 ## crontab
