@@ -18,8 +18,12 @@ Now you can install the packages we need:
 sudo add-apt-repository ppa:ubuntu-lxc/stable
 sudo add-apt-repository ppa:ubuntu-lxc/cgmanager-stable
 sudo apt-get update && sudo apt-get upgrade
-sudo apt-get install git nodejs npm lxc btrfs-tools lxctl lxc-templates uidmap
+sudo apt-get install git nodejs npm lxc btrfs-tools lxctl lxc-templates uidmap libpam-cgfs
 ```
+
+### may need this
+https://discuss.linuxcontainers.org/t/failed-creating-cgroups/272/10 looking more into it.
+
 
 remap `nodejs` to `node`:
 ```bash
