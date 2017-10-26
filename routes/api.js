@@ -13,7 +13,6 @@ console.log('========STARTING===========');
 
 workers.start();
 
-// Why is this a GET?
 router.get('/stop/:name', function(req, res, next){
 	return lxc.stop(req.params.name, function(data){
 		console.log('stop', arguments);
@@ -25,7 +24,7 @@ router.get('/stop/:name', function(req, res, next){
 	});
 });
 
-// Why is this a GET?
+
 router.get('/destroyByTag', function(req, res, next) {
 	workers.destroyByTag();
 	res.send('?');

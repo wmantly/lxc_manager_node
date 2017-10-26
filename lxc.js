@@ -2,10 +2,36 @@
 var exec = require('child_process').exec;
 
 
+// function sysExec(command, ip, callback){
+// 	ip = ip || '104.236.77.157';
+// 	command = new Buffer(command).toString('base64')
+// 	command = 'ssh -i ~/.ssh/clw_rsa -o "StrictHostKeyChecking no" virt@'+ ip + ' "echo ' + command + '|base64 --decode|bash"';
+// 	// command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command;
+
+// 	return exec(command, (function(callback){
+// 		return function(err,data,stderr){
+// 			if(callback){
+// 				return callback(data, err, stderr);
+// 			}
+// 		}
+// 	})(callback));
+// };
+
+
 function sysExec(command, ip, callback){
-	ip = ip || '104.236.77.157';
-	command = new Buffer(command).toString('base64')
-	command = 'ssh -i ~/.ssh/clw_rsa -o "StrictHostKeyChecking no" virt@'+ ip + ' "echo ' + command + '|base64 --decode|bash"';
+	if (typeof(ip) === 'function'){
+		callback = ip;
+		ip = null;
+	} else if (typeof(callback) !== 'function'){
+		callback = ()=>{};
+	}
+
+	command = `echo ${new Buffer(command).toString('base64')}|base64 --decode|bash`;
+	
+	if (ip){
+		// command = `dsh -m virt@${ip} -r ssh -o "StrictHostKeyChecking no" -o "Identity ~/.ssh/clw_rsa" -c -- "${command}"`;
+		command = `ssh -i ~/.ssh/clw_rsa -o "StrictHostKeyChecking no" virt@${ip} "${command}"`;
+	}
 	// command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command;
 
 	return exec(command, (function(callback){
@@ -20,16 +46,16 @@ function sysExec(command, ip, callback){
 var lxc = {
 	exec: sysExec,
 
-	create: function(name, template, config, callback){
-		return sysExec('lxc-create -n '+name+' -t '+template, callback);
+	create: function(name, template, config, ip, callback){
+		return sysExec('lxc-create -n '+name+' -t '+template, ip, callback);
 	},
 
-	clone: function(name, base_name, callback){
-		return sysExec('lxc-clone -o '+base_name+ ' -n '+name +' -B overlayfs -s', callback);
+	clone: function(name, base_name, ip, callback){
+		return sysExec('lxc-clone -o '+base_name+ ' -n '+name +' -B overlayfs -s', ip, callback);
 	},
 
-	destroy: function(name, callback){
-		return sysExec('lxc-destroy -n '+ name, function(data){
+	destroy: function(name, ip, callback){
+		return sysExec('lxc-destroy -n '+ name, ip, function(data){
 			var info = data.match(/Destroyed container/);
 			// console.log('destroy info:', info);
 			var args = [true].concat(Array.prototype.slice.call(arguments, 1));
@@ -37,8 +63,8 @@ var lxc = {
 		});
 	},
 
-	start: function(name, callback){
-		return sysExec('lxc-start --name '+name+' --daemon', callback);
+	start: function(name, ip, callback){
+		return sysExec('lxc-start --name '+name+' --daemon', ip, callback);
 	},
 
 	startEphemeral: function(name, base_name, ip, callback){
@@ -63,16 +89,16 @@ var lxc = {
 		return sysExec('lxc-stop -n '+ name, ip, callback);
 	},
 
-	freeze: function(name, callback){
-		return sysExec('lxc-freeze -n '+name, callback);
+	freeze: function(name, ip, callback){
+		return sysExec('lxc-freeze -n '+name, ip, callback);
 	},
 
-	unfreeze: function(name, callback){
-		return sysExec('lxc-unfreeze -n '+name, callback);
+	unfreeze: function(name, ip, callback){
+		return sysExec('lxc-unfreeze -n '+name, ip, callback);
 	},
 
-	info: function(name, callback){
-		return sysExec('lxc-info -n '+name, function(data){
+	info: function(name, ip, callback){
+		return sysExec('lxc-info -n '+name, ip, function(data){
 			// console.log('info', arguments);
 			if(data.match("doesn't exist")){
 				return callback({state: 'NULL'});
@@ -89,8 +115,8 @@ var lxc = {
 		});
 	},
 
-	list: function(callback){
-		sysExec('lxc-ls --fancy', function(data){
+	list: function(ip, callback){
+		sysExec('lxc-ls --fancy', ip, function(data){
 			var output = data.split("\n");
 			var keys = output.splice(0,1)[0].split(/\s+/).slice(0,-1);
 			var info = [];
