@@ -29,7 +29,6 @@ function sysExec(command, ip, callback){
 	command = `echo ${new Buffer(command).toString('base64')}|base64 --decode|bash`;
 	
 	if (ip){
-		// command = `dsh -m virt@${ip} -r ssh -o "StrictHostKeyChecking no" -o "Identity ~/.ssh/clw_rsa" -c -- "${command}"`;
 		command = `ssh -i ~/.ssh/clw_rsa -o "StrictHostKeyChecking no" virt@${ip} "${command}"`;
 	}
 	// command = 'unset XDG_SESSION_ID XDG_RUNTIME_DIR; cgm movepid all virt $$; ' + command;
