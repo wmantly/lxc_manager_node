@@ -117,8 +117,7 @@ var Worker = (function(){
 		callback = callback || __empty;
 
 		fs.readFile(__dirname + "/../allocate_runners.sh", function(error, file){
-			lxc.exec(worker.__buildCommand(file, 80, worker.uuid), worker.ip, function(err,data,stderr){
-				console.log("Populate script complete:", arguments)
+			lxc.exec(worker.__buildRunnersCommand(file, 80), worker.ip, function(err,data,stderr){
 				if (error){
 					console.log("Error", error);
 				}
@@ -199,7 +198,7 @@ var Worker = (function(){
 					}, 15000);
 				}
 			} else {
-				console.log("IN-SYNC DATA:", data);
+				console.log(`SYNC FOR WORKER NAME: ${worker.name}\nIP: ${worker.ip}\nOUTPUT:\n${data}`);
 				var output = data.split("\n");
 				var keys = output.splice(0,1)[0].split(/\s+/).slice(0,-1);
 				var runners = [];
@@ -218,8 +217,7 @@ var Worker = (function(){
 					runners.push(mapOut);
 					
 				}
-				console.log(`RUNNERS FOUND[=> ${worker.ip}`);
-				console.log(`RUNNERS FOUND[=>`, runners);
+
 				worker.availrunners = [];
 
 				for (let idx = 0, stop = runners.length; idx < stop; idx++){
@@ -237,7 +235,7 @@ var Worker = (function(){
 						worker.availrunners.push(runner);
 					}
 				}
-				console.log(`RUNNERS AVAILABLE[=>`, worker.availrunners);
+				// console.log(`RUNNERS AVAILABLE[=>`, worker.availrunners);
 				// TODO: Determine if this flag is needed anymore
 				worker.isBuildingRunners = false;
 				worker.isSyncing = false;
@@ -249,59 +247,36 @@ var Worker = (function(){
 
 	proto.initialize = function(params, config){
 		// Create droplet
-		// Once active the droplet begins to create runners
-		var maxMemoryUsage = params.maxMemoryUsage || config.maxMemoryUsage || 80;
 		var worker_uuid = utils.uuid();
-		var phone_home = config.home || "/worker/ping";
-
-
 		var callback = params.callback || __empty;
 		var errorCallback = params.errorCallback || empty;
 
-		// fs.readFile(__dirname + "/../allocate_runners.sh", function(error, file){
-
-			doapi.dropletToActive({
-				name: config.tagPrefix + (config.version + "") + '-' + utils.uuid(),
-				image: config.image,
-				size: config.size,
-				// user_data: proto.__buildCommand(file, maxMemoryUsage, worker_uuid, phone_home),
+		doapi.dropletToActive({
+			name: config.tagPrefix + (config.version + "") + '-' + utils.uuid(),
+			image: config.image,
+			size: config.size,
+			onCreate: function(data){
+				doapi.dropletSetTag(
+					config.tagPrefix + config.version, 
+					data.droplet.id
+				);
+			},
+			onActive: function(data, args){
+				data.uuid = worker_uuid;
+				var worker = Worker.create(data);
 				
-				onCreate: function(data){
-					doapi.dropletSetTag(
-						config.tagPrefix + config.version, 
-						data.droplet.id
-					);
-				},
-				onActive: function(data, args){
-					data.uuid = worker_uuid;
-					var worker = Worker.create(data);
-					
-					// wait for boot before syncing runners
-					setTimeout(function(){
-						worker.sync(callback, errorCallback);
-					}, 20000);
-				}
-			});
-		// });
+				// wait for boot before syncing runners
+				setTimeout(function(){
+					worker.sync(callback, errorCallback);
+				}, 20000);
+			}
+		});
 	};
 
-	proto.__buildCommand = function(file, maxMemoryUsage, worker_uuid, phone_home){
-		var scriptSetup, script, createScript, makeScriptExecutable, setupCrontab;
-		var interval = 1;
-		
-		// worker_uuid and phone_home are only usable with localhost tunnels setup in dev
-		// cronjobSetup = `export PATH=\${PATH};export WORKER_UUID="${worker_uuid}";export PHONE_HOME=${phone_home};export maxMemoryUsage=${maxMemoryUsage};`;
-		// scriptSetup = `export PATH=\${PATH};export WORKER_UUID="${worker_uuid}";export maxMemoryUsage=${maxMemoryUsage};`;
+	proto.__buildRunnersCommand = function(file, maxMemoryUsage){
+		var scriptSetup;
 		scriptSetup = `export maxMemoryUsage=${maxMemoryUsage};`
-		script = scriptSetup + `echo '${file.toString("base64")}'|base64 --decode|bash`;
-		return script;
-		// createScript = `echo "${script}" | cat > /home/virt/allocate_runners.sh`;
-		
-		// makeScriptExecutable = `chmod o+x /home/virt/allocate_runners.sh`;
-		
-		// setupCrontab = `echo "*/${interval} * * * * /home/virt/allocate_runners.sh > /home/virt/allocate_runners.log 2>&1" | crontab -u virt -`;
-		
-		// return `#!/bin/bash\n\n${createScript} && ${makeScriptExecutable} && ${setupCrontab};`;
+		return scriptSetup + `echo '${file.toString("base64")}'|base64 --decode|bash`;
 	};
 
 	return proto;
@@ -444,7 +419,7 @@ var WorkerCollection = (function(){
 				console.log(`Zombie! Worker ${worker.name}, destroying.`);
 				workers.destroy(worker);
 				zombies++;
-				if(!--count) callback();
+				if(!--syncedCount) callback();
 			};
 
 
@@ -560,7 +535,7 @@ var WorkerCollection = (function(){
 
 
 		if(count > 2){
-			console.log(`Runner attempt failed, to many requests!`);
+			console.log(`Runner attempt failed, too many requests!`);
 			return errorCallback(null, 400);
 		}
 

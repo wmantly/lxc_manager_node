@@ -18,7 +18,7 @@ function buildRunners () {
 	until [[ $memory -gt $maxMemoryUsage ]]; do
 		
 		runnerName="${namePrefix}-id-${RANDOM}";
-		lxc-start-ephemeral -o $baseName -n $runnerName --union-type overlayfs -d;
+		lxc-start-ephemeral -o $baseName -n $runnerName --union-type overlayfs -d > /dev/null;
 		
 		if [[ $? -eq 0 ]]; then
 			runners="${runners};${runnerName}";
@@ -26,8 +26,8 @@ function buildRunners () {
 		usedMemoryPercent;
 	done
 }
-buildRunners;
 
-# Add curl to manager here. Sending status report to manager
-# curl -X POST "${PHONE_HOME}" -d'{"memory":${memory}, "runnersShort": "${runners}", "runnersLong": "'"$(lxc-ls --fancy)"'", "id": "${WORKER_UUID}"}' 
+buildRunners;
+lxc-ls --fancy;
+
 exit 0;
