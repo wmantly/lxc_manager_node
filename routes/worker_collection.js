@@ -194,7 +194,7 @@ var Worker = (function(){
 					console.log("Waiting 15 seconds");
 					worker.syncAttempts++;
 					setTimeout(function(){
-						worker.sync(maxAttempts, callback, errorCallback);
+						worker.sync(callback, errorCallback, maxAttempts);
 					}, 15000);
 				}
 			} else {
