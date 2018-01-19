@@ -38,7 +38,7 @@ api = function(key){
 		var data = {
 			resources: [
 				{
-					resource_id: dropletID,
+					resource_id: ""+dropletID,
 					resource_type: 'droplet'
 				}
 			]
