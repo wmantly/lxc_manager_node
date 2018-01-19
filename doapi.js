@@ -61,7 +61,7 @@ api = function(key){
 		var data = {
 			name: args.name, // || return false,
 			region: args.region || 'nyc3',
-			size: args.size || '512mb',
+			size: args.size || 's-1vcpu-1gb',
 			image: args.image || 'ubuntu-14-04-x64',
 			ssh_keys: args.ssh_key || null,
 			backups: args.backup || false,
