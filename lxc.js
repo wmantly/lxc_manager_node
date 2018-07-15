@@ -42,7 +42,7 @@ var lxc = {
 	},
 
 	startEphemeral: function(name, base_name, ip, callback){
-		var command = 'lxc-start-ephemeral -o '+base_name+ ' -n '+name +' --union-type overlayfs -d';
+		var command = 'lxc-start-ephemeral -o '+base_name+ ' -n '+name;
 		return sysExec(command, ip, function(data){
 			// console.log('startEphemeral', arguments);
 			if(data.match("doesn't exist.")){
